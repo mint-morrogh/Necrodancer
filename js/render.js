@@ -437,7 +437,7 @@ function renderRoomActive(room) {
         ${room.isYouTube && !room.isBoss && !room.isAlchemist ? '<div class="youtube-badge">YouTube Sample Room</div>' : ''}
         <div class="room-header">${room.name}</div>
       </div>
-      <div class="room-number">ROOM #${room.number} · <span style="text-transform:uppercase;">${trackTip(room.trackType)}</span></div>
+      <div class="room-number">ROOM ${room.number} · <span style="text-transform:uppercase;">${trackTip(room.trackType)}</span></div>
 
       <!-- Genre Directive -->
       <div class="result-section">
