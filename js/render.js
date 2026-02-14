@@ -26,11 +26,20 @@ function trackTip(name) {
   return `<span class="info-tip">${name}<span class="info-tip-content info-tip-track"><div class="info-tip-title">${name}</div><div class="info-tip-desc">${info.desc}</div><div class="info-tip-field"><strong>Tips:</strong> ${info.tips}</div><div class="info-tip-field"><strong>Splice:</strong> ${info.search}</div></span></span>`;
 }
 
-function injectGenreTip(directive, genre) {
-  if (!genre || typeof GENRE_DESCRIPTIONS === 'undefined' || !GENRE_DESCRIPTIONS[genre]) return directive;
+function injectGenreTip(directive, genre, showReroll) {
+  const rerollIcon = showReroll
+    ? `<button class="reroll-inline" onclick="rerollGenre()" title="Reroll genre (${state.rerolls} left)">↻</button>`
+    : '';
+  if (!genre || typeof GENRE_DESCRIPTIONS === 'undefined' || !GENRE_DESCRIPTIONS[genre]) {
+    if (!showReroll) return directive;
+    return directive.replace(
+      `<span style="color:var(--gold);">${genre}</span>`,
+      `<span style="color:var(--gold);">${genre}</span>${rerollIcon}`
+    );
+  }
   return directive.replace(
     `<span style="color:var(--gold);">${genre}</span>`,
-    genreTip(genre)
+    genreTip(genre) + rerollIcon
   );
 }
 
@@ -189,7 +198,7 @@ function renderDungeon() {
           <div class="song-info-item" style="color:${{easy:'var(--green)',normal:'var(--text)',hard:'var(--orange)',nightmare:'var(--red)'}[state.difficulty]};">${diff().label}</div>
           <div class="song-info-item">FLOOR <span>${state.floor}</span></div>
           <div class="song-info-item">ROOM <span>#${state.rooms.length}</span></div>
-          <div class="song-info-item">SCORE <span style="color:var(--purple);">${state.score}</span></div>
+          <div class="song-info-item">SCORE <span>${state.score}</span></div>
           <div class="song-info-item">RE-ROLLS <span class="reroll-count">${state.rerolls}</span></div>
           <div class="song-info-item">GOLD <span style="color:var(--gold);">${state.gold}g</span></div>
           ${state.relics.length > 0 ? '<div class="song-info-item" style="color:var(--purple);">RELICS <span style="color:var(--purple);">' + state.relics.length + '</span></div>' : ''}
@@ -269,7 +278,7 @@ function renderMap() {
             <div class="map-tooltip-row" style="color:var(--dim); font-size:12px;">${nt.desc}</div>
             ${node.trackType ? `<div class="map-tooltip-row">Track: <span style="color:var(--gold);">${node.trackType}</span></div>` : ''}
             ${node.preview.curseCount > 0 ? `<div class="map-tooltip-row" style="color:var(--red);">Curses: ${node.preview.curseCount}</div>` : ''}
-            ${node.preview.effectCount > 0 ? `<div class="map-tooltip-row" style="color:var(--purple);">Effects: ${node.preview.effectCount}</div>` : ''}
+            ${node.preview.effectCount > 0 ? `<div class="map-tooltip-row" style="color:var(--blue);">Effects: ${node.preview.effectCount}</div>` : ''}
             ${node.preview.hasBlessing ? `<div class="map-tooltip-row" style="color:var(--green);">Blessing present</div>` : ''}
             ${node.type === 'campfire' ? `<div class="map-tooltip-row" style="color:var(--orange);">No track — shop only</div>` : ''}
             ${node.type === 'relic' ? `<div class="map-tooltip-row" style="color:var(--purple);">You sense a relic in this room</div>` : ''}
@@ -432,11 +441,7 @@ function renderRoomActive(room) {
       <div class="result-section">
         <div class="result-label genre-label">${room.isAlchemist ? 'Alchemist Directive' : room.isYouTube ? 'YouTube Directive' : 'Genre Directive'}</div>
         <div class="result-text genre-text">
-          ${injectGenreTip(room.genreDirective, room.genre)}
-          ${!room.isAlchemist && state.rerolls > 0 ? `
-            <button class="reroll-btn" onclick="rerollSampleType()" title="Reroll sample type">&#127922; Sample</button>
-            <button class="reroll-btn" onclick="rerollGenre()" title="Reroll genre">&#127922; Genre</button>
-          ` : ''}
+          ${injectGenreTip(room.genreDirective, room.genre, !room.isAlchemist && state.rerolls > 0)}
         </div>
       </div>
 
@@ -447,7 +452,7 @@ function renderRoomActive(room) {
           ${room.curses.map((c, i) => `
             <div class="result-text curse-text">
               ${c.type === 'carried' ? '[CARRIED] ' : c.type === 'boss-curse' ? '[BOSS] ' : c.type === 'deferred-forced' ? '[DEFERRED] ' : ''}${c.text}
-              ${c.type !== 'carried' && c.type !== 'deferred-forced' && state.rerolls > 0 ? `<button class="reroll-btn" onclick="rerollCurse(${i})" title="Reroll this curse">&#127922;</button>` : ''}
+              ${c.type !== 'carried' && c.type !== 'deferred-forced' && state.rerolls > 0 ? `<button class="reroll-inline" onclick="rerollCurse(${i})" title="Reroll this curse (${state.rerolls} left)">↻</button>` : ''}
             </div>
           `).join('')}
         </div>
@@ -478,9 +483,9 @@ function renderRoomActive(room) {
           <div class="result-label effect-label">Enchantments (Effects)</div>
           ${room.effects.map((e, i) => `
             <div style="margin-bottom:10px;">
-              <div style="color:var(--purple); margin-bottom:4px;">
+              <div style="color:var(--blue); margin-bottom:4px;">
                 ${effectTip(e.name)}
-                ${state.rerolls > 0 ? `<button class="reroll-btn" onclick="rerollEffect(${i})" title="Reroll this effect">&#127922;</button>` : ''}
+                ${state.rerolls > 0 ? `<button class="reroll-inline" onclick="rerollEffect(${i})" title="Reroll this effect (${state.rerolls} left)">↻</button>` : ''}
               </div>
               <div class="effect-bar">
                 <div class="effect-bar-track">

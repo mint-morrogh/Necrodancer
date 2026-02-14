@@ -1070,7 +1070,7 @@ function endSession() {
               </div>
               <div style="color:var(--teal); font-size:15px; margin-bottom:2px;">${r.genre}${r.sampleType ? ' (' + r.sampleType + ')' : ''}</div>
               ${r.curses.map(c => `<div style="color:var(--red); font-size:14px; padding-left:12px;">Curse: ${c.text}</div>`).join('')}
-              ${r.effects.map(e => `<div style="color:var(--purple); font-size:14px; padding-left:12px;">Effect: ${e.name} @ ${e.percentage}%</div>`).join('')}
+              ${r.effects.map(e => `<div style="color:var(--blue); font-size:14px; padding-left:12px;">Effect: ${e.name} @ ${e.percentage}%</div>`).join('')}
               ${r.blessing ? `<div style="color:var(--green); font-size:14px; padding-left:12px;">Blessing: ${r.blessing}</div>` : ''}
               ${r.flavorRoll ? `<div style="color:var(--gold-dim); font-size:13px; padding-left:12px;">${r.flavorRoll.label}: ${r.flavorRoll.text} ${r.bonusCompleted ? '<span style="color:var(--green);">(done)</span>' : '<span style="opacity:0.4;">(skipped)</span>'}</div>` : ''}
             </div>`;
@@ -1273,6 +1273,8 @@ function rerollGenre() {
   room.genre = pick(pool);
   room.genreDirective = rebuildGenreDirective(room);
   room.checklist[0].text = room.genreDirective;
+  // Re-pick flavor to match the new genre
+  room.flavorRoll = pickCompatibleFlavor(room.trackType, room.genre, room.isAlchemist);
   render();
 }
 

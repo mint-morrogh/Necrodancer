@@ -104,11 +104,11 @@
   position: absolute;
   top: -12px; right: -12px;
   background: var(--panel-alt);
-  border: 2px solid var(--gold-dim);
+  border: 2px solid var(--purple-dim);
   border-radius: 50%;
   width: 32px; height: 32px;
   font-size: 16px;
-  color: var(--gold);
+  color: var(--purple);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -117,10 +117,10 @@
   transition: all 0.2s;
 }
 .map-node-reroll:hover {
-  background: var(--gold-dim);
-  color: var(--bg);
+  background: var(--purple-dim);
+  color: #fff;
   transform: scale(1.15);
-  box-shadow: 0 0 8px rgba(212,165,116,0.4);
+  box-shadow: 0 0 8px rgba(155,89,182,0.4);
 }
 .map-tooltip {
   display: none;
