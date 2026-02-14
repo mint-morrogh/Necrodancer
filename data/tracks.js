@@ -6,6 +6,39 @@
 const KEYS = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 const SCALES = ['Major','Minor'];
 
+// ── OFFICIAL SPLICE GENRES (searchable as genre filters) ──
+// Everything in GENRES_BY_TRACK that's NOT in this set is a "tag"
+// Easy/Normal pick from genres; Hard/Nightmare pick from tags
+const SPLICE_GENRES = new Set([
+  // Hip Hop / R&B
+  'Hip Hop','Trap','R&B','Pluggnb','Rage','Drill','UK Drill','Lo-Fi Hip Hop','Boom Bap',
+  'Brazilian Funk','Soul','Neo Soul','Future Soul','Reggaeton','Dancehall','Jersey Club',
+  'Moombahton','Future Bass','Glitch Hop',
+  // House / Techno
+  'Techno','House','Tech House','Deep House','Nu Disco','Afro House','Amapiano','Disco',
+  'Electro','Minimal Techno','Dub Techno','Hard Techno','UK Garage','Speed Garage','Rave',
+  'Melodic Techno','French House','Acid House','Bass House','Progressive House','Melodic House',
+  'Big Room House','Hardstyle',
+  // Pop / EDM
+  'Pop','EDM','Indie Pop','Afropop & Afrobeats','Hyperpop','Synth-Pop','K-Pop','Bedroom Pop',
+  'Dream Pop','Drift Phonk','Trap EDM','Trance','Psytrance','Eurodance','Future House',
+  'Fidget House','Tropical House',
+  // Live Sounds
+  'Rock','Indie Rock','Indie Dance','Jazz','Blues','Gospel','Heavy Metal','Funk','Dub',
+  'Reggae','Afrobeat','Folk','Country','Classical','Shoegaze','Emo','Punk','Post-Punk',
+  'Bossa Nova','Cumbia','Salsa','Flamenco','Samba',
+  // Bass Music
+  'Drum and Bass','Jungle','Jump Up DnB','Drumstep','Breakbeat','Dubstep','Tearout Dubstep',
+  'Grime','Leftfield Bass',
+  // Electronic
+  'Downtempo','Ambient','Synthwave','Chillout','Indie Electronic','Chillwave','IDM',
+  'Experimental','Industrial','Chiptune','Trip Hop','Footwork',
+  // Global
+  'African','Asian','Brazilian','Caribbean','Indian','Latin American','Middle Eastern','South Asian',
+  // Cinematic / FX
+  'Cinematic','Game Audio'
+]);
+
 const TRACK_TYPES = [
   'Drums','Bass','Synth Lead','Pads','Vocals','FX / Texture',
   'Keys / Piano','Guitar','Strings','Percussion','808','Brass / Woodwinds',

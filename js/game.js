@@ -1290,23 +1290,16 @@ function downloadBeatSheet() {
 // ════════════════════════════════════════════════════════
 
 function rebuildGenreDirective(room) {
-  const isMulti = ['Drums', 'Percussion'].includes(room.trackType);
-  const isOpen = ['Foley / Found Sound'].includes(room.trackType);
-
-  if (room.isAlchemist) {
-    // Alchemist directives are fixed — no rebuild
-    return room.genreDirective;
-  } else if (room.isYouTube) {
-    return isMulti
-      ? `Find a <span style="color:var(--gold);">${room.genre}</span> track on YouTube and sample your ${room.trackType.toLowerCase()} from it`
-      : `Find a <span style="color:var(--gold);">${room.genre}</span> track on YouTube and sample a <span style="color:var(--gold);">${room.sampleType}</span> from it`;
-  } else if (isOpen) {
-    return `Find or record a <span style="color:var(--gold);">${room.sampleType}</span> and process it to fit a <span style="color:var(--gold);">${room.genre}</span> context`;
-  } else {
-    return isMulti
-      ? `Build your ${room.trackType.toLowerCase()} using samples from the <span style="color:var(--gold);">${room.genre}</span> genre on Splice`
-      : `Use a <span style="color:var(--gold);">${room.sampleType}</span> from the <span style="color:var(--gold);">${room.genre}</span> genre`;
-  }
+  if (room.isAlchemist) return room.genreDirective;
+  return buildGenreDirective({
+    trackType: room.trackType,
+    genre: room.genre,
+    sampleType: room.sampleType,
+    isMulti: ['Drums', 'Percussion'].includes(room.trackType),
+    isOpenDirective: ['Foley / Found Sound'].includes(room.trackType),
+    isAlchemist: room.isAlchemist,
+    isYouTube: room.isYouTube
+  });
 }
 
 function rerollSampleType() {
@@ -1334,8 +1327,7 @@ function rerollGenre() {
     state.rerolls--;
   }
   state.rerollsUsedThisRoom++;
-  const pool = GENRES_BY_TRACK[room.trackType] || GENRES_BY_TRACK['Drums'];
-  room.genre = pick(pool);
+  room.genre = pickGenreForDifficulty(room.trackType);
   room.genreDirective = rebuildGenreDirective(room);
   room.checklist[0].text = room.genreDirective;
   // Re-pick flavor to match the new genre

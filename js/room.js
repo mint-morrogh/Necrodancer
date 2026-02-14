@@ -1,4 +1,41 @@
 // ════════════════════════════════════════════════════════
+// GENRE SELECTION BY DIFFICULTY
+// ════════════════════════════════════════════════════════
+// Easy/Normal → pick from official Splice genres only
+// Hard/Nightmare → pick from tags (non-Splice genres) only
+// Falls back to full pool if filtered pool is empty
+
+function pickGenreForDifficulty(trackType) {
+  const fullPool = GENRES_BY_TRACK[trackType] || GENRES_BY_TRACK['Drums'];
+  const d = state.difficulty;
+  if (d === 'hard' || d === 'nightmare') {
+    const tags = fullPool.filter(g => !SPLICE_GENRES.has(g));
+    return tags.length > 0 ? pick(tags) : pick(fullPool);
+  }
+  const genres = fullPool.filter(g => SPLICE_GENRES.has(g));
+  return genres.length > 0 ? pick(genres) : pick(fullPool);
+}
+
+function buildGenreDirective({ trackType, genre, sampleType, isMulti, isOpenDirective, isAlchemist, isYouTube }) {
+  if (isAlchemist) return pick(ALCHEMIST_DIRECTIVES);
+
+  const isTag = !SPLICE_GENRES.has(genre);
+  const label = isTag ? 'tag' : 'genre';
+
+  if (isYouTube) {
+    return isMulti
+      ? `Find a <span style="color:var(--gold);">${genre}</span> track on YouTube and sample your ${trackType.toLowerCase()} from it`
+      : `Find a <span style="color:var(--gold);">${genre}</span> track on YouTube and sample a <span style="color:var(--gold);">${sampleType}</span> from it`;
+  }
+  if (isOpenDirective) {
+    return `Find or record a <span style="color:var(--gold);">${sampleType}</span> and process it to fit a <span style="color:var(--gold);">${genre}</span> context`;
+  }
+  return isMulti
+    ? `Build your ${trackType.toLowerCase()} using samples from the <span style="color:var(--gold);">${genre}</span> ${label} on Splice`
+    : `Use a <span style="color:var(--gold);">${sampleType}</span> from the <span style="color:var(--gold);">${genre}</span> ${label} on Splice`;
+}
+
+// ════════════════════════════════════════════════════════
 // FLAVOR / GENRE COMPATIBILITY
 // ════════════════════════════════════════════════════════
 // Source-defining flavors (Kit Type, Region, Perc Type, etc.) are filtered
@@ -96,8 +133,7 @@ function generateRoom(trackType, opts = {}) {
   }
   state.usedRoomNames.push(roomName);
 
-  const genrePool = GENRES_BY_TRACK[trackType] || GENRES_BY_TRACK['Drums'];
-  const genre = pick(genrePool);
+  const genre = pickGenreForDifficulty(trackType);
   const sampleType = pick(SAMPLE_TYPES[trackType] || ['sample']);
 
   const flavorRoll = pickCompatibleFlavor(trackType, genre, isAlchemist);
@@ -109,20 +145,7 @@ function generateRoom(trackType, opts = {}) {
   const openDirectiveTracks = ['Foley / Found Sound'];
   const isOpenDirective = openDirectiveTracks.includes(trackType);
 
-  let genreDirective;
-  if (isAlchemist) {
-    genreDirective = pick(ALCHEMIST_DIRECTIVES);
-  } else if (isYouTube) {
-    genreDirective = isMulti
-      ? `Find a <span style="color:var(--gold);">${genre}</span> track on YouTube and sample your ${trackType.toLowerCase()} from it`
-      : `Find a <span style="color:var(--gold);">${genre}</span> track on YouTube and sample a <span style="color:var(--gold);">${sampleType}</span> from it`;
-  } else if (isOpenDirective) {
-    genreDirective = `Find or record a <span style="color:var(--gold);">${sampleType}</span> and process it to fit a <span style="color:var(--gold);">${genre}</span> context`;
-  } else {
-    genreDirective = isMulti
-      ? `Build your ${trackType.toLowerCase()} using samples from the <span style="color:var(--gold);">${genre}</span> genre on Splice`
-      : `Use a <span style="color:var(--gold);">${sampleType}</span> from the <span style="color:var(--gold);">${genre}</span> genre`;
-  }
+  const genreDirective = buildGenreDirective({ trackType, genre, sampleType, isMulti, isOpenDirective, isAlchemist, isYouTube });
 
   const curses = [];
   const usedCurseTexts = [];
