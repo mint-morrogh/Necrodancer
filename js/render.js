@@ -225,18 +225,7 @@ function renderMap() {
 
           ${canReroll ? `<button class="map-node-reroll" onclick="event.stopPropagation(); rerollNode('${node.id}')" title="Reroll (${state.rerolls} left)">↻</button>` : ''}
 
-          <div class="map-node-icon">${isCompleted ? '✓' : nt.icon}</div>
-          <div class="map-node-type" style="color:${nt.color};">${nt.label}</div>
-          ${node.type !== 'start' && node.type !== 'campfire' ? `
-            <div class="map-node-track">${node.trackType || '???'}</div>
-          ` : ''}
-          ${node.type !== 'start' && node.type !== 'campfire' ? `
-            <div class="map-node-preview">
-              ${node.preview.curseCount > 0 ? `<span class="curse-pip">${'x'.repeat(node.preview.curseCount)}</span>` : ''}
-              ${node.preview.effectCount > 0 ? `<span class="effect-pip">${'+'.repeat(node.preview.effectCount)}</span>` : ''}
-              ${node.preview.hasBlessing ? '<span class="blessing-pip">+</span>' : ''}
-            </div>
-          ` : ''}
+          <div class="map-node-type" style="color:${nt.color};">${isCompleted ? '✓ ' + nt.label : nt.label}</div>
 
           <div class="map-tooltip">
             <div class="map-tooltip-row" style="color:${nt.color}; font-family:var(--font-pixel); font-size:10px;">${nt.label}</div>
@@ -324,6 +313,16 @@ function drawMapConnections() {
     playerPath.push(state.currentNodeId);
   }
 
+  // Helper: clip a line endpoint to the edge of a node's bounding box
+  function clipToEdge(cx, cy, hw, hh, tx, ty) {
+    const dx = tx - cx, dy = ty - cy;
+    if (dx === 0 && dy === 0) return { x: cx, y: cy };
+    const sx = dx !== 0 ? hw / Math.abs(dx) : Infinity;
+    const sy = dy !== 0 ? hh / Math.abs(dy) : Infinity;
+    const s = Math.min(sx, sy);
+    return { x: cx + dx * s, y: cy + dy * s };
+  }
+
   for (const conn of state.map.connections) {
     const fromEl = container.querySelector(`[data-node-id="${conn.from}"]`);
     const toEl = container.querySelector(`[data-node-id="${conn.to}"]`);
@@ -332,19 +331,24 @@ function drawMapConnections() {
     const fromRect = fromEl.getBoundingClientRect();
     const toRect = toEl.getBoundingClientRect();
 
-    const x1 = fromRect.left + fromRect.width / 2 - containerRect.left;
-    const y1 = fromRect.top + fromRect.height / 2 - containerRect.top;
-    const x2 = toRect.left + toRect.width / 2 - containerRect.left;
-    const y2 = toRect.top + toRect.height / 2 - containerRect.top;
+    const fcx = fromRect.left + fromRect.width / 2 - containerRect.left;
+    const fcy = fromRect.top + fromRect.height / 2 - containerRect.top;
+    const tcx = toRect.left + toRect.width / 2 - containerRect.left;
+    const tcy = toRect.top + toRect.height / 2 - containerRect.top;
+
+    // Clip lines to node edges with a small margin so they don't touch the border
+    const margin = 4;
+    const p1 = clipToEdge(fcx, fcy, fromRect.width / 2 + margin, fromRect.height / 2 + margin, tcx, tcy);
+    const p2 = clipToEdge(tcx, tcy, toRect.width / 2 + margin, toRect.height / 2 + margin, fcx, fcy);
 
     const isActive = playerPath.includes(conn.from) && playerPath.includes(conn.to);
     const isReachable = playerPath.includes(conn.from) && reachable.includes(conn.to);
 
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', x1);
-    line.setAttribute('y1', y1);
-    line.setAttribute('x2', x2);
-    line.setAttribute('y2', y2);
+    line.setAttribute('x1', p1.x);
+    line.setAttribute('y1', p1.y);
+    line.setAttribute('x2', p2.x);
+    line.setAttribute('y2', p2.y);
     if (isActive) line.classList.add('path-active');
     else if (isReachable) line.classList.add('path-reachable');
     svg.appendChild(line);

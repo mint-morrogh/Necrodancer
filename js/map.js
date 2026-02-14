@@ -245,10 +245,7 @@ async function rerollNode(nodeId) {
   const rerollBtn = nodeEl.querySelector('.map-node-reroll');
   if (rerollBtn) rerollBtn.style.display = 'none';
 
-  const iconEl = nodeEl.querySelector('.map-node-icon');
   const typeEl = nodeEl.querySelector('.map-node-type');
-  const trackEl = nodeEl.querySelector('.map-node-track');
-  const previewEl = nodeEl.querySelector('.map-node-preview');
 
   // Animate cycling through random options
   const duration = 1200;
@@ -262,12 +259,8 @@ async function rerollNode(nodeId) {
   for (let i = 0; i < steps; i++) {
     const randType = nodeTypes[Math.floor(Math.random() * nodeTypes.length)];
     const nt = NODE_TYPES[randType];
-    const randTrack = TRACK_TYPES[Math.floor(Math.random() * TRACK_TYPES.length)];
-    if (iconEl) iconEl.textContent = nt.icon;
     if (typeEl) { typeEl.textContent = nt.label; typeEl.style.color = nt.color; }
-    if (trackEl) trackEl.textContent = randTrack;
-    if (previewEl) previewEl.style.opacity = '0.3';
-    await sleep(interval + (i > steps - 4 ? i * 15 : 0)); // slow down at the end
+    await sleep(interval + (i > steps - 4 ? i * 15 : 0));
   }
 
   // Settle on final result
@@ -277,9 +270,7 @@ async function rerollNode(nodeId) {
   node.rerolled = true;
 
   const finalNt = NODE_TYPES[node.type] || NODE_TYPES.standard;
-  if (iconEl) iconEl.textContent = finalNt.icon;
   if (typeEl) { typeEl.textContent = finalNt.label; typeEl.style.color = finalNt.color; }
-  if (trackEl) trackEl.textContent = node.trackType || '???';
 
   nodeEl.style.boxShadow = '';
   nodeEl.style.transition = '';

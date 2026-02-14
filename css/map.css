@@ -12,16 +12,16 @@
   z-index: 0;
 }
 .map-svg line {
-  stroke: rgba(61, 54, 80, 0.35);
+  stroke: rgba(80, 72, 100, 0.4);
   stroke-width: 1.5;
   transition: stroke 0.3s;
 }
 .map-svg line.path-active {
-  stroke: rgba(212, 165, 116, 0.4);
+  stroke: rgba(212, 165, 116, 0.5);
   stroke-width: 2;
 }
 .map-svg line.path-reachable {
-  stroke: rgba(212, 165, 116, 0.2);
+  stroke: rgba(212, 165, 116, 0.3);
   stroke-width: 1.5;
   stroke-dasharray: 6 4;
 }
@@ -46,9 +46,8 @@
   background: var(--panel);
   border: 2px solid var(--border);
   border-radius: 6px;
-  padding: 14px 20px;
-  min-width: 140px;
-  max-width: 200px;
+  padding: 12px 24px;
+  min-width: 120px;
   text-align: center;
   cursor: default;
   transition: all 0.3s ease;
@@ -71,41 +70,19 @@
   box-shadow: 0 0 16px rgba(212,165,116,0.3);
 }
 .map-node.completed {
-  opacity: 0.5;
+  opacity: 0.45;
   border-color: var(--border);
 }
-.map-node.completed .map-node-icon { opacity: 0.5; }
 .map-node.locked {
-  opacity: 0.35;
-  filter: grayscale(0.5);
-}
-.map-node-icon {
-  font-size: 26px;
-  margin-bottom: 8px;
+  opacity: 0.55;
 }
 .map-node-type {
   font-family: var(--font-pixel);
-  font-size: 10px;
-  letter-spacing: 1px;
+  font-size: 11px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
-  margin-bottom: 6px;
-  line-height: 1.5;
+  line-height: 1.4;
 }
-.map-node-track {
-  font-size: 15px;
-  color: var(--dim);
-  margin-top: 2px;
-}
-.map-node-preview {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  margin-top: 7px;
-  font-size: 13px;
-}
-.map-node-preview .curse-pip { color: var(--red); }
-.map-node-preview .effect-pip { color: var(--purple); }
-.map-node-preview .blessing-pip { color: var(--green); }
 .map-node-reroll {
   position: absolute;
   top: -8px; right: -8px;
