@@ -15,6 +15,7 @@ let state = {
   transitionData: null,
   deferredCurses: [],
   nextRoomCurses: [],
+  completionStreak: 0,
   shieldNextRoom: false,
   usedRoomNames: [],
   seed: null,
@@ -67,9 +68,9 @@ const GOLD_VALUES = { genre: 5, curse: 8, effect: 4, boss: 12 };
 const DIFFICULTY_SETTINGS = {
   easy: {
     label: 'EASY', desc: 'Lighter constraints, more blessings',
-    curseChance: 25, trackCurseChance: 8, blessingChance: 25,
-    effectWeights: [{ value: 0, weight: 40 }, { value: 1, weight: 40 }, { value: 2, weight: 20 }],
-    effectRange: [5, 70],
+    curseChance: 8, trackCurseChance: 2, blessingChance: 35,
+    effectWeights: [{ value: 0, weight: 82 }, { value: 1, weight: 18 }],
+    effectRange: [5, 30],
     bossCurseRange: [1, 1],
     rerollChance: 65, rerollBonusChance: 85,
     chestChance: 12, sideQuestChance: 5, alchemistChance: 3, roadEventChance: 15,
@@ -80,9 +81,9 @@ const DIFFICULTY_SETTINGS = {
   },
   normal: {
     label: 'NORMAL', desc: 'The standard dungeon experience',
-    curseChance: 40, trackCurseChance: 15, blessingChance: 15,
-    effectWeights: [{ value: 0, weight: 25 }, { value: 1, weight: 45 }, { value: 2, weight: 30 }],
-    effectRange: [5, 100],
+    curseChance: 22, trackCurseChance: 8, blessingChance: 20,
+    effectWeights: [{ value: 0, weight: 50 }, { value: 1, weight: 38 }, { value: 2, weight: 12 }],
+    effectRange: [5, 50],
     bossCurseRange: [1, 2],
     rerollChance: 50, rerollBonusChance: 75,
     chestChance: 8, sideQuestChance: 5, alchemistChance: 3, roadEventChance: 18,
@@ -94,7 +95,7 @@ const DIFFICULTY_SETTINGS = {
   hard: {
     label: 'HARD', desc: 'More curses, fewer blessings, no mercy',
     curseChance: 55, trackCurseChance: 25, blessingChance: 8,
-    effectWeights: [{ value: 0, weight: 10 }, { value: 1, weight: 35 }, { value: 2, weight: 40 }, { value: 3, weight: 15 }],
+    effectWeights: [{ value: 0, weight: 10 }, { value: 1, weight: 30 }, { value: 2, weight: 40 }, { value: 3, weight: 20 }],
     effectRange: [20, 100],
     bossCurseRange: [2, 3],
     rerollChance: 35, rerollBonusChance: 55,
@@ -106,8 +107,8 @@ const DIFFICULTY_SETTINGS = {
   },
   nightmare: {
     label: 'NIGHTMARE', desc: 'Basically impossible. Good luck.',
-    curseChance: 75, trackCurseChance: 40, blessingChance: 3,
-    effectWeights: [{ value: 0, weight: 5 }, { value: 1, weight: 15 }, { value: 2, weight: 40 }, { value: 3, weight: 30 }, { value: 4, weight: 10 }],
+    curseChance: 80, trackCurseChance: 45, blessingChance: 3,
+    effectWeights: [{ value: 0, weight: 3 }, { value: 1, weight: 12 }, { value: 2, weight: 35 }, { value: 3, weight: 35 }, { value: 4, weight: 15 }],
     effectRange: [40, 100],
     bossCurseRange: [2, 4],
     rerollChance: 20, rerollBonusChance: 40,

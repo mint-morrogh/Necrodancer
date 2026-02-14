@@ -370,6 +370,29 @@ async function sealRoom() {
     }
   }
 
+  // Completion streak tracking
+  let streakReward = false;
+  let streakCount = 0;
+  if (allCompleted) {
+    state.completionStreak++;
+    streakCount = state.completionStreak;
+    if (state.completionStreak >= 3) {
+      streakReward = true;
+      state.rerolls += 1;
+      state.completionStreak = 0;
+    }
+  } else {
+    state.completionStreak = 0;
+  }
+
+  // Curse survivor: completed room with 2+ curses
+  let curseSurvivor = false;
+  const lastRoom = state.rooms[state.rooms.length - 1];
+  if (allCompleted && lastRoom && lastRoom.curses && lastRoom.curses.length >= 2) {
+    curseSurvivor = true;
+    state.rerolls += 1;
+  }
+
   const isBoss = state.currentRoom.isBoss || false;
   const bossBlessing = isBoss ? state.currentRoom.blessing : null;
   if (isBoss) state.score += Math.round(d.scorePerBoss * d.scoreMultiplier);
@@ -385,7 +408,10 @@ async function sealRoom() {
     earnedReroll,
     rerollCount,
     rollTarget,
-    rollValue
+    rollValue,
+    streakReward,
+    streakCount,
+    curseSurvivor
   };
 
   state.currentRoom = null;
@@ -457,8 +483,64 @@ async function animateSpell() {
     }
   }
 
+  // Show streak banner
+  if (td.streakReward) {
+    const streakEl = document.getElementById('streak-banner');
+    if (streakEl) { streakEl.style.display = 'block'; }
+  }
+
+  // Show curse survivor banner
+  if (td.curseSurvivor) {
+    const survivorEl = document.getElementById('survivor-banner');
+    if (survivorEl) { survivorEl.style.display = 'block'; }
+  }
+
+  // Show double or nothing button (only on standard rooms where a reroll was earned)
+  if (td.earnedReroll && !td.isBoss && !td.isSideQuest) {
+    const donBtn = document.getElementById('don-btn');
+    if (donBtn) donBtn.style.display = 'inline-block';
+  }
+
   const continueEl = document.getElementById('transition-continue');
   if (continueEl) continueEl.style.display = 'block';
+
+  const rerollDisplay = document.querySelector('.reroll-count');
+  if (rerollDisplay) rerollDisplay.textContent = state.rerolls;
+}
+
+async function doubleOrNothing() {
+  const btn = document.getElementById('don-btn');
+  if (btn) btn.style.display = 'none';
+
+  const resultEl = document.getElementById('don-result');
+  const coinEl = document.getElementById('don-coin');
+  if (!resultEl || !coinEl) return;
+
+  coinEl.style.display = 'inline-block';
+
+  // Coin flip animation
+  const faces = ['🪙', '✦', '🪙', '✧', '🪙', '★'];
+  for (let i = 0; i < 12; i++) {
+    coinEl.textContent = faces[i % faces.length];
+    coinEl.style.transform = `rotateY(${i * 60}deg)`;
+    await sleep(80 + i * 10);
+  }
+
+  const won = roll(1, 100) <= 50;
+
+  if (won) {
+    state.rerolls += 1; // net +2 total (original +1 already counted)
+    coinEl.textContent = '🪙';
+    coinEl.className = 'don-coin don-win';
+    resultEl.innerHTML = '<span class="don-win-text">DOUBLE! +2 REROLLS TOTAL</span>';
+  } else {
+    state.rerolls -= 1; // take back the one just earned
+    coinEl.textContent = '✧';
+    coinEl.className = 'don-coin don-lose';
+    resultEl.innerHTML = '<span class="don-lose-text">NOTHING! REROLL LOST</span>';
+  }
+
+  resultEl.style.display = 'block';
 
   const rerollDisplay = document.querySelector('.reroll-count');
   if (rerollDisplay) rerollDisplay.textContent = state.rerolls;
@@ -798,7 +880,7 @@ function newSession() {
     screen: 'title', key: null, scale: null, bpm: 128,
     difficulty: null, rerolls: 1, rooms: [], currentRoom: null,
     roomPhase: 'map', transitionData: null, deferredCurses: [],
-    nextRoomCurses: [], shieldNextRoom: false, usedRoomNames: [],
+    nextRoomCurses: [], completionStreak: 0, shieldNextRoom: false, usedRoomNames: [],
     seed: null, seedMode: 'daily', gold: 0, score: 0, chestData: null, pendingRoom: null,
     roadEventData: null, acceptedEvents: [], pendingBlessing: false,
     floor: 1, map: null, currentNodeId: null, floorHistory: [], setupStep: 1
@@ -882,6 +964,123 @@ function downloadBeatSheet() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+// ════════════════════════════════════════════════════════
+// ROOM ELEMENT REROLLS
+// ════════════════════════════════════════════════════════
+
+function rebuildGenreDirective(room) {
+  const isMulti = ['Drums', 'Percussion'].includes(room.trackType);
+  const isOpen = ['Foley / Found Sound'].includes(room.trackType);
+
+  if (room.isAlchemist) {
+    // Alchemist directives are fixed — no rebuild
+    return room.genreDirective;
+  } else if (room.isYouTube) {
+    return isMulti
+      ? `Find a <span style="color:var(--gold);">${room.genre}</span> track on YouTube and sample your ${room.trackType.toLowerCase()} from it`
+      : `Find a <span style="color:var(--gold);">${room.genre}</span> track on YouTube and sample a <span style="color:var(--gold);">${room.sampleType}</span> from it`;
+  } else if (isOpen) {
+    return `Find or record a <span style="color:var(--gold);">${room.sampleType}</span> and process it to fit a <span style="color:var(--gold);">${room.genre}</span> context`;
+  } else {
+    return isMulti
+      ? `Build your ${room.trackType.toLowerCase()} using samples from the <span style="color:var(--gold);">${room.genre}</span> genre on Splice`
+      : `Find a <span style="color:var(--gold);">${room.sampleType}</span> from the <span style="color:var(--gold);">${room.genre}</span> genre on Splice`;
+  }
+}
+
+function rerollSampleType() {
+  const room = state.currentRoom;
+  if (!room || state.rerolls <= 0 || room.isAlchemist) return;
+  state.rerolls--;
+  room.sampleType = pick(SAMPLE_TYPES[room.trackType] || ['sample']);
+  room.genreDirective = rebuildGenreDirective(room);
+  room.checklist[0].text = room.genreDirective;
+  render();
+}
+
+function rerollGenre() {
+  const room = state.currentRoom;
+  if (!room || state.rerolls <= 0 || room.isAlchemist) return;
+  state.rerolls--;
+  const pool = GENRES_BY_TRACK[room.trackType] || GENRES_BY_TRACK['Drums'];
+  room.genre = pick(pool);
+  room.genreDirective = rebuildGenreDirective(room);
+  room.checklist[0].text = room.genreDirective;
+  render();
+}
+
+function rerollCurse(index) {
+  const room = state.currentRoom;
+  if (!room || state.rerolls <= 0) return;
+  const curse = room.curses[index];
+  if (!curse || curse.type === 'carried') return;
+  state.rerolls--;
+
+  let pool;
+  if (curse.type === 'immediate') {
+    pool = CURSES_IMMEDIATE;
+  } else if (curse.type === 'track') {
+    pool = TRACK_CURSES[room.trackType] || CURSES_IMMEDIATE;
+  } else if (curse.type === 'boss-curse') {
+    pool = state.difficulty === 'nightmare' ? BOSS_CURSES_NIGHTMARE : BOSS_CURSES;
+  } else {
+    return;
+  }
+
+  const otherTexts = room.curses.filter((_, i) => i !== index).map(c => c.text);
+  let newText;
+  let attempts = 0;
+  do { newText = pick(pool); attempts++; } while (otherTexts.includes(newText) && attempts < 20);
+
+  curse.text = newText;
+
+  // Update matching checklist entry
+  const clEntry = room.checklist.find(c => c.id === 'curse-' + index);
+  if (clEntry) clEntry.text = newText;
+
+  render();
+}
+
+function rerollEffect(index) {
+  const room = state.currentRoom;
+  if (!room || state.rerolls <= 0) return;
+  const effect = room.effects[index];
+  if (!effect) return;
+  state.rerolls--;
+
+  const NEEDS_PREVIOUS_TRACK = ['Sidechain Compression'];
+  const isFirstRoom = state.rooms.length === 0;
+  const prevTracks = state.rooms.map(r => r.trackType);
+  const otherNames = room.effects.filter((_, i) => i !== index).map(e => e.name.replace(/\s*\(keyed to .*?\)/, ''));
+
+  let eff;
+  let attempts = 0;
+  do {
+    eff = pick(EFFECTS);
+    attempts++;
+  } while (
+    (otherNames.includes(eff) || (isFirstRoom && NEEDS_PREVIOUS_TRACK.includes(eff))) && attempts < 20
+  );
+
+  let effName = eff;
+  if (eff === 'Sidechain Compression' && prevTracks.length > 0) {
+    const target = prevTracks.includes('Drums') ? 'Drums'
+      : prevTracks.includes('808') ? '808'
+      : prevTracks.includes('Percussion') ? 'Percussion'
+      : prevTracks[prevTracks.length - 1];
+    effName = `Sidechain Compression (keyed to ${target})`;
+  }
+
+  effect.name = effName;
+  effect.percentage = roll(...diff().effectRange);
+
+  // Update matching checklist entry
+  const clEntry = room.checklist.find(c => c.id === 'fx-' + index);
+  if (clEntry) clEntry.text = `${effName} at ${effect.percentage}% wet`;
+
+  render();
 }
 
 // ════════════════════════════════════════════════════════

@@ -1,4 +1,79 @@
 // ════════════════════════════════════════════════════════
+// FLAVOR / GENRE COMPATIBILITY
+// ════════════════════════════════════════════════════════
+// Source-defining flavors (Kit Type, Region, Perc Type, etc.) are filtered
+// to match the rolled genre. Technique/character flavors always pass.
+// If no source flavor matches the genre, falls back to all options.
+
+const SOURCE_FLAVOR_COMPAT = {
+  'Drums': [
+    { match: 'Acoustic Kit',          genreKeys: ['Rock','Jazz','Blues','Funk','Soul','Pop','Country','Folk','Indie','Punk','Reggae','Ska','Gospel','Emo','Shoegaze','Classical','Metal','Disco','Neo Soul','City Pop','Bossa','Cumbia','Salsa','Samba','Flamenco','Afrobeat','Highlife','Soca','Zouk','Psychedelic','Stoner','Math Rock','Post-Rock','Post-Punk','Garage Rock'] },
+    { match: 'Electronic Kit',        genreKeys: ['Techno','House','EDM','Trance','Electro','EBM','Rave','Hardstyle','Eurodance','Synth','Dubstep','Drum and Bass','DnB','Jungle','Breakbeat','Grime','Bassline','Footwork','Hyperpop','Chiptune','Darkwave','Wave','Minimal','Acid','Big Room','Fidget','Future','Industrial','Riddim','Neurofunk','Speed Garage','UK Garage','UK Funky','2-Step','Psytrance','Amapiano','Gqom'] },
+    { match: 'Lo-Fi Kit',             genreKeys: ['Lo-Fi','Boom Bap','Trip Hop','Chill','Downtempo','Vaporwave','City Pop','Cloud Rap','Jazz','Neo Soul','Indie'] },
+    { match: 'Vintage Drum Machine',  genreKeys: ['Electro','Synth','House','Techno','Hip Hop','Trap','Boom Bap','New Wave','Disco','EBM','Industrial','Darkwave','City Pop','Vaporwave','Lo-Fi','Phonk','G-Funk','French House','Acid','Rave','Nu Disco','Drill','R&B','Pop','K-Pop','Drift','Memphis','Jersey','Dancehall','Reggaeton','Amapiano','Gqom'] },
+    { match: 'Breakbeat Kit',         genreKeys: ['Breakbeat','Jungle','DnB','Drum and Bass','Trip Hop','Boom Bap','Hip Hop','Rave','Glitch','Footwork','Neurofunk','Halftime'] },
+    { match: 'World Percussion',      genreKeys: ['Afro','Latin','Reggae','Dancehall','Cumbia','Salsa','Samba','Bossa','Flamenco','World','Ethnic','Caribbean','African','Indian','Middle Eastern','South Asian','Gqom','Highlife','Soca','Zouk','Kizomba','Bhangra','Bollywood','Moombahton','Reggaeton','Brazilian','Organic House','Amapiano','Calypso','Champeta','Kuduro'] }
+  ],
+  'Percussion': [
+    { match: 'Latin (',               genreKeys: ['Latin','Salsa','Cumbia','Reggaeton','Bossa','Samba','Brazilian','Moombahton','Dancehall','Caribbean','Soca','Calypso'] },
+    { match: 'African (',             genreKeys: ['Afro','African','Gqom','Highlife','Amapiano','Soukous','Mbalax','Kuduro','Champeta','Reggae','Dancehall'] },
+    { match: 'Brazilian (',           genreKeys: ['Brazilian','Samba','Bossa','Latin','Cumbia','Afro'] },
+    { match: 'Middle Eastern (',      genreKeys: ['Middle Eastern','Arabic','Turkish','Ethnic','World'] },
+    { match: 'Frame drums',           genreKeys: ['Middle Eastern','Celtic','Irish','Folk','Afro','Indian','World','Ethnic','Latin','Flamenco','Caribbean','Reggae'] },
+    { match: 'Hand drums',            genreKeys: ['Afro','Latin','Middle Eastern','World','Ethnic','Folk','Reggae','Dancehall','Caribbean','Indian','Flamenco'] }
+  ],
+  'World / Ethnic': [
+    { match: 'West African',          genreKeys: ['Afro','African','Highlife','Soukous','Mbalax','Gqom','Amapiano','Kuduro','Champeta'] },
+    { match: 'East African',          genreKeys: ['Afro','African','Ethiopian','Kenyan','Highlife','Amapiano','Gqom'] },
+    { match: 'Indian',                genreKeys: ['Indian','Bhangra','Bollywood','South Asian'] },
+    { match: 'Middle Eastern',        genreKeys: ['Middle Eastern','Arabic','Turkish'] },
+    { match: 'Japanese',              genreKeys: ['Japanese','City Pop','Asian'] },
+    { match: 'Chinese',               genreKeys: ['Chinese','Asian'] },
+    { match: 'Latin American',        genreKeys: ['Latin','Cumbia','Salsa','Andean','Brazilian','Bossa','Samba','Reggaeton','Moombahton'] },
+    { match: 'Caribbean',             genreKeys: ['Caribbean','Dancehall','Reggae','Soca','Calypso','Zouk','Kizomba','Dub'] },
+    { match: 'Celtic',                genreKeys: ['Celtic','Irish','Scottish','Folk'] },
+    { match: 'Southeast Asian',       genreKeys: ['Gamelan','Indonesian','Southeast','Asian'] }
+  ],
+  'Strings': [
+    { match: 'Ethnic strings',        genreKeys: ['Afro','Indian','Middle Eastern','Asian','World','Ethnic','Latin','Folk','Flamenco','Cumbia','Dancehall','Reggae','Bhangra','Bollywood','Caribbean'] }
+  ],
+  'Brass / Woodwinds': [
+    { match: 'Pan flute/ethnic',      genreKeys: ['Latin','Andean','World','Ethnic','Middle Eastern','Asian','Folk','Ambient','Cinematic','Cumbia','Flamenco','Bossa','Downtempo','Afro','Indian','Caribbean','Game Audio'] }
+  ],
+  'Mallets / Tuned Perc': [
+    { match: 'Kalimba',               genreKeys: ['Afro','African','World','Ethnic','Lo-Fi','Chill','Ambient','Indie','Bedroom','Pop','Hip Hop','R&B','Neo Soul','Downtempo','Trip Hop','Dream Pop'] },
+    { match: 'Steel Pan',             genreKeys: ['Caribbean','Soca','Calypso','Dancehall','Reggae','Tropical'] },
+    { match: 'Balafon',               genreKeys: ['Afro','African','Highlife','World','Ethnic'] }
+  ]
+};
+
+function pickCompatibleFlavor(trackType, genre, isAlchemist) {
+  if (isAlchemist) {
+    return ALCHEMIST_FLAVOR
+      ? { label: ALCHEMIST_FLAVOR.label, text: pick(ALCHEMIST_FLAVOR.options) }
+      : null;
+  }
+
+  const flavor = TRACK_FLAVOR[trackType];
+  if (!flavor) return null;
+
+  const rules = SOURCE_FLAVOR_COMPAT[trackType];
+  if (!rules) return { label: flavor.label, text: pick(flavor.options) };
+
+  const genreLower = genre.toLowerCase();
+  const compatible = flavor.options.filter(opt => {
+    const rule = rules.find(r => opt.includes(r.match));
+    if (!rule) return true; // technique/character flavor — always OK
+    return rule.genreKeys.some(k => genreLower.includes(k.toLowerCase()));
+  });
+
+  // If nothing matched (generic genre + all options source-restricted),
+  // fall back to all options — any choice is fine for non-regional genres
+  const pool = compatible.length > 0 ? compatible : flavor.options;
+  return { label: flavor.label, text: pick(pool) };
+}
+
+// ════════════════════════════════════════════════════════
 // GAME LOGIC — Room Generation
 // ════════════════════════════════════════════════════════
 
@@ -25,8 +100,7 @@ function generateRoom(trackType, opts = {}) {
   const genre = pick(genrePool);
   const sampleType = pick(SAMPLE_TYPES[trackType] || ['sample']);
 
-  const flavor = TRACK_FLAVOR[trackType];
-  const flavorRoll = flavor ? { label: flavor.label, text: pick(flavor.options) } : null;
+  const flavorRoll = pickCompatibleFlavor(trackType, genre, isAlchemist);
 
   const multiElementTracks = ['Drums', 'Percussion'];
   const isMulti = multiElementTracks.includes(trackType);
@@ -51,29 +125,36 @@ function generateRoom(trackType, opts = {}) {
   }
 
   const curses = [];
+  const usedCurseTexts = [];
   let newDeferredCurses = [];
   let newNextRoomCurses = [];
 
+  function pickUniqueCurse(pool) {
+    let text;
+    let attempts = 0;
+    do { text = pick(pool); attempts++; } while (usedCurseTexts.includes(text) && attempts < 20);
+    usedCurseTexts.push(text);
+    return text;
+  }
+
   if (state.nextRoomCurses.length > 0) {
     for (const c of state.nextRoomCurses) {
-      curses.push({ text: stripNextRoomPrefix(c), type: 'carried', completed: false });
+      const text = stripNextRoomPrefix(c);
+      usedCurseTexts.push(text);
+      curses.push({ text, type: 'carried', completed: false });
     }
     state.nextRoomCurses = [];
   }
 
   if (isBoss) {
     // Boss rooms get guaranteed curses
-    curses.push({ text: pick(CURSES_IMMEDIATE), type: 'immediate', completed: false });
+    curses.push({ text: pickUniqueCurse(CURSES_IMMEDIATE), type: 'immediate', completed: false });
     // Boss curses (mix-level) — nightmare uses the extreme pool
     const isNightmare = state.difficulty === 'nightmare';
     const bossCursePool = isNightmare ? BOSS_CURSES_NIGHTMARE : BOSS_CURSES;
     const bossCurseCount = roll(...diff().bossCurseRange);
-    const usedBossCurses = [];
     for (let i = 0; i < bossCurseCount; i++) {
-      let bc;
-      do { bc = pick(bossCursePool); } while (usedBossCurses.includes(bc));
-      usedBossCurses.push(bc);
-      curses.push({ text: bc, type: 'boss-curse', completed: false });
+      curses.push({ text: pickUniqueCurse(bossCursePool), type: 'boss-curse', completed: false });
     }
   } else if (isSanctuary) {
     // Sanctuary: no curses at all
@@ -82,10 +163,10 @@ function generateRoom(trackType, opts = {}) {
     const cursedCount = roll(2, 3);
     for (let i = 0; i < cursedCount; i++) {
       if (i === 0) {
-        curses.push({ text: pick(CURSES_IMMEDIATE), type: 'immediate', completed: false });
+        curses.push({ text: pickUniqueCurse(CURSES_IMMEDIATE), type: 'immediate', completed: false });
       } else {
         const pool = TRACK_CURSES[trackType] || CURSES_IMMEDIATE;
-        curses.push({ text: pick(pool), type: 'track', completed: false });
+        curses.push({ text: pickUniqueCurse(pool), type: 'track', completed: false });
       }
     }
   } else {
@@ -98,20 +179,20 @@ function generateRoom(trackType, opts = {}) {
         { value: 'nextRoom', weight: ctw.nextRoom }
       ]);
       if (curseType === 'immediate') {
-        curses.push({ text: pick(CURSES_IMMEDIATE), type: 'immediate', completed: false });
+        curses.push({ text: pickUniqueCurse(CURSES_IMMEDIATE), type: 'immediate', completed: false });
       } else if (curseType === 'track') {
         const pool = TRACK_CURSES[trackType] || CURSES_IMMEDIATE;
-        curses.push({ text: pick(pool), type: 'track', completed: false });
+        curses.push({ text: pickUniqueCurse(pool), type: 'track', completed: false });
       } else if (curseType === 'deferred') {
-        newDeferredCurses.push({ text: pick(CURSES_DEFERRED), completed: false, fromRoom: state.rooms.length + 1 });
+        newDeferredCurses.push({ text: pickUniqueCurse(CURSES_DEFERRED), completed: false, fromRoom: state.rooms.length + 1 });
       } else {
-        newNextRoomCurses.push(pick(CURSES_NEXT_ROOM));
+        newNextRoomCurses.push(pickUniqueCurse(CURSES_NEXT_ROOM));
       }
     }
 
     if (!state.shieldNextRoom && chance(diff().trackCurseChance)) {
       const pool = TRACK_CURSES[trackType] || CURSES_IMMEDIATE;
-      curses.push({ text: pick(pool), type: 'track', completed: false });
+      curses.push({ text: pickUniqueCurse(pool), type: 'track', completed: false });
     }
   }
 

@@ -142,5 +142,31 @@ const ROAD_EVENTS = [
     description: 'A ghostly hand draws curves in the air, parameters moving on their own.',
     reward: { type: 'rerolls', value: 2, text: '+2 Reroll Tokens' },
     cost: 'Add filter automation to every element in your track — nothing stays static from this point on'
+  },
+
+  // ── Wandering Merchants (Rerolls for Deferred Curses) ──
+  {
+    name: 'The Wandering Merchant',
+    description: 'A cloaked merchant appears from the shadows, jingling strange tokens on a chain. "I deal in second chances," he whispers.',
+    reward: { type: 'rerolls', value: 2, text: '+2 Reroll Tokens' },
+    cost: 'A debt is owed — for the next 3 rooms, you must use at least one element pitched down by 3+ semitones (darker than intended)'
+  },
+  {
+    name: 'The Debt Collector',
+    description: 'A skeletal figure in a top hat blocks your path, tapping a ledger with a bony finger. "Everyone pays eventually."',
+    reward: { type: 'rerolls', value: 1, text: '+1 Reroll Token' },
+    cost: 'The collector marks your track — your next room must include a dissonant note or chord that clashes with your key (make it intentional)'
+  },
+  {
+    name: 'The Cursed Pawnbroker',
+    description: 'Behind a cracked display case, a hunched figure polishes dice that glow with an inner light. "Take them. The price comes later."',
+    reward: { type: 'rerolls', value: 2, text: '+2 Reroll Tokens' },
+    cost: 'The pawnbroker\'s mark — duplicate one of your existing elements, detune it slightly, and layer it underneath the original for the rest of the session'
+  },
+  {
+    name: 'The Fortune Teller',
+    description: 'A veiled figure peers into a cracked crystal ball. "I see your future... and I can change it. For a price."',
+    reward: { type: 'rerolls', value: 1, text: '+1 Reroll Token' },
+    cost: 'The fortune demands tribute — add a reversed cymbal or riser before every major transition in your arrangement from this point forward'
   }
 ];

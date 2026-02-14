@@ -415,15 +415,24 @@ function renderRoomActive(room) {
       <!-- Genre Directive -->
       <div class="result-section">
         <div class="result-label genre-label">${room.isAlchemist ? 'Alchemist Directive' : room.isYouTube ? 'YouTube Directive' : 'Genre Directive'}</div>
-        <div class="result-text genre-text">${injectGenreTip(room.genreDirective, room.genre)}</div>
+        <div class="result-text genre-text">
+          ${injectGenreTip(room.genreDirective, room.genre)}
+          ${!room.isAlchemist && state.rerolls > 0 ? `
+            <button class="reroll-btn" onclick="rerollSampleType()" title="Reroll sample type">&#127922; Sample</button>
+            <button class="reroll-btn" onclick="rerollGenre()" title="Reroll genre">&#127922; Genre</button>
+          ` : ''}
+        </div>
       </div>
 
       <!-- Curses -->
       ${room.curses.length > 0 ? `
         <div class="result-section">
           <div class="result-label curse-label">${room.curses.length > 1 ? 'Curses' : 'Curse'}</div>
-          ${room.curses.map(c => `
-            <div class="result-text curse-text">${c.type === 'carried' ? '[CARRIED] ' : c.type === 'boss-curse' ? '[BOSS] ' : ''}${c.text}</div>
+          ${room.curses.map((c, i) => `
+            <div class="result-text curse-text">
+              ${c.type === 'carried' ? '[CARRIED] ' : c.type === 'boss-curse' ? '[BOSS] ' : ''}${c.text}
+              ${c.type !== 'carried' && state.rerolls > 0 ? `<button class="reroll-btn" onclick="rerollCurse(${i})" title="Reroll this curse">&#127922;</button>` : ''}
+            </div>
           `).join('')}
         </div>
       ` : `
@@ -451,9 +460,12 @@ function renderRoomActive(room) {
       ${room.effects.length > 0 ? `
         <div class="result-section">
           <div class="result-label effect-label">Enchantments (Effects)</div>
-          ${room.effects.map(e => `
+          ${room.effects.map((e, i) => `
             <div style="margin-bottom:10px;">
-              <div style="color:var(--purple); margin-bottom:4px;">${effectTip(e.name)}</div>
+              <div style="color:var(--purple); margin-bottom:4px;">
+                ${effectTip(e.name)}
+                ${state.rerolls > 0 ? `<button class="reroll-btn" onclick="rerollEffect(${i})" title="Reroll this effect">&#127922;</button>` : ''}
+              </div>
               <div class="effect-bar">
                 <div class="effect-bar-track">
                   <div class="effect-bar-fill" style="width:${e.percentage}%"></div>
@@ -532,6 +544,7 @@ function renderTransition() {
         <div style="color:var(--dim); font-size:17px; margin:20px 0; line-height:1.6;">
           You left tasks unfinished.<br>No chance to earn a reroll.
         </div>
+        <div style="color:var(--dim); font-family:var(--font-pixel); font-size:11px; letter-spacing:1px; margin-bottom:16px;">STREAK RESET</div>
         <button class="btn" onclick="continueFromTransition()">CONTINUE</button>
       </div>
     `;
@@ -544,6 +557,8 @@ function renderTransition() {
         <div style="color:var(--green); font-family:var(--font-pixel); font-size:14px; margin:16px 0;">
           +2 REROLLS EARNED!
         </div>
+        ${td.streakReward ? '<div class="reward-banner streak-banner"><span class="streak-flames">🔥🔥🔥</span><span>COMPLETION STREAK! +1 REROLL</span></div>' : ''}
+        ${td.curseSurvivor ? '<div class="reward-banner survivor-banner"><span class="survivor-icon">🛡️💀</span><span>CURSE SURVIVOR! +1 REROLL</span></div>' : ''}
         ${td.bossBlessing ? `
           <div style="margin:16px 0; padding:12px 16px; border:1px solid var(--green); border-radius:4px; background:rgba(39,174,96,0.08);">
             <div style="font-family:var(--font-pixel); font-size:10px; color:var(--green); letter-spacing:2px; margin-bottom:8px;">BOSS BLESSING</div>
@@ -565,6 +580,8 @@ function renderTransition() {
         <div style="color:var(--green); font-family:var(--font-pixel); font-size:16px; margin:20px 0; animation: glowPulse 2s infinite;">
           +2 REROLLS EARNED!
         </div>
+        ${td.streakReward ? '<div class="reward-banner streak-banner"><span class="streak-flames">🔥🔥🔥</span><span>COMPLETION STREAK! +1 REROLL</span></div>' : ''}
+        ${td.curseSurvivor ? '<div class="reward-banner survivor-banner"><span class="survivor-icon">🛡️💀</span><span>CURSE SURVIVOR! +1 REROLL</span></div>' : ''}
         <div style="color:var(--dim); font-size:16px; margin-bottom:24px;">
           The spirits reward your bravery.
         </div>
@@ -579,6 +596,7 @@ function renderTransition() {
       <div style="color:var(--dim); font-size:15px; margin-bottom:16px;">
         All tasks completed${td.bonusCompleted ? ' + Bonus' : ''}. The spirits judge your work...
       </div>
+      ${td.streakCount > 0 && !td.streakReward ? `<div class="streak-counter">STREAK: ${td.streakCount}/3</div>` : ''}
       <div class="roll-details" style="margin-bottom:8px;">
         <div style="margin-bottom:6px;"><span class="roll-chance">CHANCE: ${td.rollTarget}%</span></div>
         <div><span style="color:var(--green); font-family:var(--font-pixel); font-size:11px; letter-spacing:2px;">SUCCESS: ${td.rollTarget} OR LOWER</span></div>
@@ -588,6 +606,23 @@ function renderTransition() {
       </div>
       <div id="roll-result-line" class="roll-details" style="display:none; margin-top:8px;"></div>
       <div id="transition-result" class="transition-result" style="display:none;"></div>
+
+      <div id="streak-banner" class="reward-banner streak-banner" style="display:none;">
+        <span class="streak-flames">🔥🔥🔥</span>
+        <span>COMPLETION STREAK! +1 REROLL</span>
+      </div>
+
+      <div id="survivor-banner" class="reward-banner survivor-banner" style="display:none;">
+        <span class="survivor-icon">🛡️💀</span>
+        <span>CURSE SURVIVOR! +1 REROLL</span>
+      </div>
+
+      <div id="don-section">
+        <button id="don-btn" class="btn don-btn" style="display:none;" onclick="doubleOrNothing()">DOUBLE OR NOTHING?</button>
+        <div id="don-coin" class="don-coin" style="display:none;">🪙</div>
+        <div id="don-result" class="don-result" style="display:none;"></div>
+      </div>
+
       <div id="transition-continue" style="display:none;">
         <button class="btn" onclick="continueFromTransition()">CONTINUE</button>
       </div>

@@ -64,6 +64,25 @@ const ALCHEMIST_DIRECTIVES = [
   'Capture the sound of fabric, paper, or packaging being crinkled or torn'
 ];
 
+// ── ALCHEMIST BONUS OBJECTIVES ──────────────────────
+const ALCHEMIST_FLAVOR = { label: 'Recording Challenge', options: [
+  'Layer at least 3 different recorded sounds into a single element',
+  'Process your recording until it\'s completely unrecognizable from the source',
+  'Record your source in a different room than you\'re working in',
+  'Use only your voice or body as the raw sound source',
+  'Capture something with a natural rhythm and preserve that rhythm in your track',
+  'Record the same object/source 5 different ways and use all of them',
+  'Pitch your recording at least 2 octaves away from the original',
+  'Make your recording sound like a completely different instrument',
+  'Use granular processing to turn your recording into a sustained texture',
+  'Record something metallic and turn it into something warm and organic',
+  'Record something quiet — amplify it until it becomes powerful',
+  'Capture a sound with natural reverb (bathroom, stairwell, hallway)',
+  'Use only one single recording as the source for everything in this track element',
+  'Record at least 2 sounds and blend them into one hybrid texture',
+  'Time-stretch your recording to at least 4x its original length'
+]};
+
 // ── CHEST MESSAGES ────────────────────────────────────
 const CHEST_MESSAGES = [
   'A gilded chest materializes from the shadows...',
