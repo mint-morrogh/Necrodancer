@@ -193,18 +193,20 @@ function renderDungeon() {
     <div id="dungeon-screen" class="screen active">
       <div class="dungeon-layout">
         <div class="song-info-bar">
+          <div class="song-info-item" style="color:${{easy:'var(--green)',normal:'var(--text)',hard:'var(--orange)',nightmare:'var(--red)'}[state.difficulty]};">${diff().label}</div>
           <div class="song-info-item">KEY <span>${state.key} ${state.scale}</span></div>
           <div class="song-info-item">BPM <span>${state.bpm}</span></div>
-          <div class="song-info-item" style="color:${{easy:'var(--green)',normal:'var(--text)',hard:'var(--orange)',nightmare:'var(--red)'}[state.difficulty]};">${diff().label}</div>
+          <div class="song-info-divider"></div>
           <div class="song-info-item">FLOOR <span>${state.floor}</span></div>
           <div class="song-info-item">ROOM <span>#${state.rooms.length}</span></div>
+          <div class="song-info-divider"></div>
           <div class="song-info-item">SCORE <span>${state.score}</span></div>
-          <div class="song-info-item">RE-ROLLS <span class="reroll-count">${state.rerolls}</span></div>
           <div class="song-info-item">GOLD <span style="color:var(--gold);">${state.gold}g</span></div>
+          <div class="song-info-item">RE-ROLLS <span class="reroll-count">${state.rerolls}</span></div>
           ${state.relics.length > 0 ? '<div class="song-info-item" style="color:var(--purple);">RELICS <span style="color:var(--purple);">' + state.relics.length + '</span></div>' : ''}
           ${state.shieldNextRoom ? '<div class="song-info-item" style="color:var(--green)">SHIELD ACTIVE</div>' : ''}
-          <button class="rules-btn" onclick="showHelp()">? RULES</button>
         </div>
+        <button class="rules-btn-fixed" onclick="showHelp()">? RULES</button>
 
         <div class="room-main">
           ${mainContent}
@@ -262,7 +264,7 @@ function renderMap() {
       if (isCompleted) classes += ' completed';
       if (isLocked) classes += ' locked';
 
-      const canReroll = isReachable && !isCompleted && node.type !== 'start' && node.type !== 'boss' && node.type !== 'relic' && state.rerolls > 0;
+      const canReroll = isReachable && !isCompleted && node.type !== 'start' && node.type !== 'boss' && state.rerolls > 0;
 
       html += `
         <div class="${classes}" data-node-id="${node.id}"
@@ -660,8 +662,8 @@ function renderTransition() {
       </div>
       ${td.streakCount > 0 && !td.streakReward ? '<div class="streak-counter">STREAK: ' + td.streakCount + '/' + (hasRelic('streak_talisman') ? 2 : 3) + '</div>' : ''}
       <div class="roll-details" style="margin-bottom:8px;">
-        <div style="margin-bottom:6px;"><span class="roll-chance">CHANCE: ${td.rollTarget}%</span></div>
-        <div><span style="color:var(--green); font-family:var(--font-pixel); font-size:11px; letter-spacing:2px;">SUCCESS: ${td.rollTarget} OR LOWER</span></div>
+        <div style="margin-bottom:6px;"><span class="roll-chance">CHANCE: ${101 - td.rollTarget}%</span></div>
+        <div><span style="color:var(--green); font-family:var(--font-pixel); font-size:11px; letter-spacing:2px;">SUCCESS: ${td.rollTarget} OR HIGHER</span></div>
       </div>
       <div class="spell-container" id="spell-container">
         <div class="spell-display"><span id="spell-glyph">✧</span></div>
@@ -681,7 +683,14 @@ function renderTransition() {
 
       <div id="don-section">
         <button id="don-btn" class="btn don-btn" style="display:none;" onclick="doubleOrNothing()">DOUBLE OR NOTHING?</button>
-        <div id="don-coin" class="don-coin" style="display:none;">🪙</div>
+        <div id="don-roll-details" class="roll-details" style="display:none; margin-bottom:8px;">
+          <div style="margin-bottom:6px;"><span class="roll-chance">CHANCE: ${101 - td.rollTarget}%</span></div>
+          <div><span style="color:var(--green); font-family:var(--font-pixel); font-size:11px; letter-spacing:2px;">SUCCESS: ${td.rollTarget} OR HIGHER</span></div>
+        </div>
+        <div class="spell-container" id="don-spell-container" style="display:none;">
+          <div class="spell-display"><span id="don-spell-glyph">✧</span></div>
+        </div>
+        <div id="don-roll-result-line" class="roll-details" style="display:none; margin-top:8px;"></div>
         <div id="don-result" class="don-result" style="display:none;"></div>
       </div>
 
@@ -700,7 +709,7 @@ function renderChest() {
   if (cd.reward === 'reroll') rewardText = '+1 Reroll Token';
   else if (cd.reward === 'blessing') rewardText = 'A Random Blessing';
   else if (cd.reward === 'shield') rewardText = 'Curse Shield (next room)';
-  else if (cd.reward === 'relic' && cd.relicGranted) rewardText = cd.relicGranted.icon + ' ' + cd.relicGranted.name + ' (Relic)';
+  else if (cd.reward === 'relic' && cd.relicGranted) rewardText = cd.relicGranted.name + ' (Relic)';
 
   return `
     <div class="panel chest-panel">
@@ -910,10 +919,9 @@ function renderRelicChoice() {
         ${pc.relics.map(r => {
           const tierInfo = RELIC_TIERS[r.tier];
           return `
-            <div class="relic-card" onclick="selectRelic('${r.id}')">
-              <div class="relic-card-icon">${r.icon}</div>
+            <div class="relic-card" data-tier="${r.tier}" onclick="selectRelic('${r.id}')">
+              <div class="relic-card-name" style="color:${tierInfo.color};">${r.name}</div>
               <div class="relic-card-tier" style="color:${tierInfo.color};">${tierInfo.label}</div>
-              <div class="relic-card-name">${r.name}</div>
               <div class="relic-card-desc">${r.description}</div>
             </div>
           `;
@@ -973,9 +981,8 @@ function renderSessionLog() {
           const tierInfo = RELIC_TIERS[r.tier];
           return `
             <div class="relic-log-item">
-              <span class="relic-log-icon">${r.icon}</span>
               <div>
-                <div style="color:${tierInfo.color}; font-size:14px;">${r.name}</div>
+                <div style="color:${tierInfo.color}; font-size:14px;">${r.name} <span style="font-size:10px; opacity:0.6; text-transform:uppercase; letter-spacing:1px;">${tierInfo.label}</span></div>
                 <div style="color:var(--dim); font-size:12px;">${r.description}</div>
               </div>
             </div>`;

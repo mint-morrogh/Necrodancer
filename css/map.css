@@ -107,8 +107,8 @@
   border: 2px solid var(--purple-dim);
   border-radius: 50%;
   width: 32px; height: 32px;
-  font-size: 16px;
-  color: var(--purple);
+  font-size: 0;
+  color: transparent;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -116,11 +116,22 @@
   z-index: 3;
   transition: all 0.2s;
 }
+.map-node-reroll::after {
+  content: '';
+  display: block;
+  width: 16px;
+  height: 16px;
+  background: url('../assets/redo.png') center/contain no-repeat;
+  filter: brightness(0) saturate(100%) invert(29%) sepia(60%) saturate(1200%) hue-rotate(249deg) brightness(95%) contrast(90%);
+  transition: filter 0.2s;
+}
 .map-node-reroll:hover {
   background: var(--purple-dim);
-  color: #fff;
   transform: scale(1.15);
   box-shadow: 0 0 8px rgba(155,89,182,0.4);
+}
+.map-node-reroll:hover::after {
+  filter: brightness(0) invert(1);
 }
 .map-tooltip {
   display: none;

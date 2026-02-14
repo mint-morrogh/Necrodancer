@@ -145,11 +145,18 @@ function enterNodeFromMap(nodeId) {
     return;
   }
 
-  // Relic nodes go to relic choice screen
+  // Relic nodes: show relic choice first, then enter room
   if (node.type === 'relic') {
-    node.completed = true;
-    enterRelicNode();
-    return;
+    const relics = pickRelicsForChoice(3);
+    if (relics.length > 0) {
+      state.pendingRelicRoom = { nodeId: node.id, trackType: node.trackType };
+      state.pendingRelicChoice = { relics, source: 'node' };
+      state.roomPhase = 'relic-choice';
+      render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    // No relics left — just enter the room normally
   }
 
   enterRoomFromNode(node, node.trackType);
@@ -209,34 +216,38 @@ function pickSingleRelic() {
   })));
 }
 
-function enterRelicNode() {
-  const relics = pickRelicsForChoice(3);
-  if (relics.length === 0) {
-    // All relics collected — just return to map
-    state.roomPhase = 'map';
-    render();
-    return;
-  }
-  state.pendingRelicChoice = { relics, source: 'node' };
-  state.roomPhase = 'relic-choice';
-  render();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
 function selectRelic(relicId) {
   if (!state.relics.includes(relicId)) {
     state.relics.push(relicId);
   }
   const source = state.pendingRelicChoice ? state.pendingRelicChoice.source : 'node';
   state.pendingRelicChoice = null;
-  state.roomPhase = source === 'campfire' ? 'campfire' : 'map';
-  render();
+  afterRelicChoice(source);
 }
 
 function skipRelicChoice() {
   const source = state.pendingRelicChoice ? state.pendingRelicChoice.source : 'node';
   state.pendingRelicChoice = null;
-  state.roomPhase = source === 'campfire' ? 'campfire' : 'map';
+  afterRelicChoice(source);
+}
+
+function afterRelicChoice(source) {
+  if (source === 'campfire') {
+    state.roomPhase = 'campfire';
+    render();
+    return;
+  }
+  // Relic node: enter the room now
+  if (state.pendingRelicRoom) {
+    const pr = state.pendingRelicRoom;
+    state.pendingRelicRoom = null;
+    const node = getNodeById(pr.nodeId);
+    if (node) {
+      enterRoomFromNode(node, pr.trackType);
+      return;
+    }
+  }
+  state.roomPhase = 'map';
   render();
 }
 
@@ -526,11 +537,11 @@ async function sealRoom() {
     } else {
       rollTarget = bonusCompleted ? d.rerollBonusChance : d.rerollChance;
       // Relic: Lucky Die — +10% reroll success chance
-      if (hasRelic('lucky_die')) rollTarget += 10;
+      if (hasRelic('lucky_die')) rollTarget -= 10;
       // Relic: Crown of the Ancients — +10% reroll chance
-      if (hasRelic('crown_of_the_ancients')) rollTarget += 10;
+      if (hasRelic('crown_of_the_ancients')) rollTarget -= 10;
       rollValue = roll(1, 100);
-      earnedReroll = rollValue <= rollTarget;
+      earnedReroll = rollValue >= rollTarget;
       rerollCount = earnedReroll ? 1 : 0;
     }
   }
@@ -688,35 +699,66 @@ async function doubleOrNothing() {
   const btn = document.getElementById('don-btn');
   if (btn) btn.style.display = 'none';
 
+  const td = state.transitionData;
+  const rollTarget = td.rollTarget;
+
+  // Show chance details and spell container
+  const detailsEl = document.getElementById('don-roll-details');
+  if (detailsEl) detailsEl.style.display = 'block';
+
+  const container = document.getElementById('don-spell-container');
+  const spellEl = document.getElementById('don-spell-glyph');
+  if (!container || !spellEl) return;
+  container.style.display = 'inline-block';
+
+  const decorGlyphs = ['✧','✦','✶','❋','✺','❈'];
+
+  // Spawn dust glyphs
+  const dustInterval = setInterval(() => {
+    const dust = document.createElement('span');
+    dust.className = 'spell-dust';
+    dust.textContent = pick(decorGlyphs);
+    dust.style.left = (Math.random() * 60 + 20) + '%';
+    dust.style.top = (Math.random() * 30 + 35) + '%';
+    container.appendChild(dust);
+    setTimeout(() => dust.remove(), 800);
+  }, 100);
+
+  // Cycle through random numbers
+  const steps = 18;
+  for (let i = 0; i < steps; i++) {
+    spellEl.textContent = Math.floor(Math.random() * 101);
+    await sleep(40 + i * 5);
+  }
+
+  clearInterval(dustInterval);
+
+  const finalValue = roll(1, 100);
+  const won = finalValue >= rollTarget;
+
+  spellEl.textContent = finalValue;
+  spellEl.parentElement.classList.add('resolved');
+
+  // Show rolled value
+  const rollLine = document.getElementById('don-roll-result-line');
+  if (rollLine) {
+    rollLine.style.display = 'block';
+    rollLine.innerHTML = `<span class="roll-score">ROLLED: ${finalValue}</span>`;
+  }
+
+  await sleep(300);
+
   const resultEl = document.getElementById('don-result');
-  const coinEl = document.getElementById('don-coin');
-  if (!resultEl || !coinEl) return;
-
-  coinEl.style.display = 'inline-block';
-
-  // Coin flip animation
-  const faces = ['🪙', '✦', '🪙', '✧', '🪙', '★'];
-  for (let i = 0; i < 12; i++) {
-    coinEl.textContent = faces[i % faces.length];
-    coinEl.style.transform = `rotateY(${i * 60}deg)`;
-    await sleep(80 + i * 10);
+  if (resultEl) {
+    resultEl.style.display = 'block';
+    if (won) {
+      state.rerolls += 1;
+      resultEl.innerHTML = '<span class="don-win-text">DOUBLE! +2 REROLLS TOTAL</span>';
+    } else {
+      state.rerolls -= 1;
+      resultEl.innerHTML = '<span class="don-lose-text">NOTHING! REROLL LOST</span>';
+    }
   }
-
-  const won = roll(1, 100) <= 50;
-
-  if (won) {
-    state.rerolls += 1; // net +2 total (original +1 already counted)
-    coinEl.textContent = '🪙';
-    coinEl.className = 'don-coin don-win';
-    resultEl.innerHTML = '<span class="don-win-text">DOUBLE! +2 REROLLS TOTAL</span>';
-  } else {
-    state.rerolls -= 1; // take back the one just earned
-    coinEl.textContent = '✧';
-    coinEl.className = 'don-coin don-lose';
-    resultEl.innerHTML = '<span class="don-lose-text">NOTHING! REROLL LOST</span>';
-  }
-
-  resultEl.style.display = 'block';
 
   const rerollDisplay = document.querySelector('.reroll-count');
   if (rerollDisplay) rerollDisplay.textContent = state.rerolls;
@@ -1097,9 +1139,8 @@ function endSession() {
               const tierInfo = RELIC_TIERS[r.tier];
               return `
                 <div class="relic-log-item">
-                  <span class="relic-log-icon">${r.icon}</span>
                   <div>
-                    <div style="color:${tierInfo.color}; font-size:15px;">${r.name} <span style="font-size:12px; opacity:0.6;">(${tierInfo.label})</span></div>
+                    <div style="color:${tierInfo.color}; font-size:15px;">${r.name} <span style="font-size:10px; opacity:0.6; text-transform:uppercase; letter-spacing:1px;">${tierInfo.label}</span></div>
                     <div style="color:var(--dim); font-size:13px;">${r.description}</div>
                   </div>
                 </div>`;
@@ -1126,7 +1167,7 @@ function newSession() {
     seed: null, seedMode: 'daily', gold: 0, score: 0, chestData: null, pendingRoom: null,
     roadEventData: null, acceptedEvents: [], pendingBlessing: false, postBossCampfire: false,
     floor: 1, map: null, currentNodeId: null, floorHistory: [], setupStep: 1,
-    relics: [], relicUses: {}, pendingRelicChoice: null, rerollsUsedThisRoom: 0
+    relics: [], relicUses: {}, pendingRelicChoice: null, pendingRelicRoom: null, rerollsUsedThisRoom: 0
   };
   render();
 }

@@ -36,6 +36,7 @@ let state = {
   relics: [],
   relicUses: {},
   pendingRelicChoice: null,
+  pendingRelicRoom: null,
   rerollsUsedThisRoom: 0
 };
 
@@ -77,7 +78,7 @@ const DIFFICULTY_SETTINGS = {
     effectWeights: [{ value: 0, weight: 82 }, { value: 1, weight: 18 }],
     effectRange: [5, 30],
     bossCurseRange: [1, 1],
-    rerollChance: 65, rerollBonusChance: 85,
+    rerollChance: 36, rerollBonusChance: 16,
     chestChance: 12, sideQuestChance: 5, alchemistChance: 3, roadEventChance: 15,
     startingRerolls: 2,
     curseTypeWeights: { immediate: 50, track: 15, deferred: 20, nextRoom: 15 },
@@ -90,7 +91,7 @@ const DIFFICULTY_SETTINGS = {
     effectWeights: [{ value: 0, weight: 50 }, { value: 1, weight: 38 }, { value: 2, weight: 12 }],
     effectRange: [5, 50],
     bossCurseRange: [1, 2],
-    rerollChance: 50, rerollBonusChance: 75,
+    rerollChance: 51, rerollBonusChance: 26,
     chestChance: 8, sideQuestChance: 5, alchemistChance: 3, roadEventChance: 18,
     startingRerolls: 1,
     curseTypeWeights: { immediate: 40, track: 20, deferred: 25, nextRoom: 15 },
@@ -103,7 +104,7 @@ const DIFFICULTY_SETTINGS = {
     effectWeights: [{ value: 0, weight: 10 }, { value: 1, weight: 30 }, { value: 2, weight: 40 }, { value: 3, weight: 20 }],
     effectRange: [20, 100],
     bossCurseRange: [2, 3],
-    rerollChance: 35, rerollBonusChance: 55,
+    rerollChance: 66, rerollBonusChance: 46,
     chestChance: 5, sideQuestChance: 7, alchemistChance: 4, roadEventChance: 22,
     startingRerolls: 1,
     curseTypeWeights: { immediate: 35, track: 25, deferred: 25, nextRoom: 15 },
@@ -116,7 +117,7 @@ const DIFFICULTY_SETTINGS = {
     effectWeights: [{ value: 0, weight: 3 }, { value: 1, weight: 12 }, { value: 2, weight: 35 }, { value: 3, weight: 35 }, { value: 4, weight: 15 }],
     effectRange: [40, 100],
     bossCurseRange: [2, 4],
-    rerollChance: 20, rerollBonusChance: 40,
+    rerollChance: 81, rerollBonusChance: 61,
     chestChance: 3, sideQuestChance: 10, alchemistChance: 5, roadEventChance: 25,
     startingRerolls: 0,
     curseTypeWeights: { immediate: 30, track: 25, deferred: 30, nextRoom: 15 },

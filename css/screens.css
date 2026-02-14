@@ -178,20 +178,24 @@
 }
 .song-info-item { font-family: var(--font-pixel); font-size: 11px; color: var(--dim); letter-spacing: 1px; }
 .song-info-item span { color: var(--gold); margin-left: 6px; }
+.song-info-divider { width: 1px; height: 16px; background: var(--border); flex-shrink: 0; }
 .reroll-count { color: var(--purple) !important; }
-.rules-btn {
+.rules-btn-fixed {
   font-family: var(--font-pixel);
   font-size: 10px;
   color: var(--dim);
-  background: none;
+  background: var(--panel);
   border: 1px solid var(--border);
   padding: 4px 10px;
   cursor: pointer;
   letter-spacing: 1px;
-  margin-left: auto;
   transition: all 0.2s;
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 90;
 }
-.rules-btn:hover { color: var(--gold); border-color: var(--gold-dim); }
+.rules-btn-fixed:hover { color: var(--gold); border-color: var(--gold-dim); }
 
 .room-header { font-family: var(--font-pixel); font-size: 18px; color: var(--gold); text-align: center; margin-bottom: 12px; animation: glowPulse 3s ease-in-out infinite; }
 .room-number { font-family: var(--font-pixel); font-size: 11px; color: var(--dim); text-align: center; margin-bottom: 16px; letter-spacing: 3px; }
@@ -738,21 +742,35 @@
   background: var(--panel-alt);
   border: 2px solid var(--purple-dim);
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  font-size: 16px;
-  color: var(--purple);
+  width: 28px;
+  height: 28px;
+  font-size: 0;
+  color: transparent;
   cursor: pointer;
   margin: 0 6px;
   vertical-align: middle;
+  position: relative;
+  top: -5px;
   padding: 0;
+  line-height: 1;
   transition: all 0.2s;
+}
+.reroll-inline::after {
+  content: '';
+  display: block;
+  width: 14px;
+  height: 14px;
+  background: url('../assets/redo.png') center/contain no-repeat;
+  filter: brightness(0) saturate(100%) invert(29%) sepia(60%) saturate(1200%) hue-rotate(249deg) brightness(95%) contrast(90%);
+  transition: filter 0.2s;
 }
 .reroll-inline:hover {
   background: var(--purple-dim);
-  color: #fff;
   transform: scale(1.15);
   box-shadow: 0 0 8px rgba(155,89,182,0.4);
+}
+.reroll-inline:hover::after {
+  filter: brightness(0) invert(1);
 }
 
 /* ========== FLOOR COMPLETE SCREEN ========== */
@@ -951,48 +969,69 @@
 }
 .relic-choices {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 16px;
-  max-width: 680px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 18px;
+  max-width: 720px;
   margin: 0 auto;
 }
 .relic-card {
   border: 2px solid var(--border);
   border-radius: 6px;
-  padding: 20px 16px;
+  padding: 24px 20px;
   background: var(--panel);
   cursor: pointer;
   transition: all 0.3s ease;
   text-align: center;
 }
+/* Rarity-colored borders and backgrounds */
+.relic-card[data-tier="common"] {
+  border-color: var(--border-light);
+}
+.relic-card[data-tier="rare"] {
+  border-color: var(--purple-dim);
+  background: rgba(155,89,182,0.06);
+}
+.relic-card[data-tier="legendary"] {
+  border-color: var(--gold-dim);
+  background: rgba(212,165,116,0.08);
+}
 .relic-card:hover {
-  border-color: var(--purple);
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(155,89,182,0.3);
+}
+.relic-card[data-tier="common"]:hover {
+  border-color: var(--text);
+  box-shadow: 0 8px 24px rgba(200,192,184,0.15);
   background: var(--panel-alt);
 }
-.relic-card-icon {
-  font-size: 36px;
-  margin-bottom: 8px;
+.relic-card[data-tier="rare"]:hover {
+  border-color: var(--purple);
+  box-shadow: 0 8px 24px rgba(155,89,182,0.3);
+  background: rgba(155,89,182,0.1);
+}
+.relic-card[data-tier="legendary"]:hover {
+  border-color: var(--gold);
+  box-shadow: 0 8px 24px rgba(212,165,116,0.3);
+  background: rgba(212,165,116,0.12);
+}
+.relic-card-name {
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  letter-spacing: 1px;
+  line-height: 1.6;
+  margin-bottom: 10px;
 }
 .relic-card-tier {
   font-family: var(--font-pixel);
   font-size: 9px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  margin-bottom: 6px;
-}
-.relic-card-name {
-  font-family: var(--font-pixel);
-  font-size: 11px;
-  color: var(--text);
-  letter-spacing: 1px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  opacity: 0.7;
 }
 .relic-card-desc {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--dim);
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 /* Relic collection in quest log and session end */
@@ -1000,15 +1039,8 @@
   margin-top: 16px;
 }
 .relic-log-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   padding: 8px 0;
   border-bottom: 1px solid var(--border);
-}
-.relic-log-icon {
-  font-size: 20px;
-  flex-shrink: 0;
 }
 
 /* ========== MASTERY POPUP (in-room overlay) ========== */

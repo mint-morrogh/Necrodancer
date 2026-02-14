@@ -39,7 +39,7 @@ function generateNodePreview(nodeType, trackType) {
     curseCount = roll(2, 3);
     hasBlessing = false;
     effectCount = Math.min(weightedPick(diff().effectWeights) + 1, 4);
-  } else if (nodeType === 'campfire' || nodeType === 'relic') {
+  } else if (nodeType === 'campfire') {
     curseCount = 0; effectCount = 0; hasBlessing = false;
   } else if (nodeType === 'boss') {
     curseCount = roll(...diff().bossCurseRange) + 1;
@@ -105,7 +105,7 @@ function generateFloorMap(floorNum) {
       const nodeType = pickNodeType(canSpawnCampfire && !campfirePlaced);
       const isCampfire = nodeType === 'campfire';
       if (isCampfire) campfirePlaced = true;
-      const trackType = (isCampfire || nodeType === 'relic') ? null : drawTrackType();
+      const trackType = isCampfire ? null : drawTrackType();
       row.push({
         id: `${r}-${n}`,
         type: nodeType,
