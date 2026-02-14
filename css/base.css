@@ -123,10 +123,17 @@ body {
 @media (max-width: 900px) {
   .log-panel { width: 300px; }
   .log-toggle.open { right: 300px; }
+  .map-row { gap: 24px; }
+  .map-rows { gap: 40px; }
+  .map-node { min-width: 100px; padding: 10px 16px; }
+  .map-container { padding: 32px 20px; }
 }
 @media (max-width: 600px) {
-  .map-node { min-width: 80px; padding: 8px 10px; font-size: 12px; }
-  .map-node-icon { font-size: 16px; }
-  .map-node-type { font-size: 7px; }
-  .map-row { gap: 8px; }
+  .map-row { gap: 10px; }
+  .map-rows { gap: 28px; }
+  .map-node { min-width: 70px; padding: 6px 8px; }
+  .map-node-type { font-size: 8px; letter-spacing: 0.5px; }
+  .map-node-track { font-size: 11px; }
+  .map-container { padding: 20px 8px; }
+  .map-tooltip { min-width: 160px; font-size: 12px; padding: 8px 12px; }
 }

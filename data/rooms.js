@@ -81,28 +81,47 @@ const BOSS_ROOM_NAMES = [
   'The Bone Orchestra Pit','Sanctum of the Final Mix','The Phantom Conductor\'s Podium'
 ];
 
-// ── BOSS CURSES (mix-level constraints) ──────────────
+// ── BOSS CURSES (master bus challenges — still allow a good mix) ──
 const BOSS_CURSES = [
-  'Master bus must have no more than 3dB of dynamic range — brick-wall limit everything',
-  'The entire mix must be mono-compatible — check in mono and fix any phase issues before continuing',
-  'No element in the mix may exceed -6dB peak — strict gain staging required',
-  'The master bus must run through a tape saturation plugin for the rest of the session',
-  'All elements must be frequency-separated — no two tracks may share the same dominant frequency band',
-  'The stereo field must be managed: nothing below 200Hz in the sides, nothing above 10kHz in mono center',
+  'Add a bit crusher to the master bus — keep it subtle enough that the mix still sounds intentional',
+  'Add a flanger to the master bus at low depth — the whole mix should shimmer slightly',
+  'Add a phaser to the master bus — slow rate, low mix, just enough to feel the movement',
+  'Put a reverb on the master bus — short decay, under 20% wet, the mix lives in a room now',
+  'Add a chorus effect to the master bus — keep it tight so the mix widens without getting washy',
+  'Run the master bus through a tape saturation plugin for the rest of the session',
   'Apply a 1dB per octave tilt EQ to the master bus — bright or dark, your choice, but commit',
-  'The mix must pass the car test — it should translate on laptop speakers (check with a reference)',
+  'Cut a frequency band of your choice on the master bus by 50% — carve a hole in the mix',
+  'Boost the master bus above 8kHz by 3dB — add some air and sizzle to everything',
+  'Roll off everything below 40Hz on the master bus — tighten up the sub',
+  'Apply parallel compression to the mix bus — blend at no more than 30%',
+  'Sidechain the entire mix bus to a ghost kick at -24dB — subtle pumping on the master',
+  'Add a stereo widener to the master bus — push the sides out but keep the low end centered',
   'No reverb or delay sends may exceed -12dB — keep spatial effects subtle for the rest of the session',
   'Every track must have at least one automation lane active from this point forward',
-  'The master bus must have mid-side processing engaged — process mid and side channels differently',
-  'Sidechain the entire mix bus to a ghost kick at -24dB — subtle pumping on the master',
-  'All elements must be properly gain-staged: pre-fader levels between -18dB and -12dB',
-  'The mix must have a clear low-end hierarchy — only ONE element owns the sub-bass at any time',
-  'Apply parallel compression to the mix bus — blend at no more than 30%',
-  'The stereo image must alternate: verse narrow (50% width), chorus wide (120% width)',
-  'No track may have more than 5 plugins — strip back to essentials from this point forward',
-  'All reverb tails must be ducked by -6dB when vocals/lead play — clarity over ambience',
   'The mix must breathe: automate master volume ±1dB between sections for dynamic movement',
-  'Every frequency band (sub, low, mid, high, air) must have a designated owner track — no fights'
+  'Add a multiband compressor to the master bus — tame at least two frequency bands',
+  'Put a de-esser on the master bus targeting 5-8kHz — tame any harshness across the mix',
+  'Add a tremolo effect to the master bus — slow rate, shallow depth, gentle pulse on everything',
+  'Apply a vinyl/lo-fi plugin to the master bus — add some dust, crackle, or age to the mix'
+];
+
+// ── BOSS CURSES NIGHTMARE (extreme — can destroy the mix) ──────
+const BOSS_CURSES_NIGHTMARE = [
+  'Master bus must have no more than 3dB of dynamic range — brick-wall limit everything',
+  'No element in the mix may exceed -6dB peak — strict gain staging required',
+  'All elements must be frequency-separated — no two tracks may share the same dominant frequency band',
+  'The stereo field must be managed: nothing below 200Hz in the sides, nothing above 10kHz in mono center',
+  'The entire mix must be collapsed to mono — no stereo field allowed',
+  'All elements must be gain-staged: pre-fader levels between -18dB and -12dB with no exceptions',
+  'The stereo image must alternate: verse narrow (50% width), chorus wide (120% width)',
+  'No track may have more than 3 plugins total — strip back to absolute essentials',
+  'Every frequency band (sub, low, mid, high, air) must have a designated owner track — no overlap allowed',
+  'The master bus must have mid-side processing — cut the mids by 3dB and boost the sides by 3dB',
+  'All reverb tails must be ducked by -6dB when any lead element plays — total clarity enforcement',
+  'Bounce the entire mix to a single stem, re-import it, and build a new arrangement layer on top',
+  'Add a ring modulator to the master bus — find a setting that sounds intentional, not broken',
+  'Apply a resonant bandpass filter to the master bus — sweep it manually across the whole track',
+  'Run the master through a guitar amp sim — the whole mix is now distorted and cabinet-colored'
 ];
 
 // ── BOSS BLESSINGS (powerful rewards) ────────────────

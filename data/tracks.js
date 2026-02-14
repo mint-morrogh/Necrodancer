@@ -642,17 +642,11 @@ const SAMPLE_TYPES = {
     'whispered ensemble','choir texture','choir one-shot','choral drone'
   ],
   'Foley / Found Sound': [
-    'door slam','glass break','footstep loop','water splash',
-    'mechanical click','paper crumple','metal scrape','rain recording',
-    'traffic ambience','kitchen sounds','typewriter loop','clock tick',
-    'wind recording','fire crackle','crowd murmur','bird song recording',
-    'city street ambience','forest ambience','underwater recording',
-    'machinery hum','chain rattle','wood creak','fabric rustle',
-    'coin drop','zipper pull','switch click','body percussion',
-    'hand clap recording','finger snap recording','breath sound',
-    'whistle recording','mouth click','tongue pop','lip smack',
-    'pen tapping','key jingle','drawer open/close','bottle hit',
-    'plastic crinkle','cardboard tear','stone scrape'
+    'foley hit','found sound loop','texture recording','impact sound',
+    'environmental ambience','percussive foley','rhythmic found sound',
+    'organic noise sample','found sound one-shot','field recording loop',
+    'textural foley layer','found sound percussion','ambient recording',
+    'foley texture','recorded sound effect','natural sound sample'
   ],
 
   // ── ADDED TRACK TYPES ──────────────────────────────────
@@ -912,17 +906,17 @@ const TRACK_FLAVOR = {
     'Throat singing ensemble (overtone-rich — Tuvan/Mongolian harmonic singing)',
     'Processed/effected choir (glitchy, modern — granular, reversed, mangled)'
   ]},
-  'Foley / Found Sound': { label: 'Source', options: [
-    'Urban (traffic, construction, subway — city noise as musical material)',
-    'Nature (forest, water, wind, birds — organic environmental sounds)',
-    'Domestic (kitchen, doors, household — everyday home objects)',
-    'Industrial (machinery, factory, metal — heavy, rhythmic, mechanical)',
-    'Body (claps, snaps, breath, footsteps — human-generated percussion)',
-    'Office (typing, paper, printer, phone — workplace sounds)',
-    'Water (rain, drips, splash, underwater — liquid textures)',
-    'Public space (crowd, cafe, station — ambient human activity)',
-    'Mechanical (gears, motors, clockwork — repetitive, ticking, grinding)',
-    'Electronic (feedback, hum, static, interference — electromagnetic sounds)'
+  'Foley / Found Sound': { label: 'Recording Location', options: [
+    'Record outdoors (traffic, wind, birds, footsteps — capture something outside)',
+    'Record at home (kitchen, doors, tapping, household objects — domestic sounds)',
+    'Record your own body (claps, snaps, breath, stomps — no gear needed)',
+    'Record something metal (keys, coins, pots, tools — metallic resonance)',
+    'Record something with water (drips, splash, pouring, rain — liquid sounds)',
+    'Record a public space (cafe, store, crowd, station — ambient activity)',
+    'Record a workspace (typing, drawer, chair, pen — office or desk sounds)',
+    'Record something wooden (knocking, creaking, tapping — organic resonance)',
+    'Record plastic or paper (crinkle, tear, rustle, crumple — disposable textures)',
+    'Record something glass or ceramic (clink, tap, ring, shatter — fragile tones)'
   ]},
 
   // ── ADDED TRACK TYPES ──────────────────────────────────

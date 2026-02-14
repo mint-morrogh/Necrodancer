@@ -31,6 +31,10 @@ function generateRoom(trackType, opts = {}) {
   const multiElementTracks = ['Drums', 'Percussion'];
   const isMulti = multiElementTracks.includes(trackType);
 
+  // Track types where genre is a processing context, not a Splice search filter
+  const openDirectiveTracks = ['Foley / Found Sound'];
+  const isOpenDirective = openDirectiveTracks.includes(trackType);
+
   let genreDirective;
   if (isAlchemist) {
     genreDirective = pick(ALCHEMIST_DIRECTIVES);
@@ -38,6 +42,8 @@ function generateRoom(trackType, opts = {}) {
     genreDirective = isMulti
       ? `Find a <span style="color:var(--gold);">${genre}</span> track on YouTube and sample your ${trackType.toLowerCase()} from it`
       : `Find a <span style="color:var(--gold);">${genre}</span> track on YouTube and sample a <span style="color:var(--gold);">${sampleType}</span> from it`;
+  } else if (isOpenDirective) {
+    genreDirective = `Find or record a <span style="color:var(--gold);">${sampleType}</span> and process it to fit a <span style="color:var(--gold);">${genre}</span> context`;
   } else {
     genreDirective = isMulti
       ? `Build your ${trackType.toLowerCase()} using samples from the <span style="color:var(--gold);">${genre}</span> genre on Splice`
@@ -58,12 +64,14 @@ function generateRoom(trackType, opts = {}) {
   if (isBoss) {
     // Boss rooms get guaranteed curses
     curses.push({ text: pick(CURSES_IMMEDIATE), type: 'immediate', completed: false });
-    // Boss curses (mix-level)
+    // Boss curses (mix-level) — nightmare uses the extreme pool
+    const isNightmare = state.difficulty === 'nightmare';
+    const bossCursePool = isNightmare ? BOSS_CURSES_NIGHTMARE : BOSS_CURSES;
     const bossCurseCount = roll(...diff().bossCurseRange);
     const usedBossCurses = [];
     for (let i = 0; i < bossCurseCount; i++) {
       let bc;
-      do { bc = pick(BOSS_CURSES); } while (usedBossCurses.includes(bc));
+      do { bc = pick(bossCursePool); } while (usedBossCurses.includes(bc));
       usedBossCurses.push(bc);
       curses.push({ text: bc, type: 'boss-curse', completed: false });
     }

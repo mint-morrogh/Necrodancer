@@ -169,6 +169,20 @@ function enterRoomFromNode(node, trackType) {
     isAlchemist = true;
   }
 
+  // Road event roll (non-boss, non-campfire, not first room)
+  const roadEventChance = diff().roadEventChance || 0;
+  if (!isBoss && node.type !== 'campfire' && state.rooms.length > 0 && chance(roadEventChance)) {
+    const event = pick(ROAD_EVENTS);
+    state.roadEventData = {
+      event,
+      pendingRoom: { trackType, isSideQuest, originalTrackType, isAlchemist, isBoss, nodeId: node.id, isCursed, isSanctuary }
+    };
+    state.roomPhase = 'road-event';
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
+
   // Chest roll (non-boss, non-campfire)
   if (!isBoss && node.type !== 'campfire' && chance(diff().chestChance)) {
     state.chestData = {
@@ -304,6 +318,14 @@ function toggleDeferred(index) {
     const text = curses[index].querySelector('.pending-text');
     if (box) { box.classList.toggle('checked', done); box.textContent = done ? '✓' : ''; }
     if (text) { text.classList.toggle('done', done); }
+    curses[index].classList.toggle('resolved', done);
+  }
+
+  // Update quest log toggle button pulse
+  const toggle = document.getElementById('log-toggle');
+  if (toggle) {
+    const hasPending = state.deferredCurses.some(c => !c.completed);
+    toggle.classList.toggle('has-curses', hasPending);
   }
 }
 
@@ -385,32 +407,29 @@ async function animateSpell() {
   const td = state.transitionData;
   const finalValue = td.rollValue;
 
-  // Spawn floating dust particles during animation
+  // Spawn small dust glyphs floating off the number
   const dustInterval = setInterval(() => {
     if (!container) return;
     const dust = document.createElement('span');
     dust.className = 'spell-dust';
     dust.textContent = pick(decorGlyphs);
-    dust.style.left = (Math.random() * 80 + 10) + '%';
-    dust.style.top = (Math.random() * 40 + 30) + '%';
+    dust.style.left = (Math.random() * 60 + 20) + '%';
+    dust.style.top = (Math.random() * 30 + 35) + '%';
     container.appendChild(dust);
-    setTimeout(() => dust.remove(), 1000);
-  }, 120);
+    setTimeout(() => dust.remove(), 800);
+  }, 100);
 
-  // Cycle through random numbers 0-100 with decorative glyphs flanking
-  const steps = 28;
+  // Cycle through random numbers 0-100 — fast and clean
+  const steps = 18;
   for (let i = 0; i < steps; i++) {
-    const randNum = Math.floor(Math.random() * 101);
-    const leftGlyph = pick(decorGlyphs);
-    const rightGlyph = pick(decorGlyphs);
-    spellEl.innerHTML = `<span style="font-size:0.4em; opacity:0.5; vertical-align:middle;">${leftGlyph}</span> ${randNum} <span style="font-size:0.4em; opacity:0.5; vertical-align:middle;">${rightGlyph}</span>`;
-    await sleep(60 + i * 6); // gradually slow down
+    spellEl.textContent = Math.floor(Math.random() * 101);
+    await sleep(40 + i * 5); // starts fast, slows slightly
   }
 
   clearInterval(dustInterval);
 
   // Land on the actual roll value
-  spellEl.innerHTML = `<span style="font-size:0.4em; opacity:0.5; vertical-align:middle;">✦</span> ${finalValue} <span style="font-size:0.4em; opacity:0.5; vertical-align:middle;">✦</span>`;
+  spellEl.textContent = finalValue;
   spellEl.parentElement.classList.add('resolved');
 
   if (td.earnedReroll) {
@@ -528,6 +547,17 @@ function proceedFromChest() {
     if (b.includes('NEXT room cannot be cursed')) state.shieldNextRoom = true;
   }
 
+  // Apply pending blessing from road event (if no blessing yet)
+  if (state.pendingBlessing) {
+    if (!state.currentRoom.blessing) {
+      state.currentRoom.blessing = pick(BLESSINGS);
+      const b = state.currentRoom.blessing;
+      if (b.includes('re-roll token') || b.includes('reroll token')) state.rerolls++;
+      if (b.includes('NEXT room cannot be cursed')) state.shieldNextRoom = true;
+    }
+    state.pendingBlessing = false;
+  }
+
   state.chestData = null;
   state.pendingRoom = null;
   state.roomPhase = 'active';
@@ -560,6 +590,84 @@ function buyCampfireItem(type) {
 function leaveCampfire() {
   state.roomPhase = 'map';
   render();
+}
+
+function acceptRoadEvent() {
+  const rd = state.roadEventData;
+  if (!rd) return;
+
+  const reward = rd.event.reward;
+
+  // Apply reward
+  if (reward.type === 'rerolls') {
+    state.rerolls += reward.value;
+  } else if (reward.type === 'gold') {
+    state.gold += reward.value;
+  } else if (reward.type === 'shield') {
+    state.shieldNextRoom = true;
+  } else if (reward.type === 'blessing') {
+    // Blessing will be applied to the next room — store as a deferred blessing
+    state.pendingBlessing = true;
+  }
+
+  // Track accepted events for the session log
+  if (!state.acceptedEvents) state.acceptedEvents = [];
+  state.acceptedEvents.push({ name: rd.event.name, cost: rd.event.cost, reward: reward.text });
+
+  // Continue to room (same flow as normal entry)
+  continueFromRoadEvent(rd.pendingRoom);
+}
+
+function declineRoadEvent() {
+  const rd = state.roadEventData;
+  if (!rd) return;
+  continueFromRoadEvent(rd.pendingRoom);
+}
+
+function continueFromRoadEvent(pending) {
+  state.roadEventData = null;
+  const node = getNodeById(pending.nodeId);
+
+  // Check for chest (same roll as normal flow)
+  if (!pending.isBoss && node.type !== 'campfire' && chance(diff().chestChance)) {
+    state.chestData = {
+      message: pick(CHEST_MESSAGES),
+      reward: weightedPick([
+        { value: 'reroll', weight: 40 },
+        { value: 'blessing', weight: 35 },
+        { value: 'shield', weight: 25 }
+      ]),
+      collected: false
+    };
+    state.pendingRoom = pending;
+    state.roomPhase = 'chest';
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
+
+  // Generate room
+  const opts = { isAlchemist: pending.isAlchemist, isBoss: pending.isBoss, isCursed: pending.isCursed, isSanctuary: pending.isSanctuary };
+  state.currentRoom = generateRoom(pending.trackType, opts);
+  state.currentRoom.isSideQuest = pending.isSideQuest;
+  state.currentRoom.originalTrackType = pending.originalTrackType;
+  state.currentRoom.nodeId = pending.nodeId;
+  if (pending.isBoss) state.rerolls += 2;
+
+  // Apply pending blessing from road event
+  if (state.pendingBlessing) {
+    if (!state.currentRoom.blessing) {
+      state.currentRoom.blessing = pick(BLESSINGS);
+      const b = state.currentRoom.blessing;
+      if (b.includes('re-roll token') || b.includes('reroll token')) state.rerolls++;
+      if (b.includes('NEXT room cannot be cursed')) state.shieldNextRoom = true;
+    }
+    state.pendingBlessing = false;
+  }
+
+  state.roomPhase = 'active';
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function showHelp() {
@@ -692,6 +800,7 @@ function newSession() {
     roomPhase: 'map', transitionData: null, deferredCurses: [],
     nextRoomCurses: [], shieldNextRoom: false, usedRoomNames: [],
     seed: null, seedMode: 'daily', gold: 0, score: 0, chestData: null, pendingRoom: null,
+    roadEventData: null, acceptedEvents: [], pendingBlessing: false,
     floor: 1, map: null, currentNodeId: null, floorHistory: [], setupStep: 1
   };
   render();
@@ -736,6 +845,17 @@ function generateBeatSheet() {
     sheet += `\n`;
   }
 
+  if (state.acceptedEvents && state.acceptedEvents.length > 0) {
+    sheet += `${'─'.repeat(44)}\n`;
+    sheet += `ROAD EVENT DEALS\n`;
+    sheet += `${'─'.repeat(44)}\n`;
+    for (const ev of state.acceptedEvents) {
+      sheet += `${ev.name} (${ev.reward})\n`;
+      sheet += `   Cost: ${ev.cost}\n`;
+    }
+    sheet += `\n`;
+  }
+
   sheet += `${'═'.repeat(44)}\n`;
   sheet += `Generated by NECRODANCER - Production Dungeon Crawler\n`;
 
@@ -767,5 +887,48 @@ function downloadBeatSheet() {
 // ════════════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════════════
+
+// Redraw map connections on window resize so lines stay aligned with nodes
+let _resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(() => {
+    if (state.roomPhase === 'map') drawMapConnections();
+  }, 50);
+});
+
+// Tooltip repositioning — prevent tooltips from going off-screen
+document.addEventListener('mouseenter', (e) => {
+  // Handle .info-tip tooltips
+  const infoTip = e.target.closest('.info-tip');
+  if (infoTip) {
+    const tip = infoTip.querySelector('.info-tip-content');
+    if (!tip) return;
+    // Reset classes before measuring
+    tip.classList.remove('tip-below', 'tip-left', 'tip-right');
+    // Brief display to measure
+    tip.style.display = 'block';
+    const rect = tip.getBoundingClientRect();
+    tip.style.display = '';
+    // Vertical: flip below if clipped at top
+    if (rect.top < 0) tip.classList.add('tip-below');
+    // Horizontal: nudge if clipped
+    if (rect.left < 0) tip.classList.add('tip-left');
+    else if (rect.right > window.innerWidth) tip.classList.add('tip-right');
+  }
+  // Handle .map-node tooltips
+  const mapNode = e.target.closest('.map-node');
+  if (mapNode) {
+    const tip = mapNode.querySelector('.map-tooltip');
+    if (!tip) return;
+    tip.classList.remove('tip-below', 'tip-left', 'tip-right');
+    tip.style.display = 'block';
+    const rect = tip.getBoundingClientRect();
+    tip.style.display = '';
+    if (rect.top < 0) tip.classList.add('tip-below');
+    if (rect.left < 0) tip.classList.add('tip-left');
+    else if (rect.right > window.innerWidth) tip.classList.add('tip-right');
+  }
+}, true);
 
 render();

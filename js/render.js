@@ -6,6 +6,34 @@ const app = document.getElementById('app');
 let _lastScreen = null;
 let _lastRoomPhase = null;
 
+// ── Tooltip Helpers ──────────────────────────────────────
+function effectTip(name) {
+  const baseName = name.replace(/\s*\(keyed to .*?\)/, '');
+  const info = typeof EFFECT_DESCRIPTIONS !== 'undefined' && EFFECT_DESCRIPTIONS[baseName];
+  if (!info) return name;
+  return `<span class="info-tip">${name}<span class="info-tip-content info-tip-effect"><div class="info-tip-title">${baseName}</div><div class="info-tip-desc">${info.desc}</div><div class="info-tip-field"><strong>Plugins:</strong> ${info.plugins}</div><div class="info-tip-field"><strong>DAW Tips:</strong> ${info.daw}</div></span></span>`;
+}
+
+function genreTip(name) {
+  const info = typeof GENRE_DESCRIPTIONS !== 'undefined' && GENRE_DESCRIPTIONS[name];
+  if (!info) return `<span style="color:var(--gold);">${name}</span>`;
+  return `<span class="info-tip" style="color:var(--gold);">${name}<span class="info-tip-content info-tip-genre"><div class="info-tip-title">${name}</div><div class="info-tip-desc">${info.desc}</div><div class="info-tip-field"><strong>BPM Range:</strong> ${info.bpm}</div><div class="info-tip-field"><strong>Characteristics:</strong> ${info.traits}</div></span></span>`;
+}
+
+function trackTip(name) {
+  const info = typeof TRACK_TYPE_DESCRIPTIONS !== 'undefined' && TRACK_TYPE_DESCRIPTIONS[name];
+  if (!info) return name;
+  return `<span class="info-tip">${name}<span class="info-tip-content info-tip-track"><div class="info-tip-title">${name}</div><div class="info-tip-desc">${info.desc}</div><div class="info-tip-field"><strong>Tips:</strong> ${info.tips}</div><div class="info-tip-field"><strong>Splice:</strong> ${info.search}</div></span></span>`;
+}
+
+function injectGenreTip(directive, genre) {
+  if (!genre || typeof GENRE_DESCRIPTIONS === 'undefined' || !GENRE_DESCRIPTIONS[genre]) return directive;
+  return directive.replace(
+    `<span style="color:var(--gold);">${genre}</span>`,
+    genreTip(genre)
+  );
+}
+
 function render() {
   const screenChanged = state.screen !== _lastScreen;
   const phaseChanged = state.roomPhase !== _lastRoomPhase;
@@ -140,6 +168,8 @@ function renderDungeon() {
     mainContent = renderChest();
   } else if (state.roomPhase === 'campfire') {
     mainContent = renderCampfire();
+  } else if (state.roomPhase === 'road-event') {
+    mainContent = renderRoadEvent();
   } else {
     mainContent = renderRoomActive(state.currentRoom);
   }
@@ -168,7 +198,7 @@ function renderDungeon() {
       </div>
 
       <div class="log-overlay" id="log-overlay" onclick="toggleQuestLog()"></div>
-      <button class="log-toggle" id="log-toggle" onclick="toggleQuestLog()">
+      <button class="log-toggle ${state.deferredCurses.some(c => !c.completed) ? 'has-curses' : ''}" id="log-toggle" onclick="toggleQuestLog()">
         QUEST LOG
       </button>
       <div class="panel log-panel" id="log-panel">
@@ -212,7 +242,8 @@ function renderMap() {
       const isLocked = !isReachable && !isCurrent && !isCompleted;
 
       let classes = 'map-node';
-      if (isReachable && !isCompleted) classes += ' reachable';
+      if (startNotEntered && node.id === '0-0') classes += ' map-node-start';
+      else if (isReachable && !isCompleted) classes += ' reachable';
       if (isCurrent) classes += ' current';
       if (isCompleted) classes += ' completed';
       if (isLocked) classes += ' locked';
@@ -221,7 +252,7 @@ function renderMap() {
 
       html += `
         <div class="${classes}" data-node-id="${node.id}"
-          ${isReachable && !isCompleted && node.type !== 'start' && node.type !== 'boss' ? `onclick="enterNodeFromMap('${node.id}')"` : ''}>
+          ${isReachable && !isCompleted && node.type !== 'boss' && !(startNotEntered && node.id === '0-0') ? `onclick="enterNodeFromMap('${node.id}')"` : ''}>
 
           ${canReroll ? `<button class="map-node-reroll" onclick="event.stopPropagation(); rerollNode('${node.id}')" title="Reroll (${state.rerolls} left)">↻</button>` : ''}
 
@@ -245,17 +276,17 @@ function renderMap() {
 
   html += `</div></div>`;
 
-  // Start node: track type selection
+  // Start node: instrument picker at bottom
   if (startNotEntered) {
     html += `
       <div class="map-start-select">
-        <div style="font-family:var(--font-pixel); font-size:11px; color:var(--gold); margin-bottom:12px;">CHOOSE YOUR FIRST INSTRUMENT</div>
+        <div style="font-family:var(--font-pixel); font-size:11px; color:var(--gold); margin-bottom:12px; letter-spacing:1.5px;">CHOOSE YOUR FIRST INSTRUMENT</div>
         <select class="track-select" id="track-type-select">
-          <option value="">— Choose your instrument —</option>
+          <option value="">— Choose instrument —</option>
           ${TRACK_TYPES.map(t => `<option value="${t}">${t}</option>`).join('')}
         </select>
         <div style="margin-top:14px;">
-          <button class="btn" onclick="enterStartNode()">ENTER THE DUNGEON</button>
+          <button class="btn btn-small" onclick="enterStartNode()">ENTER THE DUNGEON</button>
         </div>
       </div>
     `;
@@ -379,12 +410,12 @@ function renderRoomActive(room) {
         ${room.isYouTube && !room.isBoss && !room.isAlchemist ? '<div class="youtube-badge">YouTube Sample Room</div>' : ''}
         <div class="room-header">${room.name}</div>
       </div>
-      <div class="room-number">ROOM #${room.number} · ${room.trackType.toUpperCase()}</div>
+      <div class="room-number">ROOM #${room.number} · <span style="text-transform:uppercase;">${trackTip(room.trackType)}</span></div>
 
       <!-- Genre Directive -->
       <div class="result-section">
         <div class="result-label genre-label">${room.isAlchemist ? 'Alchemist Directive' : room.isYouTube ? 'YouTube Directive' : 'Genre Directive'}</div>
-        <div class="result-text genre-text">${room.genreDirective}</div>
+        <div class="result-text genre-text">${injectGenreTip(room.genreDirective, room.genre)}</div>
       </div>
 
       <!-- Curses -->
@@ -422,7 +453,7 @@ function renderRoomActive(room) {
           <div class="result-label effect-label">Enchantments (Effects)</div>
           ${room.effects.map(e => `
             <div style="margin-bottom:10px;">
-              <div style="color:var(--purple); margin-bottom:4px;">${e.name}</div>
+              <div style="color:var(--purple); margin-bottom:4px;">${effectTip(e.name)}</div>
               <div class="effect-bar">
                 <div class="effect-bar-track">
                   <div class="effect-bar-fill" style="width:${e.percentage}%"></div>
@@ -597,12 +628,16 @@ function renderChest() {
 function renderCampfire() {
   const hasDeferredCurses = state.deferredCurses.filter(c => !c.completed).length > 0;
   const hasNextRoomCurses = state.nextRoomCurses.length > 0;
+  const postBoss = state.rooms.some(r => r.isBoss);
+  const campfireMsg = postBoss
+    ? 'The boss has fallen. Rest by the fire and spend your gold.'
+    : 'A warm glow cuts through the darkness. Rest here and spend your gold before pressing on.';
 
   return `
     <div class="panel campfire-panel">
       <div class="room-header" style="color:var(--orange); margin-bottom:8px;">CAMPFIRE REST</div>
       <div style="color:var(--dim); font-size:16px; margin-bottom:24px;">
-        The boss has fallen. Rest by the fire and spend your gold.
+        ${campfireMsg}
       </div>
       <div style="color:var(--gold); font-family:var(--font-pixel); font-size:14px; margin-bottom:20px;">
         GOLD: ${state.gold}g
@@ -649,6 +684,40 @@ function renderCampfire() {
   `;
 }
 
+function renderRoadEvent() {
+  const ev = state.roadEventData;
+  if (!ev) return '';
+
+  return `
+    <div class="panel" style="border-color:var(--purple-dim); background:#12091a; box-shadow:0 0 25px rgba(155,89,182,0.15), inset 0 0 40px rgba(155,89,182,0.05);">
+      <div style="text-align:center;">
+        <div style="font-family:var(--font-pixel); font-size:10px; color:var(--purple); letter-spacing:3px; margin-bottom:8px;">ROAD EVENT</div>
+        <div class="room-header" style="color:var(--purple); animation:none; text-shadow:0 0 15px rgba(155,89,182,0.4);">${ev.event.name}</div>
+      </div>
+      <div style="color:var(--dim); font-size:17px; text-align:center; margin:20px 0; line-height:1.7;">
+        ${ev.event.description}
+      </div>
+
+      <div style="max-width:500px; margin:0 auto;">
+        <div style="padding:16px; border:1px solid rgba(39,174,96,0.3); border-radius:4px; background:rgba(39,174,96,0.05); margin-bottom:12px;">
+          <div style="font-family:var(--font-pixel); font-size:10px; color:var(--green); letter-spacing:2px; margin-bottom:8px;">REWARD</div>
+          <div style="color:var(--green); font-size:17px;">${ev.event.reward.text}</div>
+        </div>
+
+        <div style="padding:16px; border:1px solid rgba(155,89,182,0.3); border-radius:4px; background:rgba(155,89,182,0.05);">
+          <div style="font-family:var(--font-pixel); font-size:10px; color:var(--purple); letter-spacing:2px; margin-bottom:8px;">THE COST</div>
+          <div style="color:var(--text); font-size:17px; line-height:1.7;">${ev.event.cost}</div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:12px; justify-content:center; margin-top:24px;">
+        <button class="btn btn-green" onclick="acceptRoadEvent()">ACCEPT THE DEAL</button>
+        <button class="btn" onclick="declineRoadEvent()">DECLINE AND MOVE ON</button>
+      </div>
+    </div>
+  `;
+}
+
 function renderSessionLog() {
   let html = '';
 
@@ -676,7 +745,7 @@ function renderSessionLog() {
       <div class="pending-section">
         <div class="panel-header" style="color:var(--red);">Deferred Curses</div>
         ${state.deferredCurses.map((c, i) => `
-          <div class="pending-curse">
+          <div class="pending-curse ${c.completed ? 'resolved' : ''}">
             <div class="check-box ${c.completed ? 'checked' : ''}" onclick="toggleDeferred(${i})">${c.completed ? '✓' : ''}</div>
             <span class="pending-text ${c.completed ? 'done' : ''}">${c.text} <span style="opacity:0.4;">(Room #${c.fromRoom})</span></span>
           </div>

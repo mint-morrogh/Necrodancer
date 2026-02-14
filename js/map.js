@@ -246,11 +246,10 @@ async function rerollNode(nodeId) {
   if (rerollBtn) rerollBtn.style.display = 'none';
 
   const typeEl = nodeEl.querySelector('.map-node-type');
+  const trackEl = nodeEl.querySelector('.map-node-track');
 
-  // Animate cycling through random options
-  const duration = 1200;
-  const interval = 80;
-  const steps = Math.floor(duration / interval);
+  // Animate cycling through random node types AND track types
+  const steps = 15;
   const nodeTypes = Object.keys(NODE_TYPES).filter(t => t !== 'start' && t !== 'boss');
 
   nodeEl.style.transition = 'none';
@@ -259,8 +258,10 @@ async function rerollNode(nodeId) {
   for (let i = 0; i < steps; i++) {
     const randType = nodeTypes[Math.floor(Math.random() * nodeTypes.length)];
     const nt = NODE_TYPES[randType];
+    const randTrack = TRACK_TYPES[Math.floor(Math.random() * TRACK_TYPES.length)];
     if (typeEl) { typeEl.textContent = nt.label; typeEl.style.color = nt.color; }
-    await sleep(interval + (i > steps - 4 ? i * 15 : 0));
+    if (trackEl) { trackEl.textContent = randType === 'campfire' ? '' : randTrack; }
+    await sleep(50 + i * 8);
   }
 
   // Settle on final result
@@ -271,6 +272,7 @@ async function rerollNode(nodeId) {
 
   const finalNt = NODE_TYPES[node.type] || NODE_TYPES.standard;
   if (typeEl) { typeEl.textContent = finalNt.label; typeEl.style.color = finalNt.color; }
+  if (trackEl) { trackEl.textContent = node.trackType || ''; }
 
   nodeEl.style.boxShadow = '';
   nodeEl.style.transition = '';
