@@ -23,7 +23,7 @@ const NODE_TYPES = {
   cursed:    { icon: 'X', label: 'Cursed Chamber',  color: 'var(--red)',    desc: 'Guaranteed curses, bonus gold' },
   sanctuary: { icon: '+', label: 'Sanctuary',       color: 'var(--green)',  desc: 'No curses, guaranteed blessing' },
   campfire:  { icon: 'R', label: 'Campfire',        color: 'var(--orange)', desc: 'Spend gold, no track produced' },
-  relic:     { icon: '\u25C7', label: 'Relic Chamber', color: 'var(--purple)', desc: 'A rare artifact awaits' },
+  relic:     { icon: '\u25C7', label: 'Relic Chamber', color: 'var(--pink)', desc: 'A rare artifact awaits' },
   start:     { icon: '>', label: 'Start',           color: 'var(--gold)',   desc: 'Choose your instrument' },
   boss:      { icon: 'B', label: 'Boss',            color: 'var(--red)',    desc: 'Defeat the boss to continue' }
 };

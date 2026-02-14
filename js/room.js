@@ -121,7 +121,7 @@ function generateRoom(trackType, opts = {}) {
   } else {
     genreDirective = isMulti
       ? `Build your ${trackType.toLowerCase()} using samples from the <span style="color:var(--gold);">${genre}</span> genre on Splice`
-      : `Find a <span style="color:var(--gold);">${sampleType}</span> from the <span style="color:var(--gold);">${genre}</span> genre on Splice`;
+      : `Use a <span style="color:var(--gold);">${sampleType}</span> from the <span style="color:var(--gold);">${genre}</span> genre`;
   }
 
   const curses = [];

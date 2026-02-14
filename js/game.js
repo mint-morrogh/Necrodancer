@@ -473,16 +473,13 @@ function showMasteryPopup() {
 
   const popup = document.createElement('div');
   popup.className = 'mastery-popup';
-  popup.innerHTML = `
-    <div class="mastery-popup-icon">\u2605</div>
-    <div class="mastery-popup-text">ROOM MASTERED</div>
-  `;
+  popup.innerHTML = `<div class="mastery-popup-text">ROOM MASTERED</div>`;
   document.body.appendChild(popup);
 
-  // Auto-dismiss after 3 seconds
+  // Auto-dismiss after 1 second
   setTimeout(() => {
     if (popup.parentNode) popup.remove();
-  }, 3000);
+  }, 1200);
 }
 
 async function sealRoom() {
@@ -649,13 +646,6 @@ async function animateSpell() {
     state.rerolls += td.rerollCount;
   }
 
-  // Show the rolled value line
-  const rollLine = document.getElementById('roll-result-line');
-  if (rollLine) {
-    rollLine.style.display = 'block';
-    rollLine.innerHTML = `<span class="roll-score">ROLLED: ${finalValue}</span>`;
-  }
-
   await sleep(300);
 
   const resultEl = document.getElementById('transition-result');
@@ -699,21 +689,53 @@ async function doubleOrNothing() {
   const btn = document.getElementById('don-btn');
   if (btn) btn.style.display = 'none';
 
+  const continueEl = document.getElementById('transition-continue');
+  if (continueEl) continueEl.style.display = 'none';
+
   const td = state.transitionData;
   const rollTarget = td.rollTarget;
 
-  // Show chance details and spell container
-  const detailsEl = document.getElementById('don-roll-details');
-  if (detailsEl) detailsEl.style.display = 'block';
+  // Update header to show double or nothing phase
+  const header = document.getElementById('transition-header');
+  if (header) { header.textContent = 'DOUBLE OR NOTHING'; header.style.color = 'var(--gold)'; }
 
-  const container = document.getElementById('don-spell-container');
-  const spellEl = document.getElementById('don-spell-glyph');
+  const subtitle = document.getElementById('transition-subtitle');
+  if (subtitle) subtitle.textContent = 'Risk your reroll for a chance at two...';
+
+  // Hide streak line if present
+  const streakLine = document.getElementById('streak-line');
+  if (streakLine) streakLine.style.display = 'none';
+
+  // Hide banners
+  const streakBanner = document.getElementById('streak-banner');
+  if (streakBanner) streakBanner.style.display = 'none';
+  const survivorBanner = document.getElementById('survivor-banner');
+  if (survivorBanner) survivorBanner.style.display = 'none';
+
+  // Reset the roll info (reuse same rows)
+  const rollInfo = document.getElementById('roll-info');
+  if (rollInfo) {
+    rollInfo.innerHTML = `
+      <div class="roll-info-row"><span class="roll-info-label">CHANCE</span><span class="roll-info-value" style="color:var(--gold);">${101 - rollTarget}%</span></div>
+      <div class="roll-info-row"><span class="roll-info-label">SUCCESS</span><span class="roll-info-value" style="color:var(--green);">${rollTarget} OR HIGHER</span></div>
+    `;
+  }
+
+  // Hide rolled row and result from previous roll
+  const rollRow = document.getElementById('roll-result-row');
+  if (rollRow) rollRow.style.display = 'none';
+  const resultEl = document.getElementById('transition-result');
+  if (resultEl) resultEl.style.display = 'none';
+
+  // Reset and re-animate the dice
+  const container = document.getElementById('spell-container');
+  const spellEl = document.getElementById('spell-glyph');
   if (!container || !spellEl) return;
-  container.style.display = 'inline-block';
+  spellEl.textContent = '✧';
+  spellEl.parentElement.classList.remove('resolved');
 
   const decorGlyphs = ['✧','✦','✶','❋','✺','❈'];
 
-  // Spawn dust glyphs
   const dustInterval = setInterval(() => {
     const dust = document.createElement('span');
     dust.className = 'spell-dust';
@@ -724,7 +746,6 @@ async function doubleOrNothing() {
     setTimeout(() => dust.remove(), 800);
   }, 100);
 
-  // Cycle through random numbers
   const steps = 18;
   for (let i = 0; i < steps; i++) {
     spellEl.textContent = Math.floor(Math.random() * 101);
@@ -739,26 +760,29 @@ async function doubleOrNothing() {
   spellEl.textContent = finalValue;
   spellEl.parentElement.classList.add('resolved');
 
-  // Show rolled value
-  const rollLine = document.getElementById('don-roll-result-line');
-  if (rollLine) {
-    rollLine.style.display = 'block';
-    rollLine.innerHTML = `<span class="roll-score">ROLLED: ${finalValue}</span>`;
+  // Show rolled value in same row
+  const rollVal = document.getElementById('roll-result-value');
+  if (rollRow && rollVal) {
+    rollVal.textContent = finalValue;
+    rollRow.style.display = 'block';
   }
 
   await sleep(300);
 
-  const resultEl = document.getElementById('don-result');
   if (resultEl) {
     resultEl.style.display = 'block';
     if (won) {
       state.rerolls += 1;
-      resultEl.innerHTML = '<span class="don-win-text">DOUBLE! +2 REROLLS TOTAL</span>';
+      resultEl.className = 'transition-result earned';
+      resultEl.innerHTML = 'DOUBLE! +2 REROLLS TOTAL';
     } else {
       state.rerolls -= 1;
-      resultEl.innerHTML = '<span class="don-lose-text">NOTHING! REROLL LOST</span>';
+      resultEl.className = 'transition-result denied';
+      resultEl.innerHTML = 'NOTHING! REROLL LOST';
     }
   }
+
+  if (continueEl) continueEl.style.display = 'block';
 
   const rerollDisplay = document.querySelector('.reroll-count');
   if (rerollDisplay) rerollDisplay.textContent = state.rerolls;
@@ -1281,7 +1305,7 @@ function rebuildGenreDirective(room) {
   } else {
     return isMulti
       ? `Build your ${room.trackType.toLowerCase()} using samples from the <span style="color:var(--gold);">${room.genre}</span> genre on Splice`
-      : `Find a <span style="color:var(--gold);">${room.sampleType}</span> from the <span style="color:var(--gold);">${room.genre}</span> genre on Splice`;
+      : `Use a <span style="color:var(--gold);">${room.sampleType}</span> from the <span style="color:var(--gold);">${room.genre}</span> genre`;
   }
 }
 

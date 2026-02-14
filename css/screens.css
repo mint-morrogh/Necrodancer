@@ -178,7 +178,7 @@
 }
 .song-info-item { font-family: var(--font-pixel); font-size: 11px; color: var(--dim); letter-spacing: 1px; }
 .song-info-item span { color: var(--gold); margin-left: 6px; }
-.song-info-divider { width: 1px; height: 16px; background: var(--border); flex-shrink: 0; }
+.song-info-divider { width: 2px; height: 20px; background: var(--border-light); flex-shrink: 0; opacity: 0.6; }
 .reroll-count { color: var(--purple) !important; }
 .rules-btn-fixed {
   font-family: var(--font-pixel);
@@ -575,6 +575,34 @@
 }
 .roll-details .roll-chance { color: var(--gold); }
 .roll-details .roll-score { color: var(--purple); font-size: 13px; }
+.roll-info {
+  margin: 12px 0;
+  animation: slideDown 0.5s ease;
+}
+.roll-info-row {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 6px 0;
+}
+.roll-info-row + .roll-info-row {
+  margin-top: 4px;
+}
+.roll-info-label {
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  color: var(--dim);
+  letter-spacing: 2px;
+  min-width: 80px;
+  text-align: right;
+}
+.roll-info-value {
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  letter-spacing: 2px;
+  min-width: 100px;
+  text-align: left;
+}
 .transition-result {
   font-family: var(--font-pixel);
   font-size: 14px;
@@ -615,6 +643,7 @@
 .help-section-body { line-height: 1.8; font-size: 16px; }
 .hl-gold { color: var(--gold); }
 .hl-purple { color: var(--purple); }
+.hl-pink { color: var(--pink); }
 .hl-green { color: var(--green); }
 .hl-red { color: var(--red); }
 .hl-orange { color: var(--orange); }
@@ -953,19 +982,19 @@
 .relic-panel {
   text-align: center;
   padding: 40px 30px;
-  border-color: rgba(155,89,182,0.4);
-  background: #0d0a14;
-  box-shadow: 0 0 30px rgba(155,89,182,0.15), inset 0 0 40px rgba(155,89,182,0.05);
+  border-color: rgba(212,96,154,0.3);
+  background: #140a10;
+  box-shadow: 0 0 20px rgba(212,96,154,0.08), inset 0 0 30px rgba(212,96,154,0.03);
 }
 .relic-chamber-icon {
   font-size: 64px;
-  color: var(--purple);
+  color: var(--pink);
   animation: relicPulse 2s ease-in-out infinite;
   margin-bottom: 8px;
 }
 @keyframes relicPulse {
-  0%, 100% { text-shadow: 0 0 15px var(--purple), 0 0 30px rgba(155,89,182,0.4); }
-  50% { text-shadow: 0 0 30px var(--purple), 0 0 60px rgba(155,89,182,0.6), 0 0 80px rgba(212,165,116,0.2); }
+  0%, 100% { text-shadow: 0 0 8px rgba(212,96,154,0.3); }
+  50% { text-shadow: 0 0 15px rgba(212,96,154,0.4); }
 }
 .relic-choices {
   display: grid;
@@ -1056,7 +1085,7 @@
   border: 3px solid var(--gold);
   border-radius: 8px;
   box-shadow: 0 0 40px rgba(212,165,116,0.4), 0 0 80px rgba(212,165,116,0.2);
-  animation: masteryPopIn 0.5s ease-out, masteryFadeOut 0.8s ease-in 2.2s forwards;
+  animation: masteryPopIn 0.3s ease-out, masteryFadeOut 0.4s ease-in 0.8s forwards;
   pointer-events: none;
 }
 @keyframes masteryPopIn {
@@ -1067,16 +1096,6 @@
 @keyframes masteryFadeOut {
   0% { opacity: 1; }
   100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
-}
-.mastery-popup-icon {
-  font-size: 48px;
-  color: var(--gold);
-  animation: masterySpin 3s linear infinite;
-  margin-bottom: 8px;
-}
-@keyframes masterySpin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }
 .mastery-popup-text {
   font-family: var(--font-pixel);
@@ -1114,21 +1133,13 @@
   align-items: center;
   gap: 8px;
 }
-.mastery-rewards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  max-width: 420px;
-  margin: 20px auto;
-}
-.mastery-reward-card {
-  padding: 12px 8px;
-  border: 1px solid var(--gold-dim);
-  border-radius: 4px;
-  background: rgba(212,165,116,0.05);
-  text-align: center;
+.mastery-rewards-line {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
   font-family: var(--font-pixel);
-  font-size: 10px;
-  color: var(--text);
+  font-size: 11px;
   letter-spacing: 1px;
+  margin: 16px 0;
 }

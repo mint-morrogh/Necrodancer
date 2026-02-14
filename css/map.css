@@ -194,9 +194,9 @@
   letter-spacing: 3px;
   margin-bottom: 24px;
 }
-/* Relic node purple tint */
-.map-node .map-node-type[style*="var(--purple)"] {
-  text-shadow: 0 0 6px rgba(155,89,182,0.3);
+/* Relic node pink tint */
+.map-node .map-node-type[style*="var(--pink)"] {
+  text-shadow: 0 0 6px rgba(212,96,154,0.3);
 }
 
 .map-start-select {

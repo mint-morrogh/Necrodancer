@@ -667,7 +667,7 @@ const CURSES_NEXT_ROOM = [
   'NEXT ROOM: the element must play the exact same rhythm as this element but with different notes',
   'NEXT ROOM: must pitch everything DOWN one octave',
   'NEXT ROOM: must use only samples shorter than 250ms \u2014 micro-samples only',
-  'NEXT ROOM: no compression allowed on any element',
+  'NEXT ROOM: no compression allowed for this room',
   'NEXT ROOM: must be 100% wet effects \u2014 no dry signal at all',
   'NEXT ROOM: must use at least one effect you have never used before',
   'NEXT ROOM: the element must be in a call-and-response pattern with THIS element',

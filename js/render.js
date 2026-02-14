@@ -198,7 +198,7 @@ function renderDungeon() {
           <div class="song-info-item">BPM <span>${state.bpm}</span></div>
           <div class="song-info-divider"></div>
           <div class="song-info-item">FLOOR <span>${state.floor}</span></div>
-          <div class="song-info-item">ROOM <span>#${state.rooms.length}</span></div>
+          <div class="song-info-item">ROOM <span>${state.rooms.length}</span></div>
           <div class="song-info-divider"></div>
           <div class="song-info-item">SCORE <span>${state.score}</span></div>
           <div class="song-info-item">GOLD <span style="color:var(--gold);">${state.gold}g</span></div>
@@ -580,7 +580,7 @@ function renderTransition() {
         <div style="color:var(--green); font-family:var(--font-pixel); font-size:14px; margin:16px 0;">
           +2 REROLLS EARNED!
         </div>
-        ${td.streakReward ? '<div class="reward-banner streak-banner"><span class="streak-flames">🔥🔥🔥</span><span>COMPLETION STREAK! +1 REROLL</span></div>' : ''}
+        ${td.streakReward ? '<div class="reward-banner streak-banner">COMPLETION STREAK! +1 REROLL</div>' : ''}
         ${td.curseSurvivor ? '<div class="reward-banner survivor-banner"><span class="survivor-icon">🛡️💀</span><span>CURSE SURVIVOR! +1 REROLL</span></div>' : ''}
         ${td.bossBlessing ? `
           <div style="margin:16px 0; padding:12px 16px; border:1px solid var(--green); border-radius:4px; background:rgba(39,174,96,0.08);">
@@ -603,7 +603,7 @@ function renderTransition() {
         <div style="color:var(--green); font-family:var(--font-pixel); font-size:16px; margin:20px 0; animation: glowPulse 2s infinite;">
           +2 REROLLS EARNED!
         </div>
-        ${td.streakReward ? '<div class="reward-banner streak-banner"><span class="streak-flames">🔥🔥🔥</span><span>COMPLETION STREAK! +1 REROLL</span></div>' : ''}
+        ${td.streakReward ? '<div class="reward-banner streak-banner">COMPLETION STREAK! +1 REROLL</div>' : ''}
         ${td.curseSurvivor ? '<div class="reward-banner survivor-banner"><span class="survivor-icon">🛡️💀</span><span>CURSE SURVIVOR! +1 REROLL</span></div>' : ''}
         <div style="color:var(--dim); font-size:16px; margin-bottom:24px;">
           The spirits reward your bravery.
@@ -616,36 +616,27 @@ function renderTransition() {
   if (td.isMastery) {
     return `
       <div class="panel transition-panel mastery-transition">
-        <div class="mastery-badge">\u2605 ROOM MASTERED \u2605</div>
+        <div class="mastery-badge">ROOM MASTERED</div>
         <div style="color:var(--dim); font-size:15px; margin:16px 0;">
           Perfect execution. The dungeon acknowledges your mastery.
         </div>
 
         <div class="mastery-criteria">
-          <div class="mastery-criteria-item"><span style="color:var(--green);">\u2713</span> All tasks completed</div>
-          <div class="mastery-criteria-item"><span style="color:var(--green);">\u2713</span> Bonus objective completed</div>
-          <div class="mastery-criteria-item"><span style="color:var(--green);">\u2713</span> Zero rerolls used</div>
+          <div class="mastery-criteria-item"><span style="color:var(--green);">\u2713</span> All tasks completed in this room</div>
+          <div class="mastery-criteria-item"><span style="color:var(--green);">\u2713</span> Bonus objective completed in this room</div>
+          <div class="mastery-criteria-item"><span style="color:var(--green);">\u2713</span> Zero rerolls used in this room</div>
         </div>
 
-        <div class="mastery-rewards">
-          <div class="mastery-reward-card">
-            <div style="font-size:24px;">&#127922;</div>
-            <div>+${td.rerollCount} Reroll</div>
-            <div style="font-size:11px; color:var(--dim);">Guaranteed</div>
-          </div>
-          <div class="mastery-reward-card">
-            <div style="font-size:24px; color:var(--gold);">+${td.masteryGoldBonus}g</div>
-            <div>Gold Bonus</div>
-          </div>
-          <div class="mastery-reward-card">
-            <div style="font-size:24px; color:var(--purple);">+${td.masteryScoreBonus}</div>
-            <div>Score Bonus</div>
-          </div>
+        <div class="mastery-rewards-line">
+          <span style="color:var(--dim);">REWARDS:</span>
+          <span style="color:var(--purple);">+${td.rerollCount} Reroll</span>
+          <span style="color:var(--purple);">+${td.masteryScoreBonus} Score</span>
+          <span style="color:var(--gold);">+${td.masteryGoldBonus}g Gold</span>
         </div>
 
-        ${td.streakReward ? '<div class="reward-banner streak-banner"><span class="streak-flames">\uD83D\uDD25\uD83D\uDD25\uD83D\uDD25</span><span>COMPLETION STREAK! +1 REROLL</span></div>' : ''}
+        ${td.streakReward ? '<div class="reward-banner streak-banner">COMPLETION STREAK! +1 REROLL</div>' : ''}
         ${td.streakCount > 0 && !td.streakReward ? '<div class="streak-counter">STREAK: ' + td.streakCount + '/' + (hasRelic('streak_talisman') ? 2 : 3) + '</div>' : ''}
-        ${td.curseSurvivor ? '<div class="reward-banner survivor-banner"><span class="survivor-icon">\uD83D\uDEE1\uFE0F\uD83D\uDC80</span><span>CURSE SURVIVOR! +1 REROLL</span></div>' : ''}
+        ${td.curseSurvivor ? '<div class="reward-banner survivor-banner">CURSE SURVIVOR! +1 REROLL</div>' : ''}
 
         <div style="margin-top:20px;">
           <button class="btn" onclick="continueFromTransition()">CONTINUE</button>
@@ -656,24 +647,22 @@ function renderTransition() {
 
   return `
     <div class="panel transition-panel">
-      <div class="room-header" style="margin-bottom:8px;">ROOM SEALED</div>
-      <div style="color:var(--dim); font-size:15px; margin-bottom:16px;">
+      <div id="transition-header" class="room-header" style="margin-bottom:8px;">ROOM SEALED</div>
+      <div id="transition-subtitle" style="color:var(--dim); font-size:15px; margin-bottom:16px;">
         All tasks completed${td.bonusCompleted ? ' + Bonus' : ''}. The spirits judge your work...
       </div>
-      ${td.streakCount > 0 && !td.streakReward ? '<div class="streak-counter">STREAK: ' + td.streakCount + '/' + (hasRelic('streak_talisman') ? 2 : 3) + '</div>' : ''}
-      <div class="roll-details" style="margin-bottom:8px;">
-        <div style="margin-bottom:6px;"><span class="roll-chance">CHANCE: ${101 - td.rollTarget}%</span></div>
-        <div><span style="color:var(--green); font-family:var(--font-pixel); font-size:11px; letter-spacing:2px;">SUCCESS: ${td.rollTarget} OR HIGHER</span></div>
+      ${td.streakCount > 0 && !td.streakReward ? '<div id="streak-line" class="streak-counter">STREAK: ' + td.streakCount + '/' + (hasRelic('streak_talisman') ? 2 : 3) + '</div>' : ''}
+      <div id="roll-info" class="roll-info">
+        <div class="roll-info-row"><span class="roll-info-label">CHANCE</span><span class="roll-info-value" style="color:var(--gold);">${101 - td.rollTarget}%</span></div>
+        <div class="roll-info-row"><span class="roll-info-label">SUCCESS</span><span class="roll-info-value" style="color:var(--green);">${td.rollTarget} OR HIGHER</span></div>
       </div>
       <div class="spell-container" id="spell-container">
         <div class="spell-display"><span id="spell-glyph">✧</span></div>
       </div>
-      <div id="roll-result-line" class="roll-details" style="display:none; margin-top:8px;"></div>
       <div id="transition-result" class="transition-result" style="display:none;"></div>
 
       <div id="streak-banner" class="reward-banner streak-banner" style="display:none;">
-        <span class="streak-flames">🔥🔥🔥</span>
-        <span>COMPLETION STREAK! +1 REROLL</span>
+        COMPLETION STREAK! +1 REROLL
       </div>
 
       <div id="survivor-banner" class="reward-banner survivor-banner" style="display:none;">
@@ -681,18 +670,7 @@ function renderTransition() {
         <span>CURSE SURVIVOR! +1 REROLL</span>
       </div>
 
-      <div id="don-section">
-        <button id="don-btn" class="btn don-btn" style="display:none;" onclick="doubleOrNothing()">DOUBLE OR NOTHING?</button>
-        <div id="don-roll-details" class="roll-details" style="display:none; margin-bottom:8px;">
-          <div style="margin-bottom:6px;"><span class="roll-chance">CHANCE: ${101 - td.rollTarget}%</span></div>
-          <div><span style="color:var(--green); font-family:var(--font-pixel); font-size:11px; letter-spacing:2px;">SUCCESS: ${td.rollTarget} OR HIGHER</span></div>
-        </div>
-        <div class="spell-container" id="don-spell-container" style="display:none;">
-          <div class="spell-display"><span id="don-spell-glyph">✧</span></div>
-        </div>
-        <div id="don-roll-result-line" class="roll-details" style="display:none; margin-top:8px;"></div>
-        <div id="don-result" class="don-result" style="display:none;"></div>
-      </div>
+      <button id="don-btn" class="btn don-btn" style="display:none;" onclick="doubleOrNothing()">DOUBLE OR NOTHING?</button>
 
       <div id="transition-continue" style="display:none;">
         <button class="btn" onclick="continueFromTransition()">CONTINUE</button>
@@ -900,7 +878,7 @@ function renderRelicChoice() {
     return `
       <div class="panel relic-panel">
         <div class="relic-chamber-icon">\u25C7</div>
-        <div class="room-header" style="color:var(--purple); margin-bottom:16px;">RELIC CHAMBER</div>
+        <div class="room-header" style="color:var(--pink); margin-bottom:16px;">RELIC CHAMBER</div>
         <div style="color:var(--dim); font-size:17px; margin:20px 0;">
           The chamber is empty. You have collected all available relics.
         </div>
@@ -912,7 +890,7 @@ function renderRelicChoice() {
   return `
     <div class="panel relic-panel">
       <div class="relic-chamber-icon">\u25C7</div>
-      <div class="room-header" style="color:var(--purple); margin-bottom:8px;">RELIC CHAMBER</div>
+      <div class="room-header" style="color:var(--pink); margin-bottom:8px;">RELIC CHAMBER</div>
       <div style="color:var(--dim); font-size:16px; margin-bottom:24px;">Choose a relic to carry with you...</div>
 
       <div class="relic-choices">
