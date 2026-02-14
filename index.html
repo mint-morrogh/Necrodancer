@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NECRODANCER - Production Dungeon Crawler</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=MedievalSharp&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/screens.css">
+  <link rel="stylesheet" href="css/map.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <div id="help-overlay" class="help-overlay" style="display:none;" onclick="if(event.target===this)hideHelp()">
+    <div class="panel help-content">
+      <div class="panel-header">RULES OF THE DUNGEON</div>
+
+      <div class="help-section">
+        <div class="help-section-title" style="color:var(--purple);">REROLLS</div>
+        <div class="help-section-body">
+          You begin each session with rerolls based on your difficulty.
+          To earn more, complete <span class="hl-green">every checkbox</span> in a room before sealing it.
+          The spirits will judge you &mdash; a dice roll determines if you earn +1 reroll.
+          Leave any task unfinished and you get no chance at all.
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title" style="color:var(--gold);">BONUS OBJECTIVES</div>
+        <div class="help-section-body">
+          Some rooms have a <span class="hl-gold">Bonus Objective</span> (sound direction like Kit Type or Synth Type).
+          This is <span class="hl-gold">optional</span> &mdash; it doesn't count toward completing the room.
+          But if you complete it, your reroll chance increases significantly.
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title" style="color:var(--orange);">SIDE QUESTS</div>
+        <div class="help-section-body">
+          When entering a room, there's a chance the dungeon ignores its track type
+          and gives you a completely different instrument &mdash; a <span class="hl-orange">Side Quest</span>.
+          Complete all tasks for <span class="hl-green">2 guaranteed rerolls</span> (no dice roll needed).
+          Or skip it with no penalty.
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title" style="color:var(--red);">CURSES</div>
+        <div class="help-section-body">
+          Rooms may carry <span class="hl-red">curses</span> &mdash; constraints that force unusual creative decisions.
+          <span class="hl-red">Immediate curses</span> apply to this room only.
+          <span class="hl-red">Track curses</span> are instrument-specific processing challenges.
+          <span class="hl-red">Deferred curses</span> appear in your Quest Log and must be resolved before the session ends.
+          <span class="hl-red">Next-room curses</span> carry forward as a surprise when you open the next door.
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title" style="color:var(--green);">BLESSINGS</div>
+        <div class="help-section-body">
+          Sometimes the spirits are kind. <span class="hl-green">Blessings</span> grant bonus effects,
+          creative freedom, protection from future curses, or even a free reroll token.
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title" style="color:var(--red);">BOSS ROOMS</div>
+        <div class="help-section-body">
+          The last node on each floor is a <span class="hl-red">Boss Encounter</span> with guaranteed curses
+          and mix-level boss constraints. Defeat the boss for <span class="hl-purple">+2 rerolls</span>
+          and a powerful <span class="hl-green">Boss Blessing</span>. You can only end the session after beating a boss.
+          A <span class="hl-orange">Campfire</span> appears after each boss where you can spend gold.
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title" style="color:var(--gold);">GOLD</div>
+        <div class="help-section-body">
+          Earn <span class="hl-gold">gold</span> by completing checklist items. Spend gold at the
+          <span class="hl-orange">Campfire</span> to remove curses, shield rooms, or buy rerolls.
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title" style="color:var(--teal);">ALCHEMIST'S LAIR</div>
+        <div class="help-section-body">
+          A rare chance to discover an <span class="hl-green">Alchemist's Lair</span>.
+          Instead of Splice/YouTube, you must record real-world sounds as source material.
+          Still gets curses, effects, and blessings as normal.
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title" style="color:var(--gold);">TREASURE CHESTS</div>
+        <div class="help-section-body">
+          A chance to find a <span class="hl-gold">Treasure Chest</span> before entering a room.
+          Rewards include reroll tokens, random blessings, or curse shields.
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title" style="color:var(--teal);">DUNGEON MAP</div>
+        <div class="help-section-body">
+          Each floor shows a <span class="hl-gold">branching map</span> of rooms.
+          Choose your path from the <span class="hl-gold">start node</span> to the <span class="hl-red">boss</span> at the top.
+          Node types: <span class="hl-gold">Standard</span> (normal room),
+          <span class="hl-red">Cursed Chamber</span> (guaranteed curses, bonus gold),
+          <span class="hl-green">Sanctuary</span> (no curses, guaranteed blessing),
+          <span class="hl-orange">Campfire</span> (shop only, no track).
+          Hover over nodes to see details. You can <span class="hl-purple">reroll</span> reachable nodes
+          before entering them to change their type, track, and contents.
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title" style="color:var(--purple);">SCORING</div>
+        <div class="help-section-body">
+          Earn <span class="hl-purple">score</span> for completing checkboxes, clearing rooms, defeating bosses, and finishing side quests.
+          Higher <span class="hl-red">difficulty</span> multiplies your score significantly but reduces gold earned.
+          <span class="hl-red">Nightmare</span> offers 4x the score of Normal.
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title" style="color:var(--orange);">DIFFICULTY MODES</div>
+        <div class="help-section-body">
+          Choose your suffering at the start of each session.
+          <span class="hl-green">Easy</span> reduces curses and increases blessings &mdash; good for learning.
+          <span class="hl-gold">Normal</span> is the standard experience.
+          <span class="hl-red">Hard</span> piles on more curses, effects, and fewer blessings.
+          <span class="hl-red">Nightmare</span> is intentionally absurd &mdash; nearly every room is cursed, effects hit hard, and blessings almost never appear.
+          Gold, shop prices, and YouTube rooms are the same across all difficulties.
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top:28px;">
+        <button class="btn btn-small" onclick="hideHelp()">CLOSE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data -->
+  <script src="data/tracks.js"></script>
+  <script src="data/curses.js"></script>
+  <script src="data/effects.js"></script>
+  <script src="data/rooms.js"></script>
+  <!-- Logic -->
+  <script src="js/state.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/room.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
