@@ -73,7 +73,7 @@ function renderSetup() {
             </div>
           </div>
         </div>
-        <div style="color:var(--dim); font-size:13px; margin-top:8px;">
+        <div style="color:var(--dim); font-size:15px; margin-top:8px;">
           40 – 300 BPM · Choose your battlefield
         </div>
         ${step < 3 ? `
@@ -115,7 +115,7 @@ function renderSetup() {
         <div style="display:flex; align-items:center; justify-content:center; gap:12px; margin-top:8px;">
           <button class="btn btn-small" onclick="rerollSeed()">ROLL THE BONES</button>
         </div>
-        <div style="color:var(--dim); font-size:12px; margin-top:10px;">
+        <div style="color:var(--dim); font-size:15px; margin-top:10px;">
           ${state.seedMode === 'daily' ? 'Same seed every day · All adventurers share this dungeon' : 'Unique dungeon · Re-roll for a new fate'}
         </div>
       </div>
@@ -169,7 +169,7 @@ function renderDungeon() {
 
       <div class="log-overlay" id="log-overlay" onclick="toggleQuestLog()"></div>
       <button class="log-toggle" id="log-toggle" onclick="toggleQuestLog()">
-        <span class="log-toggle-arrow">&lsaquo;</span>LOG
+        QUEST LOG
       </button>
       <div class="panel log-panel" id="log-panel">
         <div class="panel-header">Quest Log</div>
@@ -226,6 +226,7 @@ function renderMap() {
           ${canReroll ? `<button class="map-node-reroll" onclick="event.stopPropagation(); rerollNode('${node.id}')" title="Reroll (${state.rerolls} left)">↻</button>` : ''}
 
           <div class="map-node-type" style="color:${nt.color};">${isCompleted ? '✓ ' + nt.label : nt.label}</div>
+          ${node.trackType ? `<div class="map-node-track">${node.trackType}</div>` : ''}
 
           <div class="map-tooltip">
             <div class="map-tooltip-row" style="color:${nt.color}; font-family:var(--font-pixel); font-size:10px;">${nt.label}</div>
@@ -361,7 +362,6 @@ function renderRoomActive(room) {
   if (!room) return '';
   const panelClass = room.isBoss ? 'boss-room' : room.isAlchemist ? 'alchemist-room' : room.isYouTube ? 'youtube-room' : '';
   const panelStyle = room.isSideQuest && !room.isBoss && !room.isAlchemist ? 'style="border-color:var(--orange);"' : '';
-  const headerIcon = room.isBoss ? '///' : room.isAlchemist ? '::' : room.isYouTube ? '>' : '---';
   return `
     <div class="panel ${panelClass}" ${panelStyle}>
 
@@ -373,10 +373,12 @@ function renderRoomActive(room) {
         </div>
       ` : ''}
 
-      ${room.isBoss ? '<div class="boss-badge">BOSS ENCOUNTER</div>' : ''}
-      ${room.isAlchemist ? '<div class="alchemist-badge">Alchemist\'s Lair</div>' : ''}
-      ${room.isYouTube && !room.isBoss && !room.isAlchemist ? '<div class="youtube-badge">YouTube Sample Room</div>' : ''}
-      <div class="room-header">${headerIcon} ${room.name} ${headerIcon}</div>
+      <div style="text-align:center;">
+        ${room.isBoss ? '<div class="boss-badge">BOSS ENCOUNTER</div>' : ''}
+        ${room.isAlchemist ? '<div class="alchemist-badge">Alchemist\'s Lair</div>' : ''}
+        ${room.isYouTube && !room.isBoss && !room.isAlchemist ? '<div class="youtube-badge">YouTube Sample Room</div>' : ''}
+        <div class="room-header">${room.name}</div>
+      </div>
       <div class="room-number">ROOM #${room.number} · ${room.trackType.toUpperCase()}</div>
 
       <!-- Genre Directive -->
@@ -543,13 +545,17 @@ function renderTransition() {
   return `
     <div class="panel transition-panel">
       <div class="room-header" style="margin-bottom:8px;">ROOM SEALED</div>
-      <div style="color:var(--dim); font-size:15px; margin-bottom:8px;">
+      <div style="color:var(--dim); font-size:15px; margin-bottom:16px;">
         All tasks completed${td.bonusCompleted ? ' + Bonus' : ''}. The spirits judge your work...
+      </div>
+      <div class="roll-details" style="margin-bottom:8px;">
+        <div style="margin-bottom:6px;"><span class="roll-chance">CHANCE: ${td.rollTarget}%</span></div>
+        <div><span style="color:var(--green); font-family:var(--font-pixel); font-size:11px; letter-spacing:2px;">SUCCESS: ${td.rollTarget} OR LOWER</span></div>
       </div>
       <div class="spell-container" id="spell-container">
         <div class="spell-display"><span id="spell-glyph">✧</span></div>
       </div>
-      <div id="roll-details" class="roll-details" style="display:none;"></div>
+      <div id="roll-result-line" class="roll-details" style="display:none; margin-top:8px;"></div>
       <div id="transition-result" class="transition-result" style="display:none;"></div>
       <div id="transition-continue" style="display:none;">
         <button class="btn" onclick="continueFromTransition()">CONTINUE</button>

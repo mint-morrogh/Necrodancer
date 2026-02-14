@@ -50,11 +50,9 @@ function toggleQuestLog() {
   const toggle = document.getElementById('log-toggle');
   const overlay = document.getElementById('log-overlay');
   if (!panel || !toggle) return;
-  const isOpen = panel.classList.contains('open');
   panel.classList.toggle('open');
   toggle.classList.toggle('open');
   if (overlay) overlay.classList.toggle('open');
-  toggle.querySelector('.log-toggle-arrow').innerHTML = isOpen ? '&lsaquo;' : '&rsaquo;';
 }
 
 function getTodaySeed() {
@@ -379,50 +377,51 @@ async function sealRoom() {
 }
 
 async function animateSpell() {
-  const glyphs = ['✧','✦','☆','★','◇','✶','❋','✺','❈','⁂','⚝','✴'];
+  const decorGlyphs = ['✧','✦','✶','❋','✺','❈'];
   const spellEl = document.getElementById('spell-glyph');
   const container = document.getElementById('spell-container');
   if (!spellEl) return;
+
+  const td = state.transitionData;
+  const finalValue = td.rollValue;
 
   // Spawn floating dust particles during animation
   const dustInterval = setInterval(() => {
     if (!container) return;
     const dust = document.createElement('span');
     dust.className = 'spell-dust';
-    dust.textContent = pick(['✦','✧','·','★','✶']);
+    dust.textContent = pick(decorGlyphs);
     dust.style.left = (Math.random() * 80 + 10) + '%';
     dust.style.top = (Math.random() * 40 + 30) + '%';
     container.appendChild(dust);
     setTimeout(() => dust.remove(), 1000);
   }, 120);
 
-  // Cycle through mystical glyphs
-  for (let i = 0; i < 24; i++) {
-    spellEl.textContent = pick(glyphs);
-    await sleep(80 + i * 4); // gradually slow down
+  // Cycle through random numbers 0-100 with decorative glyphs flanking
+  const steps = 28;
+  for (let i = 0; i < steps; i++) {
+    const randNum = Math.floor(Math.random() * 101);
+    const leftGlyph = pick(decorGlyphs);
+    const rightGlyph = pick(decorGlyphs);
+    spellEl.innerHTML = `<span style="font-size:0.4em; opacity:0.5; vertical-align:middle;">${leftGlyph}</span> ${randNum} <span style="font-size:0.4em; opacity:0.5; vertical-align:middle;">${rightGlyph}</span>`;
+    await sleep(60 + i * 6); // gradually slow down
   }
 
   clearInterval(dustInterval);
 
-  const td = state.transitionData;
-
-  // Resolve with final glyph
-  spellEl.textContent = td.earnedReroll ? '✦' : '✧';
+  // Land on the actual roll value
+  spellEl.innerHTML = `<span style="font-size:0.4em; opacity:0.5; vertical-align:middle;">✦</span> ${finalValue} <span style="font-size:0.4em; opacity:0.5; vertical-align:middle;">✦</span>`;
   spellEl.parentElement.classList.add('resolved');
 
   if (td.earnedReroll) {
     state.rerolls += td.rerollCount;
   }
 
-  // Show roll details
-  const detailsEl = document.getElementById('roll-details');
-  if (detailsEl) {
-    detailsEl.style.display = 'block';
-    detailsEl.innerHTML = `
-      <span class="roll-chance">CHANCE: ${td.rollTarget}%</span>
-      &nbsp;&nbsp;·&nbsp;&nbsp;
-      <span class="roll-score">ROLLED: ${td.rollValue}</span>
-    `;
+  // Show the rolled value line
+  const rollLine = document.getElementById('roll-result-line');
+  if (rollLine) {
+    rollLine.style.display = 'block';
+    rollLine.innerHTML = `<span class="roll-score">ROLLED: ${finalValue}</span>`;
   }
 
   await sleep(300);

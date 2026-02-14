@@ -42,7 +42,6 @@
 }
 .map-node {
   position: relative;
-  z-index: 2;
   background: var(--panel);
   border: 2px solid var(--border);
   border-radius: 6px;
@@ -50,13 +49,17 @@
   min-width: 120px;
   text-align: center;
   cursor: default;
-  transition: all 0.3s ease;
+  transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
   flex: 0 1 auto;
 }
 .map-node.reachable {
   cursor: pointer;
   border-color: var(--gold-dim);
-  animation: glowPulse 2s ease infinite;
+  animation: nodeGlow 3s ease infinite;
+}
+@keyframes nodeGlow {
+  0%, 100% { box-shadow: 0 0 6px rgba(212,165,116,0.1); }
+  50% { box-shadow: 0 0 12px rgba(212,165,116,0.2); }
 }
 .map-node.reachable:hover {
   border-color: var(--gold);
@@ -83,14 +86,19 @@
   text-transform: uppercase;
   line-height: 1.4;
 }
+.map-node-track {
+  font-size: 15px;
+  color: var(--text);
+  margin-top: 4px;
+}
 .map-node-reroll {
   position: absolute;
-  top: -8px; right: -8px;
+  top: -12px; right: -12px;
   background: var(--panel-alt);
-  border: 1px solid var(--gold-dim);
+  border: 2px solid var(--gold-dim);
   border-radius: 50%;
-  width: 24px; height: 24px;
-  font-size: 12px;
+  width: 32px; height: 32px;
+  font-size: 16px;
   color: var(--gold);
   cursor: pointer;
   display: flex;
@@ -103,6 +111,7 @@
   background: var(--gold-dim);
   color: var(--bg);
   transform: scale(1.15);
+  box-shadow: 0 0 8px rgba(212,165,116,0.4);
 }
 .map-tooltip {
   display: none;
@@ -110,19 +119,23 @@
   bottom: calc(100% + 14px);
   left: 50%;
   transform: translateX(-50%);
-  background: #0d0d11;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.8);
-  border: 1px solid var(--border-light);
+  background: #0a0a0d;
+  border: 2px solid var(--border-light);
   border-radius: 4px;
   padding: 12px 16px;
   min-width: 200px;
   font-size: 14px;
-  z-index: 10;
   text-align: left;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
   pointer-events: none;
+  box-shadow: 0 6px 30px rgba(0,0,0,1);
+  isolation: isolate;
+  text-shadow: none;
+  animation: none;
 }
-.map-node:hover { z-index: 20; }
+.map-node:hover {
+  z-index: 999;
+  position: relative;
+}
 .map-node:hover .map-tooltip { display: block; }
 .map-tooltip-row { margin: 4px 0; }
 .map-floor-label {

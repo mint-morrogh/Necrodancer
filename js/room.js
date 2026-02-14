@@ -36,12 +36,12 @@ function generateRoom(trackType, opts = {}) {
     genreDirective = pick(ALCHEMIST_DIRECTIVES);
   } else if (isYouTube) {
     genreDirective = isMulti
-      ? `Find a ${genre} track on YouTube and sample your ${trackType.toLowerCase()} from it`
-      : `Find a ${genre} track on YouTube and sample a ${sampleType} from it`;
+      ? `Find a <span style="color:var(--gold);">${genre}</span> track on YouTube and sample your ${trackType.toLowerCase()} from it`
+      : `Find a <span style="color:var(--gold);">${genre}</span> track on YouTube and sample a <span style="color:var(--gold);">${sampleType}</span> from it`;
   } else {
     genreDirective = isMulti
-      ? `Build your ${trackType.toLowerCase()} using samples from the ${genre} genre on Splice`
-      : `Find a ${sampleType} from the ${genre} genre on Splice`;
+      ? `Build your ${trackType.toLowerCase()} using samples from the <span style="color:var(--gold);">${genre}</span> genre on Splice`
+      : `Find a <span style="color:var(--gold);">${sampleType}</span> from the <span style="color:var(--gold);">${genre}</span> genre on Splice`;
   }
 
   const curses = [];
