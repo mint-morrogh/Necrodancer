@@ -1,6 +1,6 @@
 # NECRODANCER
 
-**Production Dungeon Crawler** — a browser-based tool that turns music production sessions into dungeon runs. Roll for a key and scale, choose your tempo, then navigate a branching dungeon map where each room assigns you a track to produce with randomized constraints.
+**Production Dungeon Crawler** — a browser-based tool that turns music production sessions into dungeon runs. Inspired by Jon Makes Beats "Super Beatmaker RPG" and Slay the Spire. Roll for a key and scale, choose your tempo, then navigate a branching dungeon map where each room assigns you a track to produce with randomized constraints.
 
 ## How It Works
 
