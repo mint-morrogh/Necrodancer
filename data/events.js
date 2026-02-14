@@ -144,6 +144,29 @@ const ROAD_EVENTS = [
     cost: 'Add filter automation to every element in your track — nothing stays static from this point on'
   },
 
+  // ── Free Pickups (no cost) ─────────────────────────────
+  {
+    name: 'A Glinting Die',
+    description: 'Something catches your eye on the dungeon floor — a small die, still warm to the touch. You pocket it without thinking.',
+    reward: { type: 'rerolls', value: 1, text: '+1 Reroll Token' },
+    cost: '',
+    free: true
+  },
+  {
+    name: 'The Fallen Adventurer',
+    description: 'A skeleton slumps against the wall, clutching a pouch. Inside: a single glowing token. They won\'t be needing it.',
+    reward: { type: 'rerolls', value: 1, text: '+1 Reroll Token' },
+    cost: '',
+    free: true
+  },
+  {
+    name: 'Dungeon Cache',
+    description: 'A loose stone in the wall reveals a hidden alcove. Tucked inside is a small token pulsing with faint light.',
+    reward: { type: 'rerolls', value: 1, text: '+1 Reroll Token' },
+    cost: '',
+    free: true
+  },
+
   // ── Wandering Merchants (Rerolls for Deferred Curses) ──
   {
     name: 'The Wandering Merchant',
@@ -168,5 +191,19 @@ const ROAD_EVENTS = [
     description: 'A veiled figure peers into a cracked crystal ball. "I see your future... and I can change it. For a price."',
     reward: { type: 'rerolls', value: 1, text: '+1 Reroll Token' },
     cost: 'The fortune demands tribute — add a reversed cymbal or riser before every major transition in your arrangement from this point forward'
+  },
+
+  // ── Relic Encounters ────────────────────────────────
+  {
+    name: 'The Relic Peddler',
+    description: 'A hunched figure emerges from the shadows, a glowing artifact clutched in gnarled hands. "This belonged to a great producer. It can be yours... for a price."',
+    reward: { type: 'relic', value: null, text: 'A Random Relic' },
+    cost: 'Layer white noise or tape hiss under your entire track — subtle but always present, like the artifact\'s whisper'
+  },
+  {
+    name: 'The Shrine of Echoes',
+    description: 'You discover a crumbling shrine. A relic pulses on the altar, waiting to be claimed.',
+    reward: { type: 'relic', value: null, text: 'A Random Relic' },
+    cost: 'The shrine demands a tribute of echo — add a delay effect to at least two elements that currently have none'
   }
 ];

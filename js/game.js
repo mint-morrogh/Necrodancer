@@ -145,7 +145,99 @@ function enterNodeFromMap(nodeId) {
     return;
   }
 
+  // Relic nodes go to relic choice screen
+  if (node.type === 'relic') {
+    node.completed = true;
+    enterRelicNode();
+    return;
+  }
+
   enterRoomFromNode(node, node.trackType);
+}
+
+function applyDeferredCursesToBoss(room) {
+  const incomplete = state.deferredCurses.filter(c => !c.completed);
+  if (incomplete.length === 0) return;
+
+  let count = 0;
+  for (let i = 0; i < incomplete.length; i++) {
+    const dc = incomplete[i];
+    room.curses.push({ text: dc.text, type: 'deferred-forced', completed: false });
+    room.checklist.push({
+      id: 'curse-df-' + i,
+      text: dc.text,
+      completed: false,
+      type: 'curse'
+    });
+    dc.completed = true;
+    count++;
+  }
+  room.forcedDeferredCount = count;
+}
+
+// ════════════════════════════════════════════════════════
+// RELIC ACQUISITION
+// ════════════════════════════════════════════════════════
+
+function getAvailableRelics() {
+  return RELICS.filter(r => !state.relics.includes(r.id));
+}
+
+function pickRelicsForChoice(count) {
+  const available = getAvailableRelics();
+  if (available.length === 0) return [];
+  const picked = [];
+  const pool = [...available];
+  const num = Math.min(count, pool.length);
+  for (let i = 0; i < num; i++) {
+    const chosen = weightedPick(pool.map(r => ({
+      value: r,
+      weight: RELIC_TIERS[r.tier].weight
+    })));
+    picked.push(chosen);
+    pool.splice(pool.indexOf(chosen), 1);
+  }
+  return picked;
+}
+
+function pickSingleRelic() {
+  const available = getAvailableRelics();
+  if (available.length === 0) return null;
+  return weightedPick(available.map(r => ({
+    value: r,
+    weight: RELIC_TIERS[r.tier].weight
+  })));
+}
+
+function enterRelicNode() {
+  const relics = pickRelicsForChoice(3);
+  if (relics.length === 0) {
+    // All relics collected — just return to map
+    state.roomPhase = 'map';
+    render();
+    return;
+  }
+  state.pendingRelicChoice = { relics, source: 'node' };
+  state.roomPhase = 'relic-choice';
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function selectRelic(relicId) {
+  if (!state.relics.includes(relicId)) {
+    state.relics.push(relicId);
+  }
+  const source = state.pendingRelicChoice ? state.pendingRelicChoice.source : 'node';
+  state.pendingRelicChoice = null;
+  state.roomPhase = source === 'campfire' ? 'campfire' : 'map';
+  render();
+}
+
+function skipRelicChoice() {
+  const source = state.pendingRelicChoice ? state.pendingRelicChoice.source : 'node';
+  state.pendingRelicChoice = null;
+  state.roomPhase = source === 'campfire' ? 'campfire' : 'map';
+  render();
 }
 
 function enterRoomFromNode(node, trackType) {
@@ -157,7 +249,8 @@ function enterRoomFromNode(node, trackType) {
   let isAlchemist = false;
 
   // Side quest roll (not for boss/sanctuary/cursed)
-  if (!isBoss && node.type === 'standard' && chance(diff().sideQuestChance)) {
+  const sideQuestChance = diff().sideQuestChance + (hasRelic('quest_magnet') ? 3 : 0);
+  if (!isBoss && node.type === 'standard' && chance(sideQuestChance)) {
     isSideQuest = true;
     originalTrackType = trackType;
     const otherTypes = TRACK_TYPES.filter(t => t !== trackType);
@@ -165,7 +258,8 @@ function enterRoomFromNode(node, trackType) {
   }
 
   // Alchemist roll (standard nodes only)
-  if (!isBoss && !isSideQuest && node.type === 'standard' && chance(diff().alchemistChance)) {
+  const alchemistChance = diff().alchemistChance + (hasRelic('alchemists_key') ? 4 : 0);
+  if (!isBoss && !isSideQuest && node.type === 'standard' && chance(alchemistChance)) {
     isAlchemist = true;
   }
 
@@ -184,13 +278,16 @@ function enterRoomFromNode(node, trackType) {
   }
 
   // Chest roll (non-boss, non-campfire)
-  if (!isBoss && node.type !== 'campfire' && chance(diff().chestChance)) {
+  const chestChance = diff().chestChance + (hasRelic('thiefs_glove') ? 5 : 0) + (hasRelic('gamblers_coin') ? 5 : 0);
+  if (!isBoss && node.type !== 'campfire' && chance(chestChance)) {
+    const hasAvailableRelics = getAvailableRelics().length > 0;
     state.chestData = {
       message: pick(CHEST_MESSAGES),
       reward: weightedPick([
-        { value: 'reroll', weight: 40 },
-        { value: 'blessing', weight: 35 },
-        { value: 'shield', weight: 25 }
+        { value: 'reroll', weight: 35 },
+        { value: 'blessing', weight: 30 },
+        { value: 'shield', weight: 25 },
+        { value: 'relic', weight: hasAvailableRelics ? 10 : 0 }
       ]),
       collected: false
     };
@@ -206,7 +303,11 @@ function enterRoomFromNode(node, trackType) {
   state.currentRoom.isSideQuest = isSideQuest;
   state.currentRoom.originalTrackType = originalTrackType;
   state.currentRoom.nodeId = node.id;
-  if (isBoss) state.rerolls += 2;
+  if (isBoss) {
+    state.rerolls += 2;
+    applyDeferredCursesToBoss(state.currentRoom);
+  }
+  state.rerollsUsedThisRoom = 0;
   state.roomPhase = 'active';
   render();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -240,7 +341,8 @@ function toggleCheck(index) {
   const item = state.currentRoom.checklist[index];
   item.completed = !item.completed;
 
-  const gv = Math.round(goldForType(item.type) * diff().goldMultiplier);
+  const goldMult = (hasRelic('golden_chalice') ? 1.5 : 1) * (hasRelic('gamblers_coin') ? 1.5 : 1);
+  const gv = Math.round(goldForType(item.type) * diff().goldMultiplier * goldMult);
   state.gold += item.completed ? gv : -gv;
   if (state.gold < 0) state.gold = 0;
 
@@ -257,6 +359,7 @@ function toggleCheck(index) {
     if (text) { text.classList.toggle('done', item.completed); }
   }
   updateSealButton();
+  checkAndShowMasteryPopup();
 }
 
 function updateSealButton() {
@@ -306,6 +409,7 @@ function toggleBonus() {
     if (box) { box.classList.toggle('checked', done); box.textContent = done ? '✓' : ''; }
     if (text) { text.classList.toggle('done', done); }
   }
+  checkAndShowMasteryPopup();
 }
 
 function toggleDeferred(index) {
@@ -329,6 +433,47 @@ function toggleDeferred(index) {
   }
 }
 
+// ════════════════════════════════════════════════════════
+// ROOM MASTERY
+// ════════════════════════════════════════════════════════
+
+function checkRoomMastery() {
+  const room = state.currentRoom;
+  if (!room || !room.flavorRoll) return false;
+  return room.checklist.every(c => c.completed)
+      && room.bonusCompleted
+      && state.rerollsUsedThisRoom === 0;
+}
+
+function checkAndShowMasteryPopup() {
+  const room = state.currentRoom;
+  if (!room || room._masteryShown) return;
+  if (room.isSideQuest || room.isBoss) return;
+  if (checkRoomMastery()) {
+    room._masteryShown = true;
+    showMasteryPopup();
+  }
+}
+
+function showMasteryPopup() {
+  // Remove existing popup if any
+  const existing = document.querySelector('.mastery-popup');
+  if (existing) existing.remove();
+
+  const popup = document.createElement('div');
+  popup.className = 'mastery-popup';
+  popup.innerHTML = `
+    <div class="mastery-popup-icon">\u2605</div>
+    <div class="mastery-popup-text">ROOM MASTERED</div>
+  `;
+  document.body.appendChild(popup);
+
+  // Auto-dismiss after 3 seconds
+  setTimeout(() => {
+    if (popup.parentNode) popup.remove();
+  }, 3000);
+}
+
 async function sealRoom() {
   if (!state.currentRoom) return;
 
@@ -347,36 +492,64 @@ async function sealRoom() {
 
   // Score tracking
   const d = diff();
+  const scoreMult = (hasRelic('score_amplifier') ? 1.25 : 1) * (hasRelic('crown_of_the_ancients') ? 1.25 : 1);
   const completedChecks = state.currentRoom.checklist.filter(c => c.completed).length;
-  state.score += Math.round(completedChecks * d.scorePerCheckbox * d.scoreMultiplier);
-  state.score += Math.round(d.scorePerRoom * d.scoreMultiplier);
-  if (isSideQuest) state.score += Math.round(d.scorePerSideQuest * d.scoreMultiplier);
+  state.score += Math.round(completedChecks * d.scorePerCheckbox * d.scoreMultiplier * scoreMult);
+  state.score += Math.round(d.scorePerRoom * d.scoreMultiplier * scoreMult);
+  if (isSideQuest) state.score += Math.round(d.scorePerSideQuest * d.scoreMultiplier * scoreMult);
+
+  // Mastery detection (standard rooms only, not side quest or boss)
+  const isBoss = state.currentRoom.isBoss || false;
+  const isMastery = !isSideQuest && !isBoss && checkRoomMastery();
 
   let earnedReroll = false;
   let rerollCount = 0;
   let rollTarget = 0;
   let rollValue = 0;
+  let masteryGoldBonus = 0;
+  let masteryScoreBonus = 0;
 
-  if (allCompleted) {
+  if (isMastery) {
+    // Mastery: guaranteed reroll, bonus gold + score, no dice roll
+    earnedReroll = true;
+    rerollCount = 1;
+    state.rerolls += 1;
+    masteryGoldBonus = 15;
+    state.gold += masteryGoldBonus;
+    masteryScoreBonus = Math.round(50 * d.scoreMultiplier * scoreMult);
+    state.score += masteryScoreBonus;
+  } else if (allCompleted) {
     if (isSideQuest) {
       earnedReroll = true;
       rerollCount = 2;
       state.rerolls += 2;
     } else {
       rollTarget = bonusCompleted ? d.rerollBonusChance : d.rerollChance;
+      // Relic: Lucky Die — +10% reroll success chance
+      if (hasRelic('lucky_die')) rollTarget += 10;
+      // Relic: Crown of the Ancients — +10% reroll chance
+      if (hasRelic('crown_of_the_ancients')) rollTarget += 10;
       rollValue = roll(1, 100);
       earnedReroll = rollValue <= rollTarget;
       rerollCount = earnedReroll ? 1 : 0;
     }
   }
 
+  // Relic: Completion Crown — +1 extra reroll on full completion
+  let crownBonus = 0;
+  if (allCompleted && hasRelic('completion_crown') && !isMastery) {
+    crownBonus = 1;
+    state.rerolls += 1;
+  }
+
   // Completion streak tracking
+  const streakThreshold = hasRelic('streak_talisman') ? 2 : 3;
   let streakReward = false;
   let streakCount = 0;
   if (allCompleted) {
     state.completionStreak++;
     streakCount = state.completionStreak;
-    if (state.completionStreak >= 3) {
+    if (state.completionStreak >= streakThreshold) {
       streakReward = true;
       state.rerolls += 1;
       state.completionStreak = 0;
@@ -393,9 +566,8 @@ async function sealRoom() {
     state.rerolls += 1;
   }
 
-  const isBoss = state.currentRoom.isBoss || false;
   const bossBlessing = isBoss ? state.currentRoom.blessing : null;
-  if (isBoss) state.score += Math.round(d.scorePerBoss * d.scoreMultiplier);
+  if (isBoss) state.score += Math.round(d.scorePerBoss * d.scoreMultiplier * scoreMult);
 
   state.transitionData = {
     roomName: state.currentRoom.name,
@@ -411,7 +583,11 @@ async function sealRoom() {
     rollValue,
     streakReward,
     streakCount,
-    curseSurvivor
+    curseSurvivor,
+    isMastery,
+    masteryGoldBonus,
+    masteryScoreBonus,
+    crownBonus
   };
 
   state.currentRoom = null;
@@ -419,7 +595,7 @@ async function sealRoom() {
   render();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
-  if (allCompleted && !isSideQuest && !isBoss) {
+  if (allCompleted && !isSideQuest && !isBoss && !isMastery) {
     await animateSpell();
   }
 }
@@ -549,6 +725,7 @@ async function doubleOrNothing() {
 function continueFromTransition() {
   const td = state.transitionData;
   if (td && td.isBoss) {
+    state.postBossCampfire = true;
     state.roomPhase = 'campfire';
     state.transitionData = null;
     render();
@@ -601,10 +778,19 @@ function collectChest() {
   if (state.chestData.reward === 'reroll') {
     state.rerolls += 1;
   } else if (state.chestData.reward === 'blessing') {
-    // Blessing will be applied when room is generated (stored for display)
     state.chestData.blessingText = pick(BLESSINGS);
   } else if (state.chestData.reward === 'shield') {
     state.shieldNextRoom = true;
+  } else if (state.chestData.reward === 'relic') {
+    const relic = pickSingleRelic();
+    if (relic) {
+      state.chestData.relicGranted = relic;
+      state.relics.push(relic.id);
+    } else {
+      // Fallback if no relics left
+      state.rerolls += 1;
+      state.chestData.reward = 'reroll';
+    }
   }
   render();
 }
@@ -640,19 +826,23 @@ function proceedFromChest() {
     state.pendingBlessing = false;
   }
 
+  if (pr.isBoss) applyDeferredCursesToBoss(state.currentRoom);
+
   state.chestData = null;
   state.pendingRoom = null;
+  state.rerollsUsedThisRoom = 0;
   state.roomPhase = 'active';
   render();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function buyCampfireItem(type) {
-  if (type === 'removeCurse' && state.gold >= 15) {
+  const curseRemovalCost = hasRelic('purifying_flame') ? 10 : 15;
+  if (type === 'removeCurse' && state.gold >= curseRemovalCost) {
     const idx = state.deferredCurses.findIndex(c => !c.completed);
     if (idx > -1) {
       state.deferredCurses[idx].completed = true;
-      state.gold -= 15;
+      state.gold -= curseRemovalCost;
     }
   } else if (type === 'shield' && state.gold >= 10) {
     state.shieldNextRoom = true;
@@ -665,13 +855,29 @@ function buyCampfireItem(type) {
       state.nextRoomCurses.shift();
       state.gold -= 12;
     }
+  } else if (type === 'buyRelic' && state.gold >= 50) {
+    const relics = pickRelicsForChoice(2);
+    if (relics.length > 0) {
+      state.gold -= 50;
+      state.pendingRelicChoice = { relics, source: 'campfire' };
+      state.roomPhase = 'relic-choice';
+      render();
+      return;
+    }
   }
   render();
 }
 
 function leaveCampfire() {
-  state.roomPhase = 'map';
-  render();
+  if (state.postBossCampfire) {
+    state.postBossCampfire = false;
+    state.roomPhase = 'floor-complete';
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    state.roomPhase = 'map';
+    render();
+  }
 }
 
 function acceptRoadEvent() {
@@ -688,8 +894,12 @@ function acceptRoadEvent() {
   } else if (reward.type === 'shield') {
     state.shieldNextRoom = true;
   } else if (reward.type === 'blessing') {
-    // Blessing will be applied to the next room — store as a deferred blessing
     state.pendingBlessing = true;
+  } else if (reward.type === 'relic') {
+    const relic = pickSingleRelic();
+    if (relic) {
+      state.relics.push(relic.id);
+    }
   }
 
   // Track accepted events for the session log
@@ -711,13 +921,16 @@ function continueFromRoadEvent(pending) {
   const node = getNodeById(pending.nodeId);
 
   // Check for chest (same roll as normal flow)
-  if (!pending.isBoss && node.type !== 'campfire' && chance(diff().chestChance)) {
+  const chestChanceRoad = diff().chestChance + (hasRelic('thiefs_glove') ? 5 : 0) + (hasRelic('gamblers_coin') ? 5 : 0);
+  if (!pending.isBoss && node.type !== 'campfire' && chance(chestChanceRoad)) {
+    const hasAvailableRelics = getAvailableRelics().length > 0;
     state.chestData = {
       message: pick(CHEST_MESSAGES),
       reward: weightedPick([
-        { value: 'reroll', weight: 40 },
-        { value: 'blessing', weight: 35 },
-        { value: 'shield', weight: 25 }
+        { value: 'reroll', weight: 35 },
+        { value: 'blessing', weight: 30 },
+        { value: 'shield', weight: 25 },
+        { value: 'relic', weight: hasAvailableRelics ? 10 : 0 }
       ]),
       collected: false
     };
@@ -734,7 +947,10 @@ function continueFromRoadEvent(pending) {
   state.currentRoom.isSideQuest = pending.isSideQuest;
   state.currentRoom.originalTrackType = pending.originalTrackType;
   state.currentRoom.nodeId = pending.nodeId;
-  if (pending.isBoss) state.rerolls += 2;
+  if (pending.isBoss) {
+    state.rerolls += 2;
+    applyDeferredCursesToBoss(state.currentRoom);
+  }
 
   // Apply pending blessing from road event
   if (state.pendingBlessing) {
@@ -747,6 +963,7 @@ function continueFromRoadEvent(pending) {
     state.pendingBlessing = false;
   }
 
+  state.rerollsUsedThisRoom = 0;
   state.roomPhase = 'active';
   render();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -814,6 +1031,12 @@ function endSession() {
               <div style="font-size:13px; color:var(--dim); margin-top:4px;">Side Quests</div>
             </div>
           ` : ''}
+          ${state.relics.length > 0 ? `
+            <div class="panel panel-accent">
+              <div style="font-family:var(--font-pixel); font-size:24px; color:var(--purple);">${state.relics.length}</div>
+              <div style="font-size:13px; color:var(--dim); margin-top:4px;">Relics Found</div>
+            </div>
+          ` : ''}
           <div class="panel panel-accent">
             <div style="font-family:var(--font-pixel); font-size:24px; color:var(--gold);">${state.gold}g</div>
             <div style="font-size:13px; color:var(--dim); margin-top:4px;">Gold Earned</div>
@@ -865,6 +1088,25 @@ function endSession() {
           </div>
         ` : ''}
 
+        ${state.relics.length > 0 ? `
+          <div style="margin:20px 0; text-align:left;">
+            <div class="panel-header" style="color:var(--purple);">Relics Collected</div>
+            ${state.relics.map(id => {
+              const r = getRelic(id);
+              if (!r) return '';
+              const tierInfo = RELIC_TIERS[r.tier];
+              return `
+                <div class="relic-log-item">
+                  <span class="relic-log-icon">${r.icon}</span>
+                  <div>
+                    <div style="color:${tierInfo.color}; font-size:15px;">${r.name} <span style="font-size:12px; opacity:0.6;">(${tierInfo.label})</span></div>
+                    <div style="color:var(--dim); font-size:13px;">${r.description}</div>
+                  </div>
+                </div>`;
+            }).join('')}
+          </div>
+        ` : ''}
+
         <div style="margin-top:30px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
           <button class="btn" onclick="newSession()">NEW SESSION</button>
           <button class="btn btn-small" onclick="exportLog()">COPY BEAT SHEET</button>
@@ -882,8 +1124,9 @@ function newSession() {
     roomPhase: 'map', transitionData: null, deferredCurses: [],
     nextRoomCurses: [], completionStreak: 0, shieldNextRoom: false, usedRoomNames: [],
     seed: null, seedMode: 'daily', gold: 0, score: 0, chestData: null, pendingRoom: null,
-    roadEventData: null, acceptedEvents: [], pendingBlessing: false,
-    floor: 1, map: null, currentNodeId: null, floorHistory: [], setupStep: 1
+    roadEventData: null, acceptedEvents: [], pendingBlessing: false, postBossCampfire: false,
+    floor: 1, map: null, currentNodeId: null, floorHistory: [], setupStep: 1,
+    relics: [], relicUses: {}, pendingRelicChoice: null, rerollsUsedThisRoom: 0
   };
   render();
 }
@@ -934,6 +1177,17 @@ function generateBeatSheet() {
     for (const ev of state.acceptedEvents) {
       sheet += `${ev.name} (${ev.reward})\n`;
       sheet += `   Cost: ${ev.cost}\n`;
+    }
+    sheet += `\n`;
+  }
+
+  if (state.relics.length > 0) {
+    sheet += `${'─'.repeat(44)}\n`;
+    sheet += `RELICS COLLECTED\n`;
+    sheet += `${'─'.repeat(44)}\n`;
+    for (const id of state.relics) {
+      const r = getRelic(id);
+      if (r) sheet += `${r.icon} ${r.name} — ${r.description}\n`;
     }
     sheet += `\n`;
   }
@@ -993,7 +1247,13 @@ function rebuildGenreDirective(room) {
 function rerollSampleType() {
   const room = state.currentRoom;
   if (!room || state.rerolls <= 0 || room.isAlchemist) return;
-  state.rerolls--;
+  // Relic: Metronome of Mercy — first room reroll each floor is free
+  if (hasRelic('metronome_of_mercy') && !relicUsedThisFloor('metronome_of_mercy')) {
+    markRelicUsed('metronome_of_mercy');
+  } else {
+    state.rerolls--;
+  }
+  state.rerollsUsedThisRoom++;
   room.sampleType = pick(SAMPLE_TYPES[room.trackType] || ['sample']);
   room.genreDirective = rebuildGenreDirective(room);
   room.checklist[0].text = room.genreDirective;
@@ -1003,7 +1263,12 @@ function rerollSampleType() {
 function rerollGenre() {
   const room = state.currentRoom;
   if (!room || state.rerolls <= 0 || room.isAlchemist) return;
-  state.rerolls--;
+  if (hasRelic('metronome_of_mercy') && !relicUsedThisFloor('metronome_of_mercy')) {
+    markRelicUsed('metronome_of_mercy');
+  } else {
+    state.rerolls--;
+  }
+  state.rerollsUsedThisRoom++;
   const pool = GENRES_BY_TRACK[room.trackType] || GENRES_BY_TRACK['Drums'];
   room.genre = pick(pool);
   room.genreDirective = rebuildGenreDirective(room);
@@ -1015,8 +1280,13 @@ function rerollCurse(index) {
   const room = state.currentRoom;
   if (!room || state.rerolls <= 0) return;
   const curse = room.curses[index];
-  if (!curse || curse.type === 'carried') return;
-  state.rerolls--;
+  if (!curse || curse.type === 'carried' || curse.type === 'deferred-forced') return;
+  if (hasRelic('metronome_of_mercy') && !relicUsedThisFloor('metronome_of_mercy')) {
+    markRelicUsed('metronome_of_mercy');
+  } else {
+    state.rerolls--;
+  }
+  state.rerollsUsedThisRoom++;
 
   let pool;
   if (curse.type === 'immediate') {
@@ -1048,7 +1318,12 @@ function rerollEffect(index) {
   if (!room || state.rerolls <= 0) return;
   const effect = room.effects[index];
   if (!effect) return;
-  state.rerolls--;
+  if (hasRelic('metronome_of_mercy') && !relicUsedThisFloor('metronome_of_mercy')) {
+    markRelicUsed('metronome_of_mercy');
+  } else {
+    state.rerolls--;
+  }
+  state.rerollsUsedThisRoom++;
 
   const NEEDS_PREVIOUS_TRACK = ['Sidechain Compression'];
   const isFirstRoom = state.rooms.length === 0;

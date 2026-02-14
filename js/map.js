@@ -23,6 +23,7 @@ const NODE_TYPES = {
   cursed:    { icon: 'X', label: 'Cursed Chamber',  color: 'var(--red)',    desc: 'Guaranteed curses, bonus gold' },
   sanctuary: { icon: '+', label: 'Sanctuary',       color: 'var(--green)',  desc: 'No curses, guaranteed blessing' },
   campfire:  { icon: 'R', label: 'Campfire',        color: 'var(--orange)', desc: 'Spend gold, no track produced' },
+  relic:     { icon: '\u25C7', label: 'Relic Chamber', color: 'var(--purple)', desc: 'A rare artifact awaits' },
   start:     { icon: '>', label: 'Start',           color: 'var(--gold)',   desc: 'Choose your instrument' },
   boss:      { icon: 'B', label: 'Boss',            color: 'var(--red)',    desc: 'Defeat the boss to continue' }
 };
@@ -38,7 +39,7 @@ function generateNodePreview(nodeType, trackType) {
     curseCount = roll(2, 3);
     hasBlessing = false;
     effectCount = Math.min(weightedPick(diff().effectWeights) + 1, 4);
-  } else if (nodeType === 'campfire') {
+  } else if (nodeType === 'campfire' || nodeType === 'relic') {
     curseCount = 0; effectCount = 0; hasBlessing = false;
   } else if (nodeType === 'boss') {
     curseCount = roll(...diff().bossCurseRange) + 1;
@@ -57,16 +58,18 @@ function generateNodePreview(nodeType, trackType) {
 function pickNodeType(allowCampfire) {
   if (allowCampfire) {
     return weightedPick([
-      { value: 'standard', weight: 45 },
+      { value: 'standard', weight: 40 },
       { value: 'cursed', weight: 18 },
       { value: 'sanctuary', weight: 14 },
-      { value: 'campfire', weight: 23 }
+      { value: 'campfire', weight: 23 },
+      { value: 'relic', weight: 5 }
     ]);
   }
   return weightedPick([
-    { value: 'standard', weight: 55 },
+    { value: 'standard', weight: 50 },
     { value: 'cursed', weight: 25 },
-    { value: 'sanctuary', weight: 20 }
+    { value: 'sanctuary', weight: 20 },
+    { value: 'relic', weight: 5 }
   ]);
 }
 
@@ -102,7 +105,7 @@ function generateFloorMap(floorNum) {
       const nodeType = pickNodeType(canSpawnCampfire && !campfirePlaced);
       const isCampfire = nodeType === 'campfire';
       if (isCampfire) campfirePlaced = true;
-      const trackType = isCampfire ? null : drawTrackType();
+      const trackType = (isCampfire || nodeType === 'relic') ? null : drawTrackType();
       row.push({
         id: `${r}-${n}`,
         type: nodeType,

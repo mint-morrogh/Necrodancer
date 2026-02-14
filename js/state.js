@@ -27,11 +27,16 @@ let state = {
   roadEventData: null,
   acceptedEvents: [],
   pendingBlessing: false,
+  postBossCampfire: false,
   floor: 1,
   map: null,
   currentNodeId: null,
   floorHistory: [],
-  setupStep: 1
+  setupStep: 1,
+  relics: [],
+  relicUses: {},
+  pendingRelicChoice: null,
+  rerollsUsedThisRoom: 0
 };
 
 
@@ -146,4 +151,24 @@ function pickUnique(arr, used) {
 
 function stripNextRoomPrefix(text) {
   return text.replace(/^NEXT ROOM:\s*/i, '');
+}
+
+// ════════════════════════════════════════════════════════
+// RELIC HELPERS
+// ════════════════════════════════════════════════════════
+
+function hasRelic(id) {
+  return state.relics.includes(id);
+}
+
+function getRelic(id) {
+  return RELICS.find(r => r.id === id) || null;
+}
+
+function relicUsedThisFloor(id) {
+  return !!state.relicUses[id + '_' + state.floor];
+}
+
+function markRelicUsed(id) {
+  state.relicUses[id + '_' + state.floor] = true;
 }

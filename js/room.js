@@ -170,7 +170,14 @@ function generateRoom(trackType, opts = {}) {
       }
     }
   } else {
-    if (!state.shieldNextRoom && chance(diff().curseChance)) {
+    // Curse Ward relic: block the first curse each floor
+    if (hasRelic('curse_ward') && !relicUsedThisFloor('curse_ward') && !state.shieldNextRoom && !isSanctuary) {
+      // Ward absorbs the curse roll entirely for this room
+      if (chance(diff().curseChance)) {
+        markRelicUsed('curse_ward');
+        // Curse blocked — skip curse generation
+      }
+    } else if (!state.shieldNextRoom && chance(diff().curseChance)) {
       const ctw = diff().curseTypeWeights;
       const curseType = weightedPick([
         { value: 'immediate', weight: ctw.immediate },
@@ -227,7 +234,12 @@ function generateRoom(trackType, opts = {}) {
       effName = `Sidechain Compression (keyed to ${target})`;
     }
 
-    effects.push({ name: effName, percentage: roll(...diff().effectRange) });
+    let pct = roll(...diff().effectRange);
+    // Relic: Echo Crystal — cap effect % at 60
+    if (hasRelic('echo_crystal')) pct = Math.min(pct, 60);
+    // Relic: Dampening Orb — reduce effect % by 15
+    if (hasRelic('dampening_orb')) pct = Math.max(5, pct - 15);
+    effects.push({ name: effName, percentage: pct });
   }
 
   let blessing = null;
@@ -235,7 +247,7 @@ function generateRoom(trackType, opts = {}) {
     blessing = pick(BOSS_BLESSINGS);
   } else if (isSanctuary) {
     blessing = pick(BLESSINGS);
-  } else if (chance(diff().blessingChance)) {
+  } else if (chance(diff().blessingChance + (hasRelic('divine_favor') ? 15 : 0))) {
     blessing = pick(BLESSINGS);
   }
   if (blessing) {

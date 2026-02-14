@@ -170,6 +170,10 @@ function renderDungeon() {
     mainContent = renderCampfire();
   } else if (state.roomPhase === 'road-event') {
     mainContent = renderRoadEvent();
+  } else if (state.roomPhase === 'floor-complete') {
+    mainContent = renderFloorComplete();
+  } else if (state.roomPhase === 'relic-choice') {
+    mainContent = renderRelicChoice();
   } else {
     mainContent = renderRoomActive(state.currentRoom);
   }
@@ -188,6 +192,7 @@ function renderDungeon() {
           <div class="song-info-item">SCORE <span style="color:var(--purple);">${state.score}</span></div>
           <div class="song-info-item">RE-ROLLS <span class="reroll-count">${state.rerolls}</span></div>
           <div class="song-info-item">GOLD <span style="color:var(--gold);">${state.gold}g</span></div>
+          ${state.relics.length > 0 ? '<div class="song-info-item" style="color:var(--purple);">RELICS <span style="color:var(--purple);">' + state.relics.length + '</span></div>' : ''}
           ${state.shieldNextRoom ? '<div class="song-info-item" style="color:var(--green)">SHIELD ACTIVE</div>' : ''}
           <button class="rules-btn" onclick="showHelp()">? RULES</button>
         </div>
@@ -248,7 +253,7 @@ function renderMap() {
       if (isCompleted) classes += ' completed';
       if (isLocked) classes += ' locked';
 
-      const canReroll = isReachable && !isCompleted && node.type !== 'start' && node.type !== 'boss' && state.rerolls > 0;
+      const canReroll = isReachable && !isCompleted && node.type !== 'start' && node.type !== 'boss' && node.type !== 'relic' && state.rerolls > 0;
 
       html += `
         <div class="${classes}" data-node-id="${node.id}"
@@ -267,6 +272,7 @@ function renderMap() {
             ${node.preview.effectCount > 0 ? `<div class="map-tooltip-row" style="color:var(--purple);">Effects: ${node.preview.effectCount}</div>` : ''}
             ${node.preview.hasBlessing ? `<div class="map-tooltip-row" style="color:var(--green);">Blessing present</div>` : ''}
             ${node.type === 'campfire' ? `<div class="map-tooltip-row" style="color:var(--orange);">No track — shop only</div>` : ''}
+            ${node.type === 'relic' ? `<div class="map-tooltip-row" style="color:var(--purple);">You sense a relic in this room</div>` : ''}
           </div>
         </div>
       `;
@@ -404,6 +410,16 @@ function renderRoomActive(room) {
         </div>
       ` : ''}
 
+      ${(() => {
+        const pendingDeferred = state.deferredCurses.filter(c => !c.completed).length;
+        if (room.isBoss && room.forcedDeferredCount > 0) {
+          return '<div class="deferred-warning">Your deferred curses have been applied to this battle!</div>';
+        } else if (!room.isBoss && pendingDeferred > 0) {
+          return `<div class="deferred-warning">You have ${pendingDeferred} deferred curse${pendingDeferred > 1 ? 's' : ''} pending. Complete them before the boss or they'll be forced upon you!</div>`;
+        }
+        return '';
+      })()}
+
       <div style="text-align:center;">
         ${room.isBoss ? '<div class="boss-badge">BOSS ENCOUNTER</div>' : ''}
         ${room.isAlchemist ? '<div class="alchemist-badge">Alchemist\'s Lair</div>' : ''}
@@ -430,8 +446,8 @@ function renderRoomActive(room) {
           <div class="result-label curse-label">${room.curses.length > 1 ? 'Curses' : 'Curse'}</div>
           ${room.curses.map((c, i) => `
             <div class="result-text curse-text">
-              ${c.type === 'carried' ? '[CARRIED] ' : c.type === 'boss-curse' ? '[BOSS] ' : ''}${c.text}
-              ${c.type !== 'carried' && state.rerolls > 0 ? `<button class="reroll-btn" onclick="rerollCurse(${i})" title="Reroll this curse">&#127922;</button>` : ''}
+              ${c.type === 'carried' ? '[CARRIED] ' : c.type === 'boss-curse' ? '[BOSS] ' : c.type === 'deferred-forced' ? '[DEFERRED] ' : ''}${c.text}
+              ${c.type !== 'carried' && c.type !== 'deferred-forced' && state.rerolls > 0 ? `<button class="reroll-btn" onclick="rerollCurse(${i})" title="Reroll this curse">&#127922;</button>` : ''}
             </div>
           `).join('')}
         </div>
@@ -590,13 +606,54 @@ function renderTransition() {
     `;
   }
 
+  if (td.isMastery) {
+    return `
+      <div class="panel transition-panel mastery-transition">
+        <div class="mastery-badge">\u2605 ROOM MASTERED \u2605</div>
+        <div style="color:var(--dim); font-size:15px; margin:16px 0;">
+          Perfect execution. The dungeon acknowledges your mastery.
+        </div>
+
+        <div class="mastery-criteria">
+          <div class="mastery-criteria-item"><span style="color:var(--green);">\u2713</span> All tasks completed</div>
+          <div class="mastery-criteria-item"><span style="color:var(--green);">\u2713</span> Bonus objective completed</div>
+          <div class="mastery-criteria-item"><span style="color:var(--green);">\u2713</span> Zero rerolls used</div>
+        </div>
+
+        <div class="mastery-rewards">
+          <div class="mastery-reward-card">
+            <div style="font-size:24px;">&#127922;</div>
+            <div>+${td.rerollCount} Reroll</div>
+            <div style="font-size:11px; color:var(--dim);">Guaranteed</div>
+          </div>
+          <div class="mastery-reward-card">
+            <div style="font-size:24px; color:var(--gold);">+${td.masteryGoldBonus}g</div>
+            <div>Gold Bonus</div>
+          </div>
+          <div class="mastery-reward-card">
+            <div style="font-size:24px; color:var(--purple);">+${td.masteryScoreBonus}</div>
+            <div>Score Bonus</div>
+          </div>
+        </div>
+
+        ${td.streakReward ? '<div class="reward-banner streak-banner"><span class="streak-flames">\uD83D\uDD25\uD83D\uDD25\uD83D\uDD25</span><span>COMPLETION STREAK! +1 REROLL</span></div>' : ''}
+        ${td.streakCount > 0 && !td.streakReward ? '<div class="streak-counter">STREAK: ' + td.streakCount + '/' + (hasRelic('streak_talisman') ? 2 : 3) + '</div>' : ''}
+        ${td.curseSurvivor ? '<div class="reward-banner survivor-banner"><span class="survivor-icon">\uD83D\uDEE1\uFE0F\uD83D\uDC80</span><span>CURSE SURVIVOR! +1 REROLL</span></div>' : ''}
+
+        <div style="margin-top:20px;">
+          <button class="btn" onclick="continueFromTransition()">CONTINUE</button>
+        </div>
+      </div>
+    `;
+  }
+
   return `
     <div class="panel transition-panel">
       <div class="room-header" style="margin-bottom:8px;">ROOM SEALED</div>
       <div style="color:var(--dim); font-size:15px; margin-bottom:16px;">
         All tasks completed${td.bonusCompleted ? ' + Bonus' : ''}. The spirits judge your work...
       </div>
-      ${td.streakCount > 0 && !td.streakReward ? `<div class="streak-counter">STREAK: ${td.streakCount}/3</div>` : ''}
+      ${td.streakCount > 0 && !td.streakReward ? '<div class="streak-counter">STREAK: ' + td.streakCount + '/' + (hasRelic('streak_talisman') ? 2 : 3) + '</div>' : ''}
       <div class="roll-details" style="margin-bottom:8px;">
         <div style="margin-bottom:6px;"><span class="roll-chance">CHANCE: ${td.rollTarget}%</span></div>
         <div><span style="color:var(--green); font-family:var(--font-pixel); font-size:11px; letter-spacing:2px;">SUCCESS: ${td.rollTarget} OR LOWER</span></div>
@@ -638,6 +695,7 @@ function renderChest() {
   if (cd.reward === 'reroll') rewardText = '+1 Reroll Token';
   else if (cd.reward === 'blessing') rewardText = 'A Random Blessing';
   else if (cd.reward === 'shield') rewardText = 'Curse Shield (next room)';
+  else if (cd.reward === 'relic' && cd.relicGranted) rewardText = cd.relicGranted.icon + ' ' + cd.relicGranted.name + ' (Relic)';
 
   return `
     <div class="panel chest-panel">
@@ -679,12 +737,12 @@ function renderCampfire() {
       </div>
 
       <div style="max-width:400px; margin:0 auto; text-align:left;">
-        <div class="campfire-shop-item ${!hasDeferredCurses || state.gold < 15 ? 'disabled' : ''}" onclick="buyCampfireItem('removeCurse')">
+        <div class="campfire-shop-item ${!hasDeferredCurses || state.gold < (hasRelic('purifying_flame') ? 10 : 15) ? 'disabled' : ''}" onclick="buyCampfireItem('removeCurse')">
           <div>
             <div style="color:var(--red);">Remove a Deferred Curse</div>
             <div style="font-size:13px; color:var(--dim);">Clear the oldest incomplete deferred curse</div>
           </div>
-          <div style="font-family:var(--font-pixel); font-size:12px; color:var(--gold);">15g</div>
+          <div style="font-family:var(--font-pixel); font-size:12px; color:var(--gold);">${hasRelic('purifying_flame') ? '10g' : '15g'}</div>
         </div>
 
         <div class="campfire-shop-item ${state.gold < 10 ? 'disabled' : ''}" onclick="buyCampfireItem('shield')">
@@ -710,6 +768,14 @@ function renderCampfire() {
           </div>
           <div style="font-family:var(--font-pixel); font-size:12px; color:var(--gold);">12g</div>
         </div>
+
+        <div class="campfire-shop-item ${state.gold < 50 || getAvailableRelics().length === 0 ? 'disabled' : ''}" onclick="buyCampfireItem('buyRelic')">
+          <div>
+            <div style="color:var(--purple);">Buy a Relic</div>
+            <div style="font-size:13px; color:var(--dim);">Choose from 2 random relics</div>
+          </div>
+          <div style="font-family:var(--font-pixel); font-size:12px; color:var(--gold);">50g</div>
+        </div>
       </div>
 
       <div style="margin-top:24px;">
@@ -719,9 +785,67 @@ function renderCampfire() {
   `;
 }
 
+function renderFloorComplete() {
+  return `
+    <div class="panel floor-complete-panel">
+      <div style="font-family:var(--font-pixel); font-size:12px; color:var(--dim); letter-spacing:3px; margin-bottom:16px;">* * *</div>
+      <div class="room-header" style="color:var(--green); margin-bottom:8px; animation:none; text-shadow:0 0 15px rgba(39,174,96,0.4);">FLOOR ${state.floor} COMPLETE</div>
+      <div class="title-divider" style="margin:20px auto;"></div>
+
+      <div style="color:var(--text); font-size:17px; line-height:1.8; margin:24px 0; text-align:left; max-width:560px; margin-left:auto; margin-right:auto;">
+        <p style="margin-bottom:16px;">
+          Congratulations. You've survived floor ${state.floor} of the dungeon.
+          You may now choose to <strong style="color:var(--green);">complete your session</strong> and finish your song with what you have,
+          or <strong style="color:var(--gold);">delve deeper</strong> to add more elements.
+        </p>
+      </div>
+
+      <div class="floor-complete-rules">
+        <div style="font-family:var(--font-pixel); font-size:10px; color:var(--gold); letter-spacing:2px; margin-bottom:12px;">IF YOU COMPLETE NOW</div>
+        <ul class="floor-rules-list">
+          <li>You may only use what you've already created to finish your song</li>
+          <li>You <strong>cannot</strong> add new elements, instruments, or samples</li>
+          <li>You <strong>can</strong> delete small things — remove a vocal chop, trim a layer — but keep your track intact</li>
+          <li>Anything bound by a curse <strong>must stay</strong> — if a curse says sustain a note or keep an element, you cannot remove it</li>
+          <li>Mixing, arrangement, and automation are free game — polish what you have</li>
+        </ul>
+        <div style="font-size:14px; color:var(--dim); margin-top:12px; font-style:italic;">
+          If you want to add new elements, you must continue to the next floor.
+        </div>
+      </div>
+
+      <div style="display:flex; gap:16px; justify-content:center; margin-top:32px; flex-wrap:wrap;">
+        <button class="btn" style="border-color:var(--gold); color:var(--gold);" onclick="nextFloor()">DELVE DEEPER</button>
+        <button class="btn btn-green" onclick="endSession()">COMPLETE SESSION</button>
+      </div>
+    </div>
+  `;
+}
+
 function renderRoadEvent() {
   const ev = state.roadEventData;
   if (!ev) return '';
+
+  // Free pickup — simple, no cost, no decline
+  if (ev.event.free) {
+    return `
+      <div class="panel free-pickup-panel">
+        <div style="text-align:center;">
+          <div style="font-family:var(--font-pixel); font-size:10px; color:var(--gold); letter-spacing:3px; margin-bottom:8px;">FOUND SOMETHING</div>
+          <div class="room-header" style="color:var(--gold); animation:none; text-shadow:0 0 15px rgba(212,165,116,0.4);">${ev.event.name}</div>
+        </div>
+        <div style="color:var(--dim); font-size:17px; text-align:center; margin:20px 0; line-height:1.7;">
+          ${ev.event.description}
+        </div>
+        <div style="text-align:center; margin:20px 0;">
+          <div class="free-pickup-reward">${ev.event.reward.text}</div>
+        </div>
+        <div style="text-align:center; margin-top:24px;">
+          <button class="btn btn-green" onclick="acceptRoadEvent()">PICK UP AND CONTINUE</button>
+        </div>
+      </div>
+    `;
+  }
 
   return `
     <div class="panel" style="border-color:var(--purple-dim); background:#12091a; box-shadow:0 0 25px rgba(155,89,182,0.15), inset 0 0 40px rgba(155,89,182,0.05);">
@@ -748,6 +872,51 @@ function renderRoadEvent() {
       <div style="display:flex; gap:12px; justify-content:center; margin-top:24px;">
         <button class="btn btn-green" onclick="acceptRoadEvent()">ACCEPT THE DEAL</button>
         <button class="btn" onclick="declineRoadEvent()">DECLINE AND MOVE ON</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderRelicChoice() {
+  const pc = state.pendingRelicChoice;
+  if (!pc || !pc.relics.length) return '';
+
+  const exhausted = getAvailableRelics().length === 0;
+  if (exhausted) {
+    return `
+      <div class="panel relic-panel">
+        <div class="relic-chamber-icon">\u25C7</div>
+        <div class="room-header" style="color:var(--purple); margin-bottom:16px;">RELIC CHAMBER</div>
+        <div style="color:var(--dim); font-size:17px; margin:20px 0;">
+          The chamber is empty. You have collected all available relics.
+        </div>
+        <button class="btn" onclick="skipRelicChoice()">CONTINUE</button>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="panel relic-panel">
+      <div class="relic-chamber-icon">\u25C7</div>
+      <div class="room-header" style="color:var(--purple); margin-bottom:8px;">RELIC CHAMBER</div>
+      <div style="color:var(--dim); font-size:16px; margin-bottom:24px;">Choose a relic to carry with you...</div>
+
+      <div class="relic-choices">
+        ${pc.relics.map(r => {
+          const tierInfo = RELIC_TIERS[r.tier];
+          return `
+            <div class="relic-card" onclick="selectRelic('${r.id}')">
+              <div class="relic-card-icon">${r.icon}</div>
+              <div class="relic-card-tier" style="color:${tierInfo.color};">${tierInfo.label}</div>
+              <div class="relic-card-name">${r.name}</div>
+              <div class="relic-card-desc">${r.description}</div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+
+      <div style="text-align:center; margin-top:20px;">
+        <button class="btn btn-small" onclick="skipRelicChoice()">SKIP</button>
       </div>
     </div>
   `;
@@ -785,6 +954,27 @@ function renderSessionLog() {
             <span class="pending-text ${c.completed ? 'done' : ''}">${c.text} <span style="opacity:0.4;">(Room #${c.fromRoom})</span></span>
           </div>
         `).join('')}
+      </div>
+    `;
+  }
+
+  if (state.relics.length > 0) {
+    html += `
+      <div class="relic-collection-section">
+        <div class="panel-header" style="color:var(--purple);">Relics</div>
+        ${state.relics.map(id => {
+          const r = getRelic(id);
+          if (!r) return '';
+          const tierInfo = RELIC_TIERS[r.tier];
+          return `
+            <div class="relic-log-item">
+              <span class="relic-log-icon">${r.icon}</span>
+              <div>
+                <div style="color:${tierInfo.color}; font-size:14px;">${r.name}</div>
+                <div style="color:var(--dim); font-size:12px;">${r.description}</div>
+              </div>
+            </div>`;
+        }).join('')}
       </div>
     `;
   }
