@@ -34,7 +34,7 @@ function renderTitle() {
         <div class="title-sub">Production Dungeon Crawler</div>
         <div class="title-divider"></div>
         <div class="title-flavor">Enter the dungeon. Roll the bones.<br>Let fate shape your sound.</div>
-        <button class="btn" onclick="startSetup()">BEGIN THE RITUAL</button>
+        <button class="btn" onclick="startSetup()">START YOUR SESSION</button>
       </div>
     </div>
   `;

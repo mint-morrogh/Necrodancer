@@ -645,18 +645,24 @@ function endSession() {
           </div>
         ` : ''}
 
-        <div style="margin:20px 0; text-align:left;">
-          <div class="panel-header">Tracks</div>
-          ${state.rooms.map(r => `
-            <div style="padding:6px 0; border-bottom:1px solid var(--border);">
-              <span style="color:var(--gold);">${r.isBoss ? '[BOSS] ' : r.isSideQuest ? '[SQ] ' : r.isAlchemist ? '[ALC] ' : ''}Room #${r.number}</span> —
-              <span style="color:var(--text);">${r.trackType}</span>
-              <span style="color:${r.isBoss ? 'var(--red)' : r.isAlchemist ? 'var(--teal)' : r.isYouTube ? 'var(--youtube-red)' : 'var(--teal)'};">(${r.genre}${r.isYouTube ? ' · YouTube' : ''}${r.isAlchemist ? ' · Alchemist' : ''}${r.isBoss ? ' · BOSS' : ''})</span>
-              ${r.curses.length > 0 ? `<span style="color:var(--red);"> C:${r.curses.length}</span>` : ''}
-              ${r.effects.length > 0 ? `<span style="color:var(--purple);"> E:${r.effects.length}</span>` : ''}
-              ${r.blessing ? `<span style="color:var(--green);"> +B</span>` : ''}
-            </div>
-          `).join('')}
+        <div style="margin:30px 0; text-align:left;">
+          <div class="panel-header">Tracklist</div>
+          ${state.rooms.map(r => {
+            const tag = r.isBoss ? 'BOSS' : r.isSideQuest ? 'SIDE QUEST' : r.isAlchemist ? 'ALCHEMIST' : r.isYouTube ? 'YOUTUBE' : '';
+            const tagColor = r.isBoss ? 'var(--red)' : r.isSideQuest ? 'var(--orange)' : r.isAlchemist ? 'var(--teal)' : r.isYouTube ? 'var(--youtube-red)' : '';
+            return `
+            <div style="padding:12px 0; border-bottom:1px solid var(--border);">
+              <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:4px;">
+                <span style="font-family:var(--font-pixel); font-size:11px; color:var(--gold);">#${r.number} ${r.trackType.toUpperCase()}</span>
+                ${tag ? `<span style="font-family:var(--font-pixel); font-size:9px; color:${tagColor}; letter-spacing:1px;">${tag}</span>` : ''}
+              </div>
+              <div style="color:var(--teal); font-size:15px; margin-bottom:2px;">${r.genre}${r.sampleType ? ' (' + r.sampleType + ')' : ''}</div>
+              ${r.curses.map(c => `<div style="color:var(--red); font-size:14px; padding-left:12px;">Curse: ${c.text}</div>`).join('')}
+              ${r.effects.map(e => `<div style="color:var(--purple); font-size:14px; padding-left:12px;">Effect: ${e.name} @ ${e.percentage}%</div>`).join('')}
+              ${r.blessing ? `<div style="color:var(--green); font-size:14px; padding-left:12px;">Blessing: ${r.blessing}</div>` : ''}
+              ${r.flavorRoll ? `<div style="color:var(--gold-dim); font-size:13px; padding-left:12px;">${r.flavorRoll.label}: ${r.flavorRoll.text} ${r.bonusCompleted ? '<span style="color:var(--green);">(done)</span>' : '<span style="opacity:0.4;">(skipped)</span>'}</div>` : ''}
+            </div>`;
+          }).join('')}
         </div>
 
         ${state.deferredCurses.length > 0 ? `
@@ -672,7 +678,8 @@ function endSession() {
 
         <div style="margin-top:30px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
           <button class="btn" onclick="newSession()">NEW SESSION</button>
-          <button class="btn btn-small" onclick="exportLog()">COPY LOG</button>
+          <button class="btn btn-small" onclick="exportLog()">COPY BEAT SHEET</button>
+          <button class="btn btn-small" onclick="downloadBeatSheet()">SAVE AS FILE</button>
         </div>
       </div>
     </div>
@@ -691,35 +698,71 @@ function newSession() {
   render();
 }
 
-function exportLog() {
-  let log = `NECRODANCER SESSION LOG\n`;
-  log += `${'═'.repeat(40)}\n`;
-  log += `Key: ${state.key} ${state.scale}\nBPM: ${state.bpm}\nDifficulty: ${diff().label}\nSeed: ${state.seed || 'none'}\nFloors: ${state.floor}\nRooms: ${state.rooms.length}\nGold: ${state.gold}g\nScore: ${state.score}\n`;
-  log += `${'═'.repeat(40)}\n\n`;
+function generateBeatSheet() {
+  let sheet = '';
+  sheet += `NECRODANCER BEAT SHEET\n`;
+  sheet += `${'═'.repeat(44)}\n\n`;
+  sheet += `Key: ${state.key} ${state.scale}    BPM: ${state.bpm}\n`;
+  sheet += `Difficulty: ${diff().label}    Seed: ${state.seed || 'daily'}\n`;
+  sheet += `Score: ${state.score}    Gold: ${state.gold}g\n`;
+  sheet += `Floors: ${state.floor}    Rooms: ${state.rooms.length}\n\n`;
+  sheet += `${'─'.repeat(44)}\n`;
+  sheet += `TRACKLIST\n`;
+  sheet += `${'─'.repeat(44)}\n\n`;
 
   for (const room of state.rooms) {
-    const prefix = room.isBoss ? '[BOSS] ' : room.isSideQuest ? '[SIDE QUEST] ' : room.isAlchemist ? '[ALCHEMIST] ' : '';
-    log += `${prefix}ROOM #${room.number} — ${room.name}\n`;
-    log += `Track: ${room.trackType}${room.isYouTube ? ' (YouTube)' : ''}${room.isAlchemist ? ' (Alchemist)' : ''}${room.isBoss ? ' (BOSS)' : ''}\n`;
-    log += `Genre: ${room.genre} (${room.sampleType})\n`;
-    if (room.flavorRoll) log += `${room.flavorRoll.label}: ${room.flavorRoll.text} ${room.bonusCompleted ? '(completed)' : '(skipped)'}\n`;
-    for (const c of room.curses) log += `Curse: ${c.text}\n`;
-    for (const e of room.effects) log += `Effect: ${e.name} at ${e.percentage}%\n`;
-    if (room.blessing) log += `Blessing: ${room.blessing}\n`;
-    log += '\n';
+    const tag = room.isBoss ? ' [BOSS]' : room.isSideQuest ? ' [SIDE QUEST]' : room.isAlchemist ? ' [ALCHEMIST]' : room.isYouTube ? ' [YOUTUBE]' : '';
+    sheet += `#${room.number} ${room.trackType.toUpperCase()}${tag}\n`;
+    sheet += `   Genre: ${room.genre}`;
+    if (room.sampleType) sheet += ` (${room.sampleType})`;
+    sheet += `\n`;
+    if (room.curses.length > 0) {
+      for (const c of room.curses) sheet += `   Curse: ${c.text}\n`;
+    }
+    if (room.effects.length > 0) {
+      for (const e of room.effects) sheet += `   Effect: ${e.name} @ ${e.percentage}%\n`;
+    }
+    if (room.blessing) sheet += `   Blessing: ${room.blessing}\n`;
+    if (room.flavorRoll) sheet += `   Bonus: ${room.flavorRoll.label}: ${room.flavorRoll.text} ${room.bonusCompleted ? '(done)' : '(skipped)'}\n`;
+    sheet += `\n`;
   }
 
   if (state.deferredCurses.length > 0) {
-    log += `DEFERRED CURSES\n${'─'.repeat(20)}\n`;
+    sheet += `${'─'.repeat(44)}\n`;
+    sheet += `DEFERRED CURSES\n`;
+    sheet += `${'─'.repeat(44)}\n`;
     for (const c of state.deferredCurses) {
-      log += `${c.completed ? '[✓]' : '[ ]'} ${c.text}\n`;
+      sheet += `${c.completed ? '[x]' : '[ ]'} ${c.text}\n`;
     }
+    sheet += `\n`;
   }
 
-  navigator.clipboard.writeText(log).then(() => {
+  sheet += `${'═'.repeat(44)}\n`;
+  sheet += `Generated by NECRODANCER - Production Dungeon Crawler\n`;
+
+  return sheet;
+}
+
+function exportLog() {
+  const sheet = generateBeatSheet();
+  navigator.clipboard.writeText(sheet).then(() => {
     const btn = document.querySelector('[onclick="exportLog()"]');
-    if (btn) { btn.textContent = 'COPIED!'; setTimeout(() => { btn.textContent = 'COPY LOG'; }, 2000); }
+    if (btn) { btn.textContent = 'COPIED!'; setTimeout(() => { btn.textContent = 'COPY BEAT SHEET'; }, 2000); }
   });
+}
+
+function downloadBeatSheet() {
+  const sheet = generateBeatSheet();
+  const blob = new Blob([sheet], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const dateStr = new Date().toISOString().slice(0, 10);
+  a.download = `necrodancer-${state.key}-${state.scale}-${state.bpm}bpm-${dateStr}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // ════════════════════════════════════════════════════════

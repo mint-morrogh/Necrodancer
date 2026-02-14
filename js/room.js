@@ -112,11 +112,33 @@ function generateRoom(trackType, opts = {}) {
   const effectCount = weightedPick(diff().effectWeights);
   const effects = [];
   const usedEffects = [];
+
+  // Effects that only make sense when a previous track exists to reference
+  const NEEDS_PREVIOUS_TRACK = ['Sidechain Compression'];
+  const isFirstRoom = state.rooms.length === 0;
+  const prevTracks = state.rooms.map(r => r.trackType);
+
   for (let i = 0; i < effectCount; i++) {
     let eff;
-    do { eff = pick(EFFECTS); } while (usedEffects.includes(eff));
+    do {
+      eff = pick(EFFECTS);
+    } while (
+      usedEffects.includes(eff) ||
+      (isFirstRoom && NEEDS_PREVIOUS_TRACK.includes(eff))
+    );
     usedEffects.push(eff);
-    effects.push({ name: eff, percentage: roll(...diff().effectRange) });
+
+    // Add context for sidechain — specify which previous element to key against
+    let effName = eff;
+    if (eff === 'Sidechain Compression' && prevTracks.length > 0) {
+      const target = prevTracks.includes('Drums') ? 'Drums'
+        : prevTracks.includes('808') ? '808'
+        : prevTracks.includes('Percussion') ? 'Percussion'
+        : prevTracks[prevTracks.length - 1];
+      effName = `Sidechain Compression (keyed to ${target})`;
+    }
+
+    effects.push({ name: effName, percentage: roll(...diff().effectRange) });
   }
 
   let blessing = null;
