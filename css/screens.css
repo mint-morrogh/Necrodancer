@@ -1232,8 +1232,8 @@
   .don-result { font-size: 12px; }
 
   /* Log panel */
-  .log-panel { width: 85vw; max-width: 340px; }
-  .log-toggle.open { right: 85vw; max-width: unset; }
+  .log-panel { width: min(85vw, 340px); }
+  .log-toggle.open { right: min(85vw, 340px); }
   .log-toggle { font-size: 12px; padding: 16px 8px; top: 160px; }
   .log-entry { font-size: 15px; padding: 12px 0; }
   .log-entry-header { font-size: 10px; }
@@ -1334,9 +1334,9 @@
   .pending-curse .check-box { width: 14px; height: 14px; font-size: 9px; }
   .next-room-warning { font-size: 13px; padding: 8px 10px; }
 
-  /* Log panel - full width on phones */
-  .log-panel { width: 100vw; max-width: 100vw; }
-  .log-toggle.open { right: 100vw; }
+  /* Log panel - near full width but leave room for toggle tab */
+  .log-panel { width: calc(100vw - 36px); max-width: calc(100vw - 36px); }
+  .log-toggle.open { right: calc(100vw - 36px); }
   .log-toggle { top: 120px; font-size: 11px; padding: 14px 7px; }
   .log-entry { font-size: 14px; }
   .log-entry-detail { font-size: 13px; padding-left: 8px; }
