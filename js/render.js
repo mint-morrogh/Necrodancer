@@ -218,7 +218,10 @@ function renderDungeon() {
         QUEST LOG
       </button>
       <div class="panel log-panel" id="log-panel">
-        <div class="panel-header">Quest Log</div>
+        <div class="panel-header" style="display:flex;align-items:center;justify-content:space-between;">
+          Quest Log
+          <button class="log-close-btn" onclick="toggleQuestLog()" aria-label="Close quest log">&times;</button>
+        </div>
         ${renderSessionLog()}
       </div>
     </div>
