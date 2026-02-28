@@ -127,7 +127,10 @@ function enterBossNode() {
   enterRoomFromNode(bossNode, trackType);
 }
 
+let _blockNextEnter = false;
+
 function enterNodeFromMap(nodeId) {
+  if (_blockNextEnter) { _blockNextEnter = false; return; }
   const node = getNodeById(nodeId);
   if (!node || node.completed) return;
 
@@ -1462,6 +1465,64 @@ document.addEventListener('mouseenter', (e) => {
     if (rect.left < 0) tip.classList.add('tip-left');
     else if (rect.right > window.innerWidth) tip.classList.add('tip-right');
   }
+}, true);
+
+// ════════════════════════════════════════════════════════
+// MOBILE: tap-to-preview map nodes
+// ════════════════════════════════════════════════════════
+const isTouchDevice = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+let _activeTooltipNode = null;
+
+function dismissActiveTooltip() {
+  if (_activeTooltipNode) {
+    _activeTooltipNode.classList.remove('tooltip-visible');
+    _activeTooltipNode = null;
+  }
+}
+
+document.addEventListener('click', (e) => {
+  if (!isTouchDevice()) return;
+
+  const mapNode = e.target.closest('.map-node');
+
+  // Clicking the enter button inside tooltip — let it through
+  if (e.target.closest('.map-tooltip-enter')) return;
+
+  // Clicking a reroll button — let it through
+  if (e.target.closest('.map-node-reroll')) return;
+
+  // Tapped a map node
+  if (mapNode) {
+    const isReachable = mapNode.classList.contains('reachable');
+
+    // If this node already has tooltip showing and is reachable, enter the room
+    if (mapNode === _activeTooltipNode && isReachable) {
+      dismissActiveTooltip();
+      return; // let the onclick="enterNodeFromMap()" fire
+    }
+
+    // Otherwise, show tooltip and block navigation
+    e.preventDefault();
+    dismissActiveTooltip();
+    _blockNextEnter = true;
+    mapNode.classList.add('tooltip-visible');
+    _activeTooltipNode = mapNode;
+
+    // Reposition tooltip
+    const tip = mapNode.querySelector('.map-tooltip');
+    if (tip) {
+      tip.classList.remove('tip-below', 'tip-left', 'tip-right');
+      const rect = tip.getBoundingClientRect();
+      if (rect.top < 0) tip.classList.add('tip-below');
+      if (rect.left < 0) tip.classList.add('tip-left');
+      else if (rect.right > window.innerWidth) tip.classList.add('tip-right');
+    }
+    return;
+  }
+
+  // Tapped elsewhere — dismiss
+  dismissActiveTooltip();
 }, true);
 
 render();

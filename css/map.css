@@ -209,6 +209,17 @@
   max-width: 480px;
 }
 
+/* ========== MOBILE TAP-TO-PREVIEW ========== */
+.map-node.tooltip-visible { z-index: 999; position: relative; }
+.map-node.tooltip-visible .map-tooltip {
+  display: block;
+  pointer-events: auto;
+}
+.map-tooltip-enter {
+  margin-top: 8px;
+  width: 100%;
+}
+
 /* ========== MAP MOBILE ========== */
 @media (max-width: 768px) {
   .map-container { padding: 24px 12px; min-height: 300px; }

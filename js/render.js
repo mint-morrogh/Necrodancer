@@ -287,6 +287,7 @@ function renderMap() {
             ${node.preview.hasBlessing ? `<div class="map-tooltip-row" style="color:var(--green);">Blessing present</div>` : ''}
             ${node.type === 'campfire' ? `<div class="map-tooltip-row" style="color:var(--orange);">No track — shop only</div>` : ''}
             ${node.type === 'relic' ? `<div class="map-tooltip-row" style="color:var(--purple);">You sense a relic in this room</div>` : ''}
+            ${isReachable && !isCompleted ? `<button class="btn btn-small map-tooltip-enter" onclick="event.stopPropagation(); enterNodeFromMap('${node.id}')">ENTER</button>` : ''}
           </div>
         </div>
       `;
