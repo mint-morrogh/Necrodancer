@@ -1171,6 +1171,17 @@
   /* Room header */
   .room-header { font-size: 15px; }
   .room-number { font-size: 10px; margin-bottom: 12px; }
+
+  /* Log panel */
+  .log-panel { width: 85vw; max-width: 340px; }
+  .log-toggle.open { right: 85vw; max-width: unset; }
+  .log-toggle { font-size: 12px; padding: 16px 8px; top: 160px; }
+  .log-entry { font-size: 15px; padding: 12px 0; }
+  .log-entry-header { font-size: 10px; }
+  .log-entry-detail { font-size: 14px; }
+
+  /* Rules button */
+  .rules-btn-fixed { bottom: 12px; right: 12px; font-size: 9px; padding: 4px 8px; }
 }
 
 @media (max-width: 600px) {
@@ -1200,6 +1211,16 @@
   /* Room header */
   .room-header { font-size: 14px; margin-bottom: 10px; }
   .track-select { font-size: 12px; padding: 8px 12px; }
+
+  /* Log panel - full width on phones */
+  .log-panel { width: 100vw; max-width: 100vw; }
+  .log-toggle.open { right: 100vw; }
+  .log-toggle { top: 120px; font-size: 11px; padding: 14px 7px; }
+  .log-entry { font-size: 14px; }
+  .log-entry-detail { font-size: 13px; padding-left: 8px; }
+
+  /* Rules button */
+  .rules-btn-fixed { bottom: 8px; right: 8px; }
 }
 
 @media (max-width: 400px) {
