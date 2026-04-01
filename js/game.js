@@ -1139,7 +1139,7 @@ function endSession() {
               </div>
               <div style="color:var(--teal); font-size:15px; margin-bottom:2px;">${r.genre}${r.sampleType ? ' (' + r.sampleType + ')' : ''}</div>
               ${r.curses.map(c => `<div style="color:var(--red); font-size:14px; padding-left:12px;">Curse: ${c.text}</div>`).join('')}
-              ${r.effects.map(e => `<div style="color:var(--blue); font-size:14px; padding-left:12px;">Effect: ${e.name} @ ${e.percentage}%</div>`).join('')}
+              ${r.effects.map(e => `<div style="color:var(--blue); font-size:14px; padding-left:12px;">Effect: ${e.name} @ ${e.min}\u2013${e.max}% wet</div>`).join('')}
               ${r.blessing ? `<div style="color:var(--green); font-size:14px; padding-left:12px;">Blessing: ${r.blessing}</div>` : ''}
               ${r.flavorRoll ? `<div style="color:var(--gold-dim); font-size:13px; padding-left:12px;">${r.flavorRoll.label}: ${r.flavorRoll.text} ${r.bonusCompleted ? '<span style="color:var(--green);">(done)</span>' : '<span style="opacity:0.4;">(skipped)</span>'}</div>` : ''}
             </div>`;
@@ -1221,7 +1221,7 @@ function generateBeatSheet() {
       for (const c of room.curses) sheet += `   Curse: ${c.text}\n`;
     }
     if (room.effects.length > 0) {
-      for (const e of room.effects) sheet += `   Effect: ${e.name} @ ${e.percentage}%\n`;
+      for (const e of room.effects) sheet += `   Effect: ${e.name} @ ${e.min}-${e.max}% wet\n`;
     }
     if (room.blessing) sheet += `   Blessing: ${room.blessing}\n`;
     if (room.flavorRoll) sheet += `   Bonus: ${room.flavorRoll.label}: ${room.flavorRoll.text} ${room.bonusCompleted ? '(done)' : '(skipped)'}\n`;
@@ -1411,11 +1411,14 @@ function rerollEffect(index) {
   }
 
   effect.name = effName;
-  effect.percentage = roll(...diff().effectRange);
+  const center = roll(...diff().effectRange);
+  const tol = diff().effectTolerance;
+  effect.min = Math.max(3, center - tol);
+  effect.max = Math.min(100, center + tol);
 
   // Update matching checklist entry
   const clEntry = room.checklist.find(c => c.id === 'fx-' + index);
-  if (clEntry) clEntry.text = `${effName} at ${effect.percentage}% wet`;
+  if (clEntry) clEntry.text = `${effName} at ${effect.min}\u2013${effect.max}% wet`;
 
   render();
 }

@@ -494,10 +494,12 @@ function renderRoomActive(room) {
                 ${state.rerolls > 0 ? `<button class="reroll-inline" onclick="rerollEffect(${i})" title="Reroll this effect (${state.rerolls} left)">↻</button>` : ''}
               </div>
               <div class="effect-bar">
+                <div class="effect-bar-label-dry">DRY</div>
                 <div class="effect-bar-track">
-                  <div class="effect-bar-fill" style="width:${e.percentage}%"></div>
+                  <div class="effect-bar-range" style="left:${e.min}%; width:${e.max - e.min}%"></div>
                 </div>
-                <div class="effect-pct">${e.percentage}%</div>
+                <div class="effect-bar-label-wet">WET</div>
+                <div class="effect-pct">${e.min}–${e.max}%</div>
               </div>
             </div>
           `).join('')}
@@ -933,7 +935,7 @@ function renderSessionLog() {
         <div class="log-entry-detail">${room.trackType} · ${room.genre} ${room.isYouTube ? '(YouTube)' : ''}${room.isAlchemist ? '(Alchemist)' : ''}${room.isBoss ? '(BOSS)' : ''}</div>
         ${room.flavorRoll ? `<div class="log-entry-detail">${room.flavorRoll.label}: ${room.flavorRoll.text} ${room.bonusCompleted ? '<span style="color:var(--green);">(completed)</span>' : '<span style="opacity:0.4;">(skipped)</span>'}</div>` : ''}
         ${room.curses.map(c => `<div class="log-entry-detail curse">${c.text}</div>`).join('')}
-        ${room.effects.map(e => `<div class="log-entry-detail effect">${e.name}: ${e.percentage}%</div>`).join('')}
+        ${room.effects.map(e => `<div class="log-entry-detail effect">${e.name}: ${e.min}–${e.max}% wet</div>`).join('')}
         ${room.blessing ? `<div class="log-entry-detail blessing">${room.blessing}</div>` : ''}
       </div>
     `;

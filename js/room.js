@@ -257,12 +257,15 @@ function generateRoom(trackType, opts = {}) {
       effName = `Sidechain Compression (keyed to ${target})`;
     }
 
-    let pct = roll(...diff().effectRange);
+    let center = roll(...diff().effectRange);
     // Relic: Echo Crystal — cap effect % at 60
-    if (hasRelic('echo_crystal')) pct = Math.min(pct, 60);
+    if (hasRelic('echo_crystal')) center = Math.min(center, 60);
     // Relic: Dampening Orb — reduce effect % by 15
-    if (hasRelic('dampening_orb')) pct = Math.max(5, pct - 15);
-    effects.push({ name: effName, percentage: pct });
+    if (hasRelic('dampening_orb')) center = Math.max(5, center - 15);
+    const tol = diff().effectTolerance;
+    const pctMin = Math.max(3, center - tol);
+    const pctMax = Math.min(100, center + tol);
+    effects.push({ name: effName, min: pctMin, max: pctMax });
   }
 
   let blessing = null;
@@ -294,7 +297,7 @@ function generateRoom(trackType, opts = {}) {
     checklist.push({ id: 'curse-' + i, text: curses[i].text, completed: false, type: cType });
   }
   for (let i = 0; i < effects.length; i++) {
-    checklist.push({ id: 'fx-' + i, text: `${effects[i].name} at ${effects[i].percentage}% wet`, completed: false, type: 'effect' });
+    checklist.push({ id: 'fx-' + i, text: `${effects[i].name} at ${effects[i].min}–${effects[i].max}% wet`, completed: false, type: 'effect' });
   }
 
   return {
