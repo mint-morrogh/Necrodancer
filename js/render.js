@@ -14,11 +14,16 @@ function effectTip(name) {
   return `<span class="info-tip">${name}<span class="info-tip-content info-tip-effect"><div class="info-tip-title">${baseName}</div><div class="info-tip-desc">${info.desc}</div><div class="info-tip-field"><strong>Plugins:</strong> ${info.plugins}</div><div class="info-tip-field"><strong>DAW Tips:</strong> ${info.daw}</div></span></span>`;
 }
 
+function genreSpliceUrl(name) {
+  const slug = name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return `https://splice.com/sounds/genres/${slug}/samples`;
+}
+
 function genreTip(name) {
-  const spliceUrl = `https://splice.com/sounds/search?q=${encodeURIComponent(name)}`;
+  const spliceUrl = genreSpliceUrl(name);
   const info = typeof GENRE_DESCRIPTIONS !== 'undefined' && GENRE_DESCRIPTIONS[name];
   if (!info) return `<a href="${spliceUrl}" target="_blank" rel="noopener" class="genre-link" style="color:var(--gold);">${name}</a>`;
-  return `<span class="info-tip" style="color:var(--gold);"><a href="${spliceUrl}" target="_blank" rel="noopener" class="genre-link">${name}</a><span class="info-tip-content info-tip-genre"><div class="info-tip-title">${name}</div><div class="info-tip-desc">${info.desc}</div><div class="info-tip-field"><strong>BPM Range:</strong> ${info.bpm}</div><div class="info-tip-field"><strong>Characteristics:</strong> ${info.traits}</div><div class="info-tip-field"><a href="${spliceUrl}" target="_blank" rel="noopener" class="genre-splice-link">Browse on Splice →</a></div></span></span>`;
+  return `<span class="info-tip" style="color:var(--gold);"><a href="${spliceUrl}" target="_blank" rel="noopener" class="genre-link">${name}</a><span class="info-tip-content info-tip-genre"><div class="info-tip-title">${name}</div><div class="info-tip-desc">${info.desc}</div><div class="info-tip-field"><strong>BPM Range:</strong> ${info.bpm}</div><div class="info-tip-field"><strong>Characteristics:</strong> ${info.traits}</div><div class="info-tip-field genre-splice-hint">Click genre name to browse on Splice</div></span></span>`;
 }
 
 function trackTip(name) {
@@ -559,16 +564,14 @@ function renderRoomActive(room) {
       ${(() => {
         const totalMandatory = room.checklist.length;
         const completedMandatory = room.checklist.filter(i => i.completed).length;
-        const pct = totalMandatory > 0 ? completedMandatory / totalMandatory : 0;
-        const threshold = room.isSideQuest ? 1.0 : 0.5;
-        const thresholdLabel = room.isSideQuest ? '100%' : '50%';
-        const canSeal = pct >= threshold;
+        const required = room.isSideQuest ? totalMandatory : Math.max(1, totalMandatory - 1);
+        const canSeal = completedMandatory >= required;
         return `
           <div class="btn-row" style="margin-top:20px; justify-content: center;">
             ${room.isSideQuest ? '<button class="btn btn-small btn-orange" onclick="skipSideQuest()">SKIP SIDE QUEST</button>' : ''}
             <button class="btn btn-green" id="seal-btn" onclick="sealRoom()" ${canSeal ? '' : 'disabled style="opacity:0.3; cursor:not-allowed; pointer-events:none;"'}>SEAL THE ROOM</button>
           </div>
-          ${!canSeal ? '<div style="text-align:center; margin-top:8px; font-size:14px; color:var(--dim);">Complete at least ' + thresholdLabel + ' of tasks to seal (' + Math.round(pct * 100) + '% done)</div>' : ''}
+          ${!canSeal ? '<div style="text-align:center; margin-top:8px; font-size:14px; color:var(--dim);">Complete at least ' + required + ' of ' + totalMandatory + ' tasks to seal (' + completedMandatory + ' done)</div>' : ''}
         `;
       })()}
     </div>
@@ -600,7 +603,7 @@ function renderTransition() {
           +2 REROLLS EARNED!
         </div>
         ${td.streakReward ? '<div class="reward-banner streak-banner">COMPLETION STREAK! +1 REROLL</div>' : ''}
-        ${td.curseSurvivor ? '<div class="reward-banner survivor-banner"><span class="survivor-icon">🛡️💀</span><span>CURSE SURVIVOR! +1 REROLL</span></div>' : ''}
+        ${td.curseSurvivor ? '<div class="reward-banner survivor-banner">CURSE SURVIVOR! +1 REROLL</div>' : ''}
         ${td.bossBlessing ? `
           <div style="margin:16px 0; padding:12px 16px; border:1px solid var(--green); border-radius:4px; background:rgba(39,174,96,0.08);">
             <div style="font-family:var(--font-pixel); font-size:10px; color:var(--green); letter-spacing:2px; margin-bottom:8px;">BOSS BLESSING</div>
@@ -623,7 +626,7 @@ function renderTransition() {
           +2 REROLLS EARNED!
         </div>
         ${td.streakReward ? '<div class="reward-banner streak-banner">COMPLETION STREAK! +1 REROLL</div>' : ''}
-        ${td.curseSurvivor ? '<div class="reward-banner survivor-banner"><span class="survivor-icon">🛡️💀</span><span>CURSE SURVIVOR! +1 REROLL</span></div>' : ''}
+        ${td.curseSurvivor ? '<div class="reward-banner survivor-banner">CURSE SURVIVOR! +1 REROLL</div>' : ''}
         <div style="color:var(--dim); font-size:16px; margin-bottom:24px;">
           The spirits reward your bravery.
         </div>
@@ -666,19 +669,23 @@ function renderTransition() {
 
   return `
     <div class="panel transition-panel">
-      <div id="transition-header" class="room-header" style="margin-bottom:8px;">ROOM SEALED</div>
-      <div id="transition-subtitle" style="color:var(--dim); font-size:15px; margin-bottom:16px;">
+      <div id="transition-header" class="room-header" style="margin-bottom:12px;">ROOM SEALED</div>
+      <div id="transition-subtitle" style="color:var(--dim); font-size:15px; margin-bottom:32px;">
         All tasks completed${td.bonusCompleted ? ' + Bonus' : ''}. The spirits judge your work...
       </div>
-      ${td.streakCount > 0 && !td.streakReward ? '<div id="streak-line" class="streak-counter">STREAK: ' + td.streakCount + '/' + (hasRelic('streak_talisman') ? 2 : 3) + '</div>' : ''}
-      <div id="roll-info" class="roll-info">
-        <div class="roll-info-row"><span class="roll-info-label">CHANCE</span><span class="roll-info-value" style="color:var(--gold);">${101 - td.rollTarget}%</span></div>
-        <div class="roll-info-row"><span class="roll-info-label">SUCCESS</span><span class="roll-info-value" style="color:var(--green);">${td.rollTarget} OR HIGHER</span></div>
-      </div>
+
       <div class="spell-container" id="spell-container">
         <div class="spell-display"><span id="spell-glyph">✧</span></div>
       </div>
+
+      <div id="roll-info" class="roll-info">
+        <div class="roll-info-row"><span class="roll-info-label">CHANCE</span><span class="roll-info-value" style="color:var(--gold);">${101 - td.rollTarget}%</span></div>
+        <div class="roll-info-row"><span class="roll-info-label">SUCCESS</span><span class="roll-info-value" style="color:var(--green);">${td.rollTarget}+</span></div>
+      </div>
+
       <div id="transition-result" class="transition-result" style="display:none;"></div>
+
+      ${td.streakCount > 0 && !td.streakReward ? '<div id="streak-line" class="streak-counter">STREAK: ' + td.streakCount + '/' + (hasRelic('streak_talisman') ? 2 : 3) + '</div>' : ''}
 
       <div id="streak-banner" class="reward-banner streak-banner" style="display:none;">
         COMPLETION STREAK! +1 REROLL

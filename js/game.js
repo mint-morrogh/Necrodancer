@@ -477,12 +477,20 @@ function showMasteryPopup() {
   const popup = document.createElement('div');
   popup.className = 'mastery-popup';
   popup.innerHTML = `<div class="mastery-popup-text">ROOM MASTERED</div>`;
-  document.body.appendChild(popup);
 
-  // Auto-dismiss after 1 second
+  // Insert after the seal button row so it appears below it in flow
+  const sealBtn = document.getElementById('seal-btn');
+  const btnRow = sealBtn && sealBtn.closest('.btn-row');
+  if (btnRow) {
+    btnRow.parentNode.insertBefore(popup, btnRow.nextSibling);
+  } else {
+    document.body.appendChild(popup);
+  }
+
+  // Auto-dismiss after 1.5 seconds
   setTimeout(() => {
     if (popup.parentNode) popup.remove();
-  }, 1200);
+  }, 1500);
 }
 
 async function sealRoom() {
@@ -925,7 +933,7 @@ function buyCampfireItem(type) {
       state.gold -= 12;
     }
   } else if (type === 'buyRelic' && state.gold >= 50) {
-    const relics = pickRelicsForChoice(2);
+    const relics = pickRelicsForChoice(3);
     if (relics.length > 0) {
       state.gold -= 50;
       state.pendingRelicChoice = { relics, source: 'campfire' };
