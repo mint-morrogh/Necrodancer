@@ -59,6 +59,9 @@ function render() {
   else if (state.screen === 'setup') renderSetup();
   else if (state.screen === 'dungeon') renderDungeon();
 
+  // Auto-save when in dungeon
+  if (state.screen === 'dungeon') saveGame();
+
   // Only animate on actual screen/phase transitions
   if (screenChanged || phaseChanged) {
     const el = app.querySelector('.screen.active');
@@ -89,7 +92,14 @@ function renderTitle() {
         <div class="title-sub">Production Dungeon Crawler</div>
         <div class="title-divider"></div>
         <div class="title-flavor">Enter the dungeon. Roll the bones.<br>Let fate shape your sound.</div>
-        <button class="btn" onclick="startSetup()">START YOUR SESSION</button>
+        ${hasSavedGame() ? `
+          <button class="btn" onclick="continueSavedGame()">CONTINUE SESSION</button>
+          <div style="margin-top:12px;">
+            <button class="btn btn-small" onclick="clearSave(); startSetup();">NEW SESSION</button>
+          </div>
+        ` : `
+          <button class="btn" onclick="startSetup()">START YOUR SESSION</button>
+        `}
       </div>
     </div>
   `;
@@ -141,10 +151,40 @@ function renderSetup() {
 
       ${step >= 3 ? `
       <div class="panel${step === 3 ? ' setup-step' : ''}" style="text-align:center;">
+        <div class="panel-header">Source Mode</div>
+        <div class="source-slider-container">
+          <div class="source-slider-labels">
+            <span class="source-label-production">PRODUCTION</span>
+            <span class="source-label-splice">SPLICE</span>
+          </div>
+          <input type="range" class="source-slider" id="source-slider" min="0" max="100" value="${state.spliceRatio}"
+            oninput="state.spliceRatio=parseInt(this.value); document.getElementById('source-value').textContent=this.value+'% Splice / '+(100-this.value)+'% Production';">
+          <div class="source-slider-value" id="source-value">${state.spliceRatio}% Splice / ${100 - state.spliceRatio}% Production</div>
+          <div class="source-presets">
+            <button class="btn btn-small" onclick="document.getElementById('source-slider').value=0; state.spliceRatio=0; renderSetup();">ALL PRODUCTION</button>
+            <button class="btn btn-small" onclick="document.getElementById('source-slider').value=50; state.spliceRatio=50; renderSetup();">BALANCED</button>
+            <button class="btn btn-small" onclick="document.getElementById('source-slider').value=100; state.spliceRatio=100; renderSetup();">ALL SPLICE</button>
+          </div>
+        </div>
+        <div style="color:var(--dim); font-size:14px; margin-top:10px; max-width:450px; margin-left:auto; margin-right:auto; line-height:1.5;">
+          ${state.spliceRatio === 100 ? 'All rooms use Splice samples — the classic experience'
+            : state.spliceRatio === 0 ? 'All rooms are production-based — create sounds with VSTs and synths'
+            : 'Each room randomly picks between Splice samples and production with VSTs/synths'}
+        </div>
+        ${step < 4 ? `
+        <div style="margin-top:16px;">
+          <button class="btn btn-small" onclick="state.setupStep = 4; renderSetup();">CONFIRM SOURCE</button>
+        </div>
+        ` : ''}
+      </div>
+      ` : ''}
+
+      ${step >= 4 ? `
+      <div class="panel${step === 4 ? ' setup-step' : ''}" style="text-align:center;">
         <div class="panel-header">Difficulty</div>
         <div class="difficulty-row">
           ${Object.entries(DIFFICULTY_SETTINGS).map(([key, d]) => `
-            <button class="difficulty-option ${state.difficulty === key ? 'selected' : ''}" onclick="state.difficulty='${key}'; if(state.setupStep < 4){ state.setupStep = 4; } renderSetup();">
+            <button class="difficulty-option ${state.difficulty === key ? 'selected' : ''}" onclick="state.difficulty='${key}'; if(state.setupStep < 5){ state.setupStep = 5; } renderSetup();">
               <span class="difficulty-name" style="color:${state.difficulty === key ? 'var(--gold)' : 'var(--dim)'};">${d.label}</span>
               <span class="difficulty-desc">${d.desc}</span>
             </button>
@@ -153,8 +193,8 @@ function renderSetup() {
       </div>
       ` : ''}
 
-      ${step >= 4 ? `
-      <div class="panel${step === 4 ? ' setup-step' : ''}" style="text-align:center;">
+      ${step >= 5 ? `
+      <div class="panel${step === 5 ? ' setup-step' : ''}" style="text-align:center;">
         <div class="panel-header">Dungeon Seed</div>
         <div style="margin-top:8px;">
           <div class="seed-toggle">
@@ -176,8 +216,8 @@ function renderSetup() {
       </div>
       ` : ''}
 
-      ${step >= 4 ? `
-        <div${step === 4 ? ' class="setup-step"' : ''} style="text-align:center; margin-top:24px;">
+      ${step >= 5 ? `
+        <div${step === 5 ? ' class="setup-step"' : ''} style="text-align:center; margin-top:24px;">
           <button class="btn" onclick="startDungeon()">DESCEND INTO THE DUNGEON</button>
         </div>
       ` : ''}
@@ -305,7 +345,7 @@ function renderMap() {
             ${node.preview.hasBlessing ? `<div class="map-tooltip-row" style="color:var(--green);">Blessing present</div>` : ''}
             ${node.type === 'campfire' ? `<div class="map-tooltip-row" style="color:var(--orange);">No track — shop only</div>` : ''}
             ${node.type === 'relic' ? `<div class="map-tooltip-row" style="color:var(--purple);">You sense a relic in this room</div>` : ''}
-            ${isReachable && !isCompleted ? `<button class="btn btn-small map-tooltip-enter" onclick="event.stopPropagation(); enterNodeFromMap('${node.id}')">ENTER</button>` : ''}
+            ${isReachable && !isCompleted ? `<button class="btn btn-small map-tooltip-enter" onclick="event.stopPropagation(); _blockNextEnter=false; enterNodeFromMap('${node.id}')">ENTER</button>` : ''}
           </div>
         </div>
       `;
@@ -457,13 +497,14 @@ function renderRoomActive(room) {
         ${room.isBoss ? '<div class="boss-badge">BOSS ENCOUNTER</div>' : ''}
         ${room.isAlchemist ? '<div class="alchemist-badge">Alchemist\'s Lair</div>' : ''}
         ${room.isYouTube && !room.isBoss && !room.isAlchemist ? '<div class="youtube-badge">YouTube Sample Room</div>' : ''}
+        ${room.isProductionRoom && !room.isBoss && !room.isAlchemist ? '<div class="production-badge">Production Room</div>' : ''}
         <div class="room-header">${room.name}</div>
       </div>
       <div class="room-number">ROOM ${room.number} · <span style="text-transform:uppercase;">${trackTip(room.trackType)}</span></div>
 
       <!-- Genre Directive -->
       <div class="result-section">
-        <div class="result-label genre-label">${room.isAlchemist ? 'Alchemist Directive' : room.isYouTube ? 'YouTube Directive' : 'Genre Directive'}</div>
+        <div class="result-label genre-label">${room.isAlchemist ? 'Alchemist Directive' : room.isYouTube ? 'YouTube Directive' : room.isProductionRoom ? 'Production Directive' : 'Genre Directive'}</div>
         <div class="result-text genre-text">
           ${injectGenreTip(room.genreDirective, room.genre, !room.isAlchemist && state.rerolls > 0)}
         </div>
@@ -947,12 +988,12 @@ function renderSessionLog() {
   }
 
   for (const room of state.rooms) {
-    const logClass = room.isBoss ? 'boss-log' : room.isAlchemist ? 'alchemist-log' : room.isYouTube ? 'youtube-log' : '';
+    const logClass = room.isBoss ? 'boss-log' : room.isAlchemist ? 'alchemist-log' : room.isYouTube ? 'youtube-log' : room.isProductionRoom ? 'production-log' : '';
     const logPrefix = room.isBoss ? '[BOSS] ' : room.isSideQuest ? '[SIDE QUEST] ' : room.isAlchemist ? '[ALCHEMIST] ' : room.isYouTube ? '[YOUTUBE] ' : '';
     html += `
       <div class="log-entry ${logClass}">
         <div class="log-entry-header">${logPrefix}ROOM #${room.number} — ${room.name}</div>
-        <div class="log-entry-detail">${room.trackType} · ${room.genre} ${room.isYouTube ? '(YouTube)' : ''}${room.isAlchemist ? '(Alchemist)' : ''}${room.isBoss ? '(BOSS)' : ''}</div>
+        <div class="log-entry-detail">${room.trackType} · ${room.genre} ${room.isYouTube ? '(YouTube)' : ''}${room.isAlchemist ? '(Alchemist)' : ''}${room.isProductionRoom ? '(Production)' : ''}${room.isBoss ? '(BOSS)' : ''}</div>
         ${room.flavorRoll ? `<div class="log-entry-detail">${room.flavorRoll.label}: ${room.flavorRoll.text} ${room.bonusCompleted ? '<span style="color:var(--green);">(completed)</span>' : '<span style="opacity:0.4;">(skipped)</span>'}</div>` : ''}
         ${room.curses.map(c => `<div class="log-entry-detail curse">${c.text}</div>`).join('')}
         ${room.effects.map(e => `<div class="log-entry-detail effect">${e.name}: ${e.min}–${e.max}% wet</div>`).join('')}

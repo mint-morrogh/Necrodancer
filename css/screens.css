@@ -4,7 +4,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 90vh;
+  min-height: 100vh;
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -285,6 +285,71 @@
   background: rgba(212,165,116,0.05);
 }
 
+/* ========== SOURCE MODE SLIDER ========== */
+.source-slider-container {
+  max-width: 400px;
+  margin: 16px auto 0 auto;
+}
+.source-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+.source-label-production { color: var(--blue); }
+.source-label-splice { color: var(--gold); }
+.source-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--blue), var(--blue-dim) 30%, var(--gold-dim) 70%, var(--gold));
+  outline: none;
+  cursor: pointer;
+}
+.source-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text);
+  border: 2px solid var(--gold-dim);
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(0,0,0,0.5);
+}
+.source-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text);
+  border: 2px solid var(--gold-dim);
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(0,0,0,0.5);
+}
+.source-slider-value {
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: var(--dim);
+  text-align: center;
+  margin-top: 10px;
+  letter-spacing: 1px;
+}
+.source-presets {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+.source-presets .btn-small {
+  font-size: 9px;
+  padding: 6px 10px;
+  letter-spacing: 1px;
+}
+
 /* ========== DUNGEON SCREEN ========== */
 #dungeon-screen { display: none; }
 #dungeon-screen.active { display: grid; }
@@ -538,6 +603,21 @@
 .alchemist-room .result-label.genre-label { color: var(--teal); }
 .alchemist-room .result-text.genre-text { color: var(--green); }
 .log-entry.alchemist-log { border-left: 3px solid var(--teal); padding-left: 10px; }
+
+/* ========== PRODUCTION ROOM ========== */
+.production-badge {
+  display: inline-block;
+  background: var(--blue);
+  color: #0a0a0d;
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  padding: 4px 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin: 0 auto 12px auto;
+  text-align: center;
+}
+.log-entry.production-log { border-left: 3px solid var(--blue); padding-left: 10px; }
 
 /* ========== BOSS ROOM ========== */
 .panel.boss-room {
@@ -1399,7 +1479,7 @@
   .title-sub { font-size: 8px; letter-spacing: 2px; margin-bottom: 20px; }
   .title-divider { width: 120px; margin: 16px auto; }
   .title-flavor { font-size: 15px; margin-bottom: 24px; max-width: 90%; }
-  #title-screen { min-height: 80vh; }
+  #title-screen { min-height: 100vh; }
 
   /* Setup screen */
   .setup-title { font-size: 11px; }

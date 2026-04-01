@@ -16,8 +16,14 @@ function pickGenreForDifficulty(trackType) {
   return genres.length > 0 ? pick(genres) : pick(fullPool);
 }
 
-function buildGenreDirective({ trackType, genre, sampleType, isMulti, isOpenDirective, isAlchemist, isYouTube }) {
+function buildGenreDirective({ trackType, genre, sampleType, isMulti, isOpenDirective, isAlchemist, isYouTube, isProductionRoom }) {
   if (isAlchemist) return pick(ALCHEMIST_DIRECTIVES);
+
+  if (isProductionRoom) {
+    const templates = PRODUCTION_DIRECTIVES[trackType] || PRODUCTION_DIRECTIVES['Synth Lead'];
+    const template = pick(templates);
+    return template.replace(/\{genre\}/g, genre);
+  }
 
   const isTag = !SPLICE_GENRES.has(genre);
   const label = isTag ? 'tag' : 'genre';
@@ -119,7 +125,11 @@ function generateRoom(trackType, opts = {}) {
   const isBoss = opts.isBoss || false;
   const isCursed = opts.isCursed || false;
   const isSanctuary = opts.isSanctuary || false;
-  const isYouTube = isAlchemist ? false : (isBoss ? false : chance(10));
+
+  // Determine room source mode (splice vs production)
+  const isProductionRoom = !isAlchemist && !chance(state.spliceRatio);
+  // YouTube rooms only in splice mode
+  const isYouTube = (isAlchemist || isProductionRoom) ? false : (isBoss ? false : chance(10));
 
   let roomName;
   if (isBoss) {
@@ -128,6 +138,8 @@ function generateRoom(trackType, opts = {}) {
     roomName = pickUnique(ALCHEMIST_ROOM_NAMES, state.usedRoomNames);
   } else if (isYouTube) {
     roomName = pickUnique(YOUTUBE_ROOM_NAMES, state.usedRoomNames);
+  } else if (isProductionRoom) {
+    roomName = pickUnique(PRODUCTION_ROOM_NAMES, state.usedRoomNames);
   } else {
     roomName = pickUnique(ROOM_NAMES, state.usedRoomNames);
   }
@@ -136,7 +148,12 @@ function generateRoom(trackType, opts = {}) {
   const genre = pickGenreForDifficulty(trackType);
   const sampleType = pick(SAMPLE_TYPES[trackType] || ['sample']);
 
-  const flavorRoll = pickCompatibleFlavor(trackType, genre, isAlchemist);
+  // Use production flavor for production rooms
+  const flavorRoll = isProductionRoom
+    ? (PRODUCTION_FLAVOR[trackType]
+      ? { label: PRODUCTION_FLAVOR[trackType].label, text: pick(PRODUCTION_FLAVOR[trackType].options) }
+      : null)
+    : pickCompatibleFlavor(trackType, genre, isAlchemist);
 
   const multiElementTracks = ['Drums', 'Percussion'];
   const isMulti = multiElementTracks.includes(trackType);
@@ -145,12 +162,20 @@ function generateRoom(trackType, opts = {}) {
   const openDirectiveTracks = ['Foley / Found Sound'];
   const isOpenDirective = openDirectiveTracks.includes(trackType);
 
-  const genreDirective = buildGenreDirective({ trackType, genre, sampleType, isMulti, isOpenDirective, isAlchemist, isYouTube });
+  const genreDirective = buildGenreDirective({ trackType, genre, sampleType, isMulti, isOpenDirective, isAlchemist, isYouTube, isProductionRoom });
 
   const curses = [];
   const usedCurseTexts = [];
   let newDeferredCurses = [];
   let newNextRoomCurses = [];
+
+  // Build mode-aware curse pool
+  const immediateCursePool = (() => {
+    const pool = [...CURSES_IMMEDIATE];
+    if (typeof CURSES_SPLICE !== 'undefined' && runHasMode('splice')) pool.push(...CURSES_SPLICE);
+    if (typeof CURSES_PRODUCTION !== 'undefined' && runHasMode('production')) pool.push(...CURSES_PRODUCTION);
+    return pool;
+  })();
 
   function pickUniqueCurse(pool) {
     let text;
@@ -171,7 +196,7 @@ function generateRoom(trackType, opts = {}) {
 
   if (isBoss) {
     // Boss rooms get guaranteed curses
-    curses.push({ text: pickUniqueCurse(CURSES_IMMEDIATE), type: 'immediate', completed: false });
+    curses.push({ text: pickUniqueCurse(immediateCursePool), type: 'immediate', completed: false });
     // Boss curses (mix-level) — nightmare uses the extreme pool
     const isNightmare = state.difficulty === 'nightmare';
     const bossCursePool = isNightmare ? BOSS_CURSES_NIGHTMARE : BOSS_CURSES;
@@ -186,9 +211,9 @@ function generateRoom(trackType, opts = {}) {
     const cursedCount = roll(2, 3);
     for (let i = 0; i < cursedCount; i++) {
       if (i === 0) {
-        curses.push({ text: pickUniqueCurse(CURSES_IMMEDIATE), type: 'immediate', completed: false });
+        curses.push({ text: pickUniqueCurse(immediateCursePool), type: 'immediate', completed: false });
       } else {
-        const pool = TRACK_CURSES[trackType] || CURSES_IMMEDIATE;
+        const pool = TRACK_CURSES[trackType] || immediateCursePool;
         curses.push({ text: pickUniqueCurse(pool), type: 'track', completed: false });
       }
     }
@@ -209,9 +234,9 @@ function generateRoom(trackType, opts = {}) {
         { value: 'nextRoom', weight: ctw.nextRoom }
       ]);
       if (curseType === 'immediate') {
-        curses.push({ text: pickUniqueCurse(CURSES_IMMEDIATE), type: 'immediate', completed: false });
+        curses.push({ text: pickUniqueCurse(immediateCursePool), type: 'immediate', completed: false });
       } else if (curseType === 'track') {
-        const pool = TRACK_CURSES[trackType] || CURSES_IMMEDIATE;
+        const pool = TRACK_CURSES[trackType] || immediateCursePool;
         curses.push({ text: pickUniqueCurse(pool), type: 'track', completed: false });
       } else if (curseType === 'deferred') {
         newDeferredCurses.push({ text: pickUniqueCurse(CURSES_DEFERRED), completed: false, fromRoom: state.rooms.length + 1 });
@@ -221,7 +246,7 @@ function generateRoom(trackType, opts = {}) {
     }
 
     if (!state.shieldNextRoom && chance(diff().trackCurseChance)) {
-      const pool = TRACK_CURSES[trackType] || CURSES_IMMEDIATE;
+      const pool = TRACK_CURSES[trackType] || immediateCursePool;
       curses.push({ text: pickUniqueCurse(pool), type: 'track', completed: false });
     }
   }
@@ -268,13 +293,21 @@ function generateRoom(trackType, opts = {}) {
     effects.push({ name: effName, min: pctMin, max: pctMax });
   }
 
+  // Build mode-aware blessing pool
+  function buildBlessingPool(base) {
+    const pool = [...base];
+    if (typeof BLESSINGS_SPLICE !== 'undefined' && runHasMode('splice')) pool.push(...BLESSINGS_SPLICE);
+    if (typeof BLESSINGS_PRODUCTION !== 'undefined' && runHasMode('production')) pool.push(...BLESSINGS_PRODUCTION);
+    return pool;
+  }
+
   let blessing = null;
   if (isBoss) {
-    blessing = pick(BOSS_BLESSINGS);
+    blessing = pick(buildBlessingPool(BOSS_BLESSINGS));
   } else if (isSanctuary) {
-    blessing = pick(BLESSINGS);
+    blessing = pick(buildBlessingPool(BLESSINGS));
   } else if (chance(diff().blessingChance + (hasRelic('divine_favor') ? 15 : 0))) {
-    blessing = pick(BLESSINGS);
+    blessing = pick(buildBlessingPool(BLESSINGS));
   }
   if (blessing) {
     // Inject room-specific context into blessing text
@@ -317,6 +350,7 @@ function generateRoom(trackType, opts = {}) {
     newNextRoomCurses,
     isYouTube,
     isAlchemist,
+    isProductionRoom,
     isBoss,
     completed: false,
     isSideQuest: false,

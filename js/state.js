@@ -37,7 +37,8 @@ let state = {
   relicUses: {},
   pendingRelicChoice: null,
   pendingRelicRoom: null,
-  rerollsUsedThisRoom: 0
+  rerollsUsedThisRoom: 0,
+  spliceRatio: 50
 };
 
 
@@ -128,6 +129,12 @@ const DIFFICULTY_SETTINGS = {
 
 function diff() { return DIFFICULTY_SETTINGS[state.difficulty || 'normal']; }
 
+function runHasMode(mode) {
+  if (mode === 'splice') return state.spliceRatio > 0;
+  if (mode === 'production') return state.spliceRatio < 100;
+  return true;
+}
+
 // ════════════════════════════════════════════════════════
 // UTILITY
 // ════════════════════════════════════════════════════════
@@ -163,7 +170,8 @@ function hasRelic(id) {
 }
 
 function getRelic(id) {
-  return RELICS.find(r => r.id === id) || null;
+  const allRelics = [...RELICS, ...(typeof RELICS_PRODUCTION !== 'undefined' ? RELICS_PRODUCTION : []), ...(typeof RELICS_SPLICE !== 'undefined' ? RELICS_SPLICE : [])];
+  return allRelics.find(r => r.id === id) || null;
 }
 
 function relicUsedThisFloor(id) {
@@ -172,4 +180,53 @@ function relicUsedThisFloor(id) {
 
 function markRelicUsed(id) {
   state.relicUses[id + '_' + state.floor] = true;
+}
+
+// ════════════════════════════════════════════════════════
+// AUTO-SAVE (localStorage)
+// ════════════════════════════════════════════════════════
+
+const SAVE_KEY = 'necrodancer_save';
+
+function saveGame() {
+  if (state.screen !== 'dungeon') return;
+  try {
+    const saveData = {
+      state: JSON.parse(JSON.stringify(state)),
+      rngState: _rngState,
+      version: 1
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+  } catch (e) { /* storage full or unavailable — silently fail */ }
+}
+
+function loadGame() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return false;
+    const saveData = JSON.parse(raw);
+    if (!saveData.state || saveData.state.screen !== 'dungeon') {
+      localStorage.removeItem(SAVE_KEY);
+      return false;
+    }
+    Object.assign(state, saveData.state);
+    _rngState = saveData.rngState || 1;
+    return true;
+  } catch (e) {
+    localStorage.removeItem(SAVE_KEY);
+    return false;
+  }
+}
+
+function hasSavedGame() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return false;
+    const saveData = JSON.parse(raw);
+    return saveData.state && saveData.state.screen === 'dungeon';
+  } catch (e) { return false; }
+}
+
+function clearSave() {
+  try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ }
 }

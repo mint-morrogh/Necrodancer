@@ -17,22 +17,24 @@
       <div class="panel-header">RULES OF THE DUNGEON</div>
 
       <div class="help-section">
-        <div class="help-section-title" style="color:var(--teal);">GENRE DIRECTIVES</div>
+        <div class="help-section-title" style="color:var(--teal);">ROOM DIRECTIVES</div>
         <div class="help-section-body">
-          Each room assigns a <span class="hl-gold">genre directive</span> that guides the style of your track.
-          If a combination is impossible &mdash; for example, you can't find a shakuhachi melody
-          in the Breakbeat genre &mdash; use the <span class="hl-green">closest equivalent</span> you can find.
-          A generic flute would be perfectly fine. The dungeon respects creative interpretation.
+          Each room assigns a <span class="hl-gold">directive</span> that guides the style of your track.
+          <span class="hl-gold">Splice rooms</span> ask you to find samples from a specific genre.
+          <span style="color:var(--blue);">Production rooms</span> ask you to create sounds with VSTs and synths.
+          If a combination is impossible, use the <span class="hl-green">closest equivalent</span> you can find.
+          The dungeon respects creative interpretation.
         </div>
       </div>
 
       <div class="help-section">
-        <div class="help-section-title" style="color:var(--purple);">REROLLS</div>
+        <div class="help-section-title" style="color:var(--purple);">SEALING &amp; REROLLS</div>
         <div class="help-section-body">
+          You can seal a room once you've completed <span class="hl-gold">all but one</span> of its tasks.
+          To earn rerolls, complete <span class="hl-green">every task</span> before sealing &mdash;
+          the spirits will judge you with a dice roll for a chance at +1 reroll.
+          Leave any task unfinished and you get no chance.
           You begin each session with rerolls based on your difficulty.
-          To earn more, complete <span class="hl-green">every checkbox</span> in a room before sealing it.
-          The spirits will judge you &mdash; a dice roll determines if you earn +1 reroll.
-          Leave any task unfinished and you get no chance at all.
         </div>
       </div>
 
@@ -88,7 +90,18 @@
         <div class="help-section-title" style="color:var(--gold);">GOLD</div>
         <div class="help-section-body">
           Earn <span class="hl-gold">gold</span> by completing checklist items. Spend gold at the
-          <span class="hl-orange">Campfire</span> to remove curses, shield rooms, or buy rerolls.
+          <span class="hl-orange">Campfire</span> to remove curses, shield rooms, buy rerolls, or purchase <span class="hl-purple">relics</span>.
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title" style="color:var(--blue);">SOURCE MODE</div>
+        <div class="help-section-body">
+          Before each session, set the <span class="hl-gold">Splice vs Production</span> ratio.
+          <span class="hl-gold">Splice rooms</span> ask you to find samples on Splice.
+          <span style="color:var(--blue);">Production rooms</span> ask you to create sounds from scratch using VSTs, synths, and instruments.
+          At 50/50, each room is randomly assigned. Set to 100% either way for a focused experience.
+          No Splice subscription? Go full production. Want pure sample hunting? Go full Splice.
         </div>
       </div>
 
@@ -158,8 +171,8 @@
       <div class="help-section">
         <div class="help-section-title" style="color:var(--gold);">ROOM MASTERY</div>
         <div class="help-section-body">
-          Achieve <span class="hl-gold">Room Mastery</span> by completing ALL three conditions in a standard room:
-          every checklist task completed, bonus objective completed, and zero rerolls used.
+          Achieve <span class="hl-gold">Room Mastery</span> by meeting all three conditions in a standard room:
+          every checklist task completed, bonus objective completed, and zero rerolls used in that room.
           Mastery grants a <span class="hl-green">guaranteed reroll</span> (no dice roll),
           <span class="hl-gold">+15 bonus gold</span>, and <span class="hl-purple">+50 bonus score</span>.
           Boss rooms and side quests cannot be mastered.
@@ -174,7 +187,7 @@
           <span class="hl-gold">Normal</span> is the standard experience.
           <span class="hl-red">Hard</span> piles on more curses, effects, and fewer blessings.
           <span class="hl-red">Nightmare</span> is intentionally absurd &mdash; nearly every room is cursed, effects hit hard, and blessings almost never appear.
-          Gold, shop prices, and YouTube rooms are the same across all difficulties.
+          Gold and shop prices are the same across all difficulties.
         </div>
       </div>
 
@@ -191,6 +204,7 @@
   <script src="data/rooms.js"></script>
   <script src="data/events.js"></script>
   <script src="data/relics.js"></script>
+  <script src="data/production.js"></script>
   <!-- Descriptions (tooltips) -->
   <script src="data/descriptions_effects.js"></script>
   <script src="data/descriptions_genres.js"></script>

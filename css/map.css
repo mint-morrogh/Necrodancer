@@ -154,11 +154,13 @@
   opacity: 1 !important;
   z-index: 1000;
 }
-.map-node:hover {
-  z-index: 999;
-  position: relative;
+@media (hover: hover) {
+  .map-node:hover {
+    z-index: 999;
+    position: relative;
+  }
+  .map-node:hover .map-tooltip { display: block; }
 }
-.map-node:hover .map-tooltip { display: block; }
 .map-tooltip.tip-below {
   bottom: auto;
   top: calc(100% + 14px);

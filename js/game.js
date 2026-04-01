@@ -3,6 +3,7 @@
 // ════════════════════════════════════════════════════════
 
 function startSetup() {
+  clearSave();
   state.screen = 'setup';
   state.setupStep = 1;
   state.key = null;
@@ -10,7 +11,21 @@ function startSetup() {
   state.difficulty = null;
   state.seedMode = 'daily';
   state.seed = null;
+  state.spliceRatio = 50;
   render();
+}
+
+function continueSavedGame() {
+  if (loadGame()) {
+    render();
+    // Redraw map connections if on the map screen
+    if (state.roomPhase === 'map') {
+      setTimeout(() => { if (typeof drawMapConnections === 'function') drawMapConnections(); }, 50);
+    }
+  } else {
+    // Save was invalid, fall back to new session
+    startSetup();
+  }
 }
 
 async function rollForKey() {
@@ -190,7 +205,12 @@ function applyDeferredCursesToBoss(room) {
 // ════════════════════════════════════════════════════════
 
 function getAvailableRelics() {
-  return RELICS.filter(r => !state.relics.includes(r.id));
+  const allRelics = [...RELICS, ...(RELICS_PRODUCTION || []), ...(RELICS_SPLICE || [])];
+  return allRelics.filter(r => {
+    if (state.relics.includes(r.id)) return false;
+    if (r.mode && !runHasMode(r.mode)) return false;
+    return true;
+  });
 }
 
 function pickRelicsForChoice(count) {
@@ -1055,6 +1075,7 @@ function hideHelp() {
 }
 
 function endSession() {
+  clearSave();
   const totalRooms = state.rooms.length;
   const totalCurses = state.rooms.reduce((s, r) => s + r.curses.length, 0);
   const totalEffects = state.rooms.reduce((s, r) => s + r.effects.length, 0);
@@ -1213,6 +1234,7 @@ function generateBeatSheet() {
   sheet += `${'═'.repeat(44)}\n\n`;
   sheet += `Key: ${state.key} ${state.scale}    BPM: ${state.bpm}\n`;
   sheet += `Difficulty: ${diff().label}    Seed: ${state.seed || 'daily'}\n`;
+  sheet += `Source: ${state.spliceRatio}% Splice / ${100 - state.spliceRatio}% Production\n`;
   sheet += `Score: ${state.score}    Gold: ${state.gold}g\n`;
   sheet += `Floors: ${state.floor}    Rooms: ${state.rooms.length}\n\n`;
   sheet += `${'─'.repeat(44)}\n`;
@@ -1220,7 +1242,7 @@ function generateBeatSheet() {
   sheet += `${'─'.repeat(44)}\n\n`;
 
   for (const room of state.rooms) {
-    const tag = room.isBoss ? ' [BOSS]' : room.isSideQuest ? ' [SIDE QUEST]' : room.isAlchemist ? ' [ALCHEMIST]' : room.isYouTube ? ' [YOUTUBE]' : '';
+    const tag = room.isBoss ? ' [BOSS]' : room.isSideQuest ? ' [SIDE QUEST]' : room.isAlchemist ? ' [ALCHEMIST]' : room.isYouTube ? ' [YOUTUBE]' : room.isProductionRoom ? ' [PRODUCTION]' : '';
     sheet += `#${room.number} ${room.trackType.toUpperCase()}${tag}\n`;
     sheet += `   Genre: ${room.genre}`;
     if (room.sampleType) sheet += ` (${room.sampleType})`;
@@ -1309,7 +1331,8 @@ function rebuildGenreDirective(room) {
     isMulti: ['Drums', 'Percussion'].includes(room.trackType),
     isOpenDirective: ['Foley / Found Sound'].includes(room.trackType),
     isAlchemist: room.isAlchemist,
-    isYouTube: room.isYouTube
+    isYouTube: room.isYouTube,
+    isProductionRoom: room.isProductionRoom
   });
 }
 
