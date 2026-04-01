@@ -464,7 +464,7 @@ function renderRoomActive(room) {
         </div>
       ` : `
         <div class="result-section">
-          <div class="result-label" style="color:var(--dim);">No curse — the spirits spare you... this time</div>
+          <div class="result-label" style="color:var(--dim);">No curse in this room</div>
         </div>
       `}
 

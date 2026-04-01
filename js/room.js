@@ -274,6 +274,12 @@ function generateRoom(trackType, opts = {}) {
     blessing = pick(BLESSINGS);
   }
   if (blessing) {
+    // Inject room-specific context into blessing text
+    const hl = v => `<span style="color:var(--gold);">${v}</span>`;
+    blessing = blessing
+      .replace(/\{genre\}/g, hl(genre))
+      .replace(/\{trackType\}/g, hl(trackType))
+      .replace(/\{key\}/g, hl(state.key + ' ' + state.scale));
     if (blessing.includes('re-roll token') || blessing.includes('reroll token')) state.rerolls++;
     if (blessing.includes('NEXT room cannot be cursed') || blessing.includes('next 2 rooms cannot be cursed')) state.shieldNextRoom = true;
   }
