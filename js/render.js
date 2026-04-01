@@ -15,9 +15,10 @@ function effectTip(name) {
 }
 
 function genreTip(name) {
+  const spliceUrl = `https://splice.com/sounds/search?q=${encodeURIComponent(name)}`;
   const info = typeof GENRE_DESCRIPTIONS !== 'undefined' && GENRE_DESCRIPTIONS[name];
-  if (!info) return `<span style="color:var(--gold);">${name}</span>`;
-  return `<span class="info-tip" style="color:var(--gold);">${name}<span class="info-tip-content info-tip-genre"><div class="info-tip-title">${name}</div><div class="info-tip-desc">${info.desc}</div><div class="info-tip-field"><strong>BPM Range:</strong> ${info.bpm}</div><div class="info-tip-field"><strong>Characteristics:</strong> ${info.traits}</div></span></span>`;
+  if (!info) return `<a href="${spliceUrl}" target="_blank" rel="noopener" class="genre-link" style="color:var(--gold);">${name}</a>`;
+  return `<span class="info-tip" style="color:var(--gold);"><a href="${spliceUrl}" target="_blank" rel="noopener" class="genre-link">${name}</a><span class="info-tip-content info-tip-genre"><div class="info-tip-title">${name}</div><div class="info-tip-desc">${info.desc}</div><div class="info-tip-field"><strong>BPM Range:</strong> ${info.bpm}</div><div class="info-tip-field"><strong>Characteristics:</strong> ${info.traits}</div><div class="info-tip-field"><a href="${spliceUrl}" target="_blank" rel="noopener" class="genre-splice-link">Browse on Splice →</a></div></span></span>`;
 }
 
 function trackTip(name) {
@@ -64,10 +65,22 @@ function render() {
 }
 
 function renderTitle() {
+  const iconSet = ['💀','⚔️','🧪','🗡️','☠️','🛡️','🎲','🔮','🕯️','💎','🏹','⚗️','🪦','👑','🐉'];
+  const iconCount = 36;
+  const fallingIcons = Array.from({length: iconCount}, (_, i) => {
+    const icon = iconSet[i % iconSet.length];
+    const left = Math.round(2 + (i / iconCount) * 92 + (Math.random() * 4 - 2));
+    const dur = (12 + Math.random() * 10).toFixed(1);
+    const delay = (-Math.random() * parseFloat(dur)).toFixed(1);
+    const size = (48 + Math.random() * 24).toFixed(0);
+    return `<span class="title-falling-icon" style="left:${left}%;animation-delay:${delay}s;animation-duration:${dur}s;font-size:${size}px;">${icon}</span>`;
+  }).join('');
+
   app.innerHTML = `
     <div id="title-screen" class="screen active">
-      <div class="panel" style="max-width:650px; margin:0 auto; text-align:center; padding:60px 30px;">
-        <div class="title-main">NECRODANCER</div>
+      <div class="title-falling-icons">${fallingIcons}</div>
+      <div class="panel" style="max-width:650px; margin:0 auto; text-align:center; padding:60px 30px; position:relative; z-index:1;">
+        <div class="title-main">${'NECRODANCER'.split('').map((ch, i) => `<span class="title-letter" style="animation-delay:${(i * 0.12).toFixed(2)}s">${ch}</span>`).join('')}</div>
         <div class="title-sub">Production Dungeon Crawler</div>
         <div class="title-divider"></div>
         <div class="title-flavor">Enter the dungeon. Roll the bones.<br>Let fate shape your sound.</div>
@@ -506,7 +519,7 @@ function renderRoomActive(room) {
         </div>
       ` : `
         <div class="result-section">
-          <div class="result-label" style="color:var(--dim);">No mandatory effects — enchant freely</div>
+          <div class="result-label" style="color:var(--dim);">No mandatory effects required for this room</div>
         </div>
       `}
 
