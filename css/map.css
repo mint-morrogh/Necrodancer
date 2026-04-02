@@ -196,6 +196,29 @@
   letter-spacing: 3px;
   margin-bottom: 24px;
 }
+/* Floor theme banner */
+.floor-theme-banner {
+  text-align: center;
+  margin: -12px auto 20px auto;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--panel-alt);
+  max-width: 400px;
+}
+.floor-theme-name {
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  letter-spacing: 2px;
+  display: block;
+  margin-bottom: 4px;
+}
+.floor-theme-desc {
+  font-size: 13px;
+  color: var(--dim);
+  display: block;
+}
+
 /* Relic node pink tint */
 .map-node .map-node-type[style*="var(--pink)"] {
   text-shadow: 0 0 6px rgba(212,96,154,0.3);

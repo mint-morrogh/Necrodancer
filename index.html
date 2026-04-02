@@ -191,9 +191,54 @@
         </div>
       </div>
 
+      <div class="help-section">
+        <div class="help-section-title" style="color:var(--purple);">FLOOR THEMES</div>
+        <div class="help-section-body">
+          Starting from Floor 2, each floor gets a random <span class="hl-purple">theme modifier</span> that changes
+          the rules for all rooms on that floor. Themes can double curses, boost gold, increase effects,
+          or provide unique trade-offs. The active theme is shown on the map screen.
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title" style="color:var(--orange);">CHALLENGE MODIFIERS</div>
+        <div class="help-section-body">
+          During setup, toggle optional <span class="hl-orange">challenge modifiers</span> for extra score multipliers.
+          Stack multiple challenges for higher risk and reward. Examples include
+          <span class="hl-red">Iron Will</span> (no rerolls, x1.5 score),
+          <span class="hl-purple">Overloaded</span> (max effects, x1.3), and
+          <span class="hl-gold">Glass Cannon</span> (effects at 80-100% wet, x2.0 score).
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title" style="color:var(--teal);">FLOOR SCOUTING</div>
+        <div class="help-section-body">
+          At the <span class="hl-orange">post-boss campfire</span>, spend <span class="hl-gold">45g</span> to peek at the
+          first two rows of rooms on the next floor. You can <span class="hl-teal">swap</span> the two rows
+          to rearrange your upcoming path before descending.
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title" style="color:var(--purple);">PROFILE &amp; ACHIEVEMENTS</div>
+        <div class="help-section-body">
+          Your <span class="hl-purple">player profile</span> tracks stats across all sessions.
+          Earn <span class="hl-gold">achievement badges</span> for milestones like defeating bosses,
+          reaching deep floors, scoring high, and completing challenges.
+          View your profile from the <span class="hl-purple">PROFILE</span> button during any session.
+        </div>
+      </div>
+
       <div style="text-align:center; margin-top:28px;">
         <button class="btn btn-small" onclick="hideHelp()">CLOSE</button>
       </div>
+    </div>
+  </div>
+
+  <div id="profile-overlay" class="help-overlay" style="display:none;" onclick="if(event.target===this)hideProfile()">
+    <div class="panel help-content" id="profile-content">
+      <!-- Filled dynamically by showProfile() -->
     </div>
   </div>
 
@@ -205,6 +250,9 @@
   <script src="data/events.js"></script>
   <script src="data/relics.js"></script>
   <script src="data/production.js"></script>
+  <script src="data/floors.js"></script>
+  <script src="data/challenges.js"></script>
+  <script src="data/achievements.js"></script>
   <!-- Descriptions (tooltips) -->
   <script src="data/descriptions_effects.js"></script>
   <script src="data/descriptions_genres.js"></script>

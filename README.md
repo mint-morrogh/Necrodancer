@@ -91,6 +91,32 @@ Each room has a notes field where you can jot down what you used — sample name
 ### Room Timeline
 The quest log features a horizontal scrollable timeline strip at the top showing all completed rooms as compact cards. Each card shows the room number, track type, and genre. Hover (or tap on mobile) to see a tooltip with full details including curses, effects, blessings, and your notes.
 
+### Floor Themes
+Starting from Floor 2, each floor gets a random theme modifier that changes the rules for all rooms on that floor. Themes are announced on the map screen. Examples:
+- **Resonance Surge** — All effect wet percentages increased by 10%
+- **Cursed Depths** — Double curse chance, but double gold from curses
+- **The Gauntlet** — +25% curse chance, +25% blessing chance, +100% score
+- **Miser's Domain** — All campfire prices halved
+- **The Quiet Floor** — Max 1 effect per room, but no curses from standard rooms
+
+### Challenge Modifiers
+Optional modifiers selected during setup for extra score multipliers. Stack multiple for higher risk and reward:
+- **Iron Will** (x1.5) — No rerolls allowed
+- **Cursed Blood** (x1.3) — Every room guaranteed at least 1 curse
+- **Overloaded** (x1.3) — Maximum effects in every room
+- **Forsaken** (x1.2) — Blessings never appear
+- **Glass Cannon** (x2.0) — Double score, but effects are always 80-100% wet
+- **Minimalist** (x1.2) — No campfire purchases allowed
+
+### Floor Scouting
+At the post-boss campfire, spend 45g to peek at the first two rows of rooms on the next floor. You can swap the two rows to rearrange your upcoming path before descending.
+
+### Player Profile & Achievements
+A persistent player profile tracks stats across all sessions (total rooms, bosses, best score, deepest floor). 18 achievement badges unlock based on milestones and challenges — from "First Blood" (complete your first room) to "Legend" (score over 2000). View your profile from the PROFILE button during any session.
+
+### High Scores
+Top 5 scores per difficulty are stored locally and displayed on the title screen as a Hall of Fame with score, difficulty, seed, and date.
+
 ### Tooltips & Info System
 Hover tooltips throughout the game provide contextual information:
 - **Effects** — Plugin recommendations and DAW-specific tips for every effect.

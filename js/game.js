@@ -12,7 +12,16 @@ function startSetup() {
   state.seedMode = 'daily';
   state.seed = null;
   state.spliceRatio = 50;
+  state.challengeMods = [];
   render();
+}
+
+function toggleChallenge(id) {
+  if (state.challengeMods.includes(id)) {
+    state.challengeMods = state.challengeMods.filter(m => m !== id);
+  } else {
+    state.challengeMods.push(id);
+  }
 }
 
 function continueSavedGame() {
@@ -81,9 +90,10 @@ function startDungeon() {
   const seed = seedInput ? seedInput.value.trim() || getTodaySeed() : getTodaySeed();
   state.seed = seed;
   initRng(seed);
-  state.rerolls = diff().startingRerolls;
+  state.rerolls = hasChallenge('no_rerolls') ? 0 : diff().startingRerolls;
   state.floor = 1;
   state.score = 0;
+  state.floorTheme = null; // Floor 1 has no theme
   state.map = generateFloorMap(1);
   state.currentNodeId = null;
   state.floorHistory = [];
@@ -355,11 +365,40 @@ function nextFloor() {
   });
 
   state.floor++;
-  state.map = generateFloorMap(state.floor);
+  state.floorTheme = (typeof pickFloorTheme === 'function') ? pickFloorTheme(state.floor) : null;
+  // Use pre-generated map from room trading peek, or generate fresh
+  if (state.nextFloorMap) {
+    state.map = state.nextFloorMap;
+    state.nextFloorMap = null;
+  } else {
+    state.map = generateFloorMap(state.floor);
+  }
   state.currentNodeId = null;
   state.roomPhase = 'map';
   render();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function peekNextFloor() {
+  if (state.gold < 45 || !state.postBossCampfire) return;
+  state.gold -= 45;
+  // Pre-generate the next floor's map
+  state.nextFloorMap = generateFloorMap(state.floor + 1);
+  render();
+}
+
+function swapFloorRows() {
+  if (!state.nextFloorMap || state.nextFloorMap.rows.length < 4) return;
+  // Swap rows 1 and 2 (first two choice rows after start)
+  const temp = state.nextFloorMap.rows[1];
+  state.nextFloorMap.rows[1] = state.nextFloorMap.rows[2];
+  state.nextFloorMap.rows[2] = temp;
+  // Update node IDs to match new positions
+  state.nextFloorMap.rows[1].forEach((node, i) => { node.id = '1-' + i; });
+  state.nextFloorMap.rows[2].forEach((node, i) => { node.id = '2-' + i; });
+  // Regenerate connections since row contents changed
+  state.nextFloorMap.connections = generateMapConnections(state.nextFloorMap.rows);
+  render();
 }
 
 function goldForType(type) {
@@ -1001,6 +1040,7 @@ function proceedFromChest() {
 }
 
 function buyCampfireItem(type) {
+  if (hasChallenge('minimalist')) return; // Minimalist challenge blocks purchases
   const curseRemovalCost = hasRelic('purifying_flame') ? 10 : 15;
   if (type === 'removeCurse' && state.gold >= curseRemovalCost) {
     const idx = state.deferredCurses.findIndex(c => !c.completed);
@@ -1141,6 +1181,69 @@ function hideHelp() {
   document.getElementById('help-overlay').style.display = 'none';
 }
 
+function showProfile() {
+  const profile = getProfile();
+  const el = document.getElementById('profile-content');
+  if (!el) return;
+
+  const allAch = typeof ACHIEVEMENTS !== 'undefined' ? ACHIEVEMENTS : [];
+  const unlocked = profile.badges || [];
+
+  el.innerHTML = `
+    <div class="panel-header" style="display:flex; align-items:center; justify-content:space-between;">
+      Player Profile
+      <button class="log-close-btn" onclick="hideProfile()" aria-label="Close">&times;</button>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap:10px; margin:20px 0;">
+      <div class="panel panel-accent" style="padding:12px 8px; text-align:center;">
+        <div style="font-family:var(--font-pixel); font-size:18px; color:var(--gold);">${profile.totalSessions}</div>
+        <div style="font-size:12px; color:var(--dim); margin-top:4px;">Sessions</div>
+      </div>
+      <div class="panel panel-accent" style="padding:12px 8px; text-align:center;">
+        <div style="font-family:var(--font-pixel); font-size:18px; color:var(--gold);">${profile.totalRooms}</div>
+        <div style="font-size:12px; color:var(--dim); margin-top:4px;">Rooms</div>
+      </div>
+      <div class="panel panel-accent" style="padding:12px 8px; text-align:center;">
+        <div style="font-family:var(--font-pixel); font-size:18px; color:var(--red);">${profile.totalBosses}</div>
+        <div style="font-size:12px; color:var(--dim); margin-top:4px;">Bosses</div>
+      </div>
+      <div class="panel panel-accent" style="padding:12px 8px; text-align:center;">
+        <div style="font-family:var(--font-pixel); font-size:18px; color:var(--purple);">${profile.maxScore}</div>
+        <div style="font-size:12px; color:var(--dim); margin-top:4px;">Best Score</div>
+      </div>
+      <div class="panel panel-accent" style="padding:12px 8px; text-align:center;">
+        <div style="font-family:var(--font-pixel); font-size:18px; color:var(--teal);">${profile.maxFloor}</div>
+        <div style="font-size:12px; color:var(--dim); margin-top:4px;">Deepest Floor</div>
+      </div>
+      <div class="panel panel-accent" style="padding:12px 8px; text-align:center;">
+        <div style="font-family:var(--font-pixel); font-size:18px; color:var(--green);">${unlocked.length}/${allAch.length}</div>
+        <div style="font-size:12px; color:var(--dim); margin-top:4px;">Badges</div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <div style="font-family:var(--font-pixel); font-size:10px; color:var(--gold-dim); letter-spacing:2px; margin-bottom:12px;">BADGES</div>
+      <div style="display:flex; flex-wrap:wrap; gap:6px;">
+        ${allAch.map(ach => {
+          const earned = unlocked.includes(ach.id);
+          return '<span class="info-tip" style="display:inline-block;"><span class="profile-badge ' + (earned ? 'earned' : 'locked') + '">' + ach.name + '</span><span class="info-tip-content" style="min-width:180px;"><div class="info-tip-title" style="color:' + (earned ? 'var(--gold)' : 'var(--dim)') + ';">' + ach.name + '</div><div class="info-tip-desc">' + ach.desc + '</div><div style="font-size:11px; margin-top:4px; color:' + (earned ? 'var(--green)' : 'var(--dim)') + ';">' + (earned ? 'Unlocked' : 'Locked') + '</div></span></span>';
+        }).join('')}
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-top:24px;">
+      <button class="btn btn-small" onclick="hideProfile()">CLOSE</button>
+    </div>
+  `;
+
+  document.getElementById('profile-overlay').style.display = 'flex';
+}
+
+function hideProfile() {
+  document.getElementById('profile-overlay').style.display = 'none';
+}
+
 function endSession() {
   clearSave();
   const totalRooms = state.rooms.length;
@@ -1155,6 +1258,9 @@ function endSession() {
   const rerollBonus = Math.round(state.rerolls * 10 * diff().scoreMultiplier);
   const baseScore = state.score;
   state.score += rerollBonus;
+
+  // Update player profile and check achievements
+  updateProfileFromSession();
 
   // Save high score
   const today = new Date();
@@ -1327,7 +1433,8 @@ function newSession() {
     seed: null, seedMode: 'daily', gold: 0, score: 0, chestData: null, pendingRoom: null,
     roadEventData: null, acceptedEvents: [], pendingBlessing: false, postBossCampfire: false,
     floor: 1, map: null, currentNodeId: null, floorHistory: [], setupStep: 1,
-    relics: [], relicUses: {}, pendingRelicChoice: null, pendingRelicRoom: null, rerollsUsedThisRoom: 0
+    relics: [], relicUses: {}, pendingRelicChoice: null, pendingRelicRoom: null, rerollsUsedThisRoom: 0,
+    spliceRatio: 50, nextFloorMap: null, floorTheme: null
   };
   render();
 }

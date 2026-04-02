@@ -38,7 +38,10 @@ let state = {
   pendingRelicChoice: null,
   pendingRelicRoom: null,
   rerollsUsedThisRoom: 0,
-  spliceRatio: 50
+  spliceRatio: 50,
+  nextFloorMap: null,
+  floorTheme: null,
+  challengeMods: []
 };
 
 
@@ -127,7 +130,48 @@ const DIFFICULTY_SETTINGS = {
   }
 };
 
-function diff() { return DIFFICULTY_SETTINGS[state.difficulty || 'normal']; }
+function diff() {
+  const base = DIFFICULTY_SETTINGS[state.difficulty || 'normal'];
+  const mods = (state.floorTheme && state.floorTheme.apply) ? state.floorTheme.apply(base) : {};
+
+  // Start from base + floor theme mods
+  const result = {
+    ...base,
+    curseChance: Math.min(100, (base.curseChance * (mods.curseChanceMult || 1)) + (mods.curseChanceBoost || 0)),
+    blessingChance: Math.min(100, (base.blessingChance * (mods.blessingChanceMult || 1)) + (mods.blessingChanceBoost || 0)),
+    effectRange: [
+      Math.min(100, base.effectRange[0] + (mods.effectRangeBoost || 0)),
+      Math.min(100, base.effectRange[1] + (mods.effectRangeBoost || 0))
+    ],
+    effectTolerance: base.effectTolerance + (mods.toleranceBoost || 0),
+    goldMultiplier: base.goldMultiplier * (mods.goldMult || 1),
+    scoreMultiplier: base.scoreMultiplier * (mods.scoreMult || 1) * challengeScoreMult(),
+    _themeMods: mods
+  };
+
+  // Apply challenge modifiers
+  if (hasChallenge('all_curses')) result.curseChance = 100;
+  if (hasChallenge('no_blessings')) result.blessingChance = 0;
+  if (hasChallenge('glass_cannon')) { result.effectRange = [80, 100]; result.effectTolerance = 5; }
+  if (hasChallenge('max_effects')) {
+    const maxEff = result.effectWeights[result.effectWeights.length - 1].value;
+    result.effectWeights = [{ value: maxEff, weight: 1 }];
+  }
+
+  return result;
+}
+
+function hasChallenge(id) {
+  return state.challengeMods && state.challengeMods.includes(id);
+}
+
+function challengeScoreMult() {
+  if (!state.challengeMods || state.challengeMods.length === 0) return 1;
+  return state.challengeMods.reduce((mult, id) => {
+    const mod = (typeof CHALLENGE_MODIFIERS !== 'undefined') ? CHALLENGE_MODIFIERS.find(m => m.id === id) : null;
+    return mult * (mod ? mod.scoreMult : 1);
+  }, 1);
+}
 
 function runHasMode(mode) {
   if (mode === 'splice') return state.spliceRatio > 0;
@@ -234,6 +278,70 @@ function clearSave() {
 // ════════════════════════════════════════════════════════
 // HIGH SCORES (localStorage)
 // ════════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════
+// PLAYER PROFILE (localStorage)
+// ════════════════════════════════════════════════════════
+
+const PROFILE_KEY = 'necrodancer_profile';
+
+function getProfile() {
+  try {
+    const raw = localStorage.getItem(PROFILE_KEY);
+    return raw ? JSON.parse(raw) : {
+      totalSessions: 0, totalRooms: 0, totalBosses: 0, totalSideQuests: 0,
+      maxScore: 0, maxGold: 0, maxFloor: 0, maxRelics: 0, maxCursesInRoom: 0,
+      masteryInSession: 0, floorNoRerolls: false, floorNoCurses: false,
+      nightmareCompleted: false, challengeSessionCompleted: false,
+      badges: []
+    };
+  } catch (e) {
+    return { totalSessions: 0, totalRooms: 0, totalBosses: 0, totalSideQuests: 0,
+      maxScore: 0, maxGold: 0, maxFloor: 0, maxRelics: 0, maxCursesInRoom: 0,
+      masteryInSession: 0, floorNoRerolls: false, floorNoCurses: false,
+      nightmareCompleted: false, challengeSessionCompleted: false,
+      badges: [] };
+  }
+}
+
+function saveProfile(profile) {
+  try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch (e) { /* ignore */ }
+}
+
+function updateProfileFromSession() {
+  const profile = getProfile();
+  profile.totalSessions++;
+  profile.totalRooms += state.rooms.length;
+  profile.totalBosses += state.rooms.filter(r => r.isBoss).length;
+  profile.totalSideQuests += state.rooms.filter(r => r.isSideQuest).length;
+  if (state.score > profile.maxScore) profile.maxScore = state.score;
+  if (state.gold > profile.maxGold) profile.maxGold = state.gold;
+  if (state.floor > profile.maxFloor) profile.maxFloor = state.floor;
+  if (state.relics.length > profile.maxRelics) profile.maxRelics = state.relics.length;
+
+  // Per-room stats
+  const masteryCount = state.rooms.filter(r => r._masteryShown).length;
+  if (masteryCount > profile.masteryInSession) profile.masteryInSession = masteryCount;
+  for (const room of state.rooms) {
+    if (room.curses.length > profile.maxCursesInRoom) profile.maxCursesInRoom = room.curses.length;
+  }
+
+  // Difficulty and challenge checks
+  if (state.difficulty === 'nightmare') profile.nightmareCompleted = true;
+  if (state.challengeMods && state.challengeMods.length > 0) profile.challengeSessionCompleted = true;
+
+  // Check achievements
+  if (typeof ACHIEVEMENTS !== 'undefined') {
+    for (const ach of ACHIEVEMENTS) {
+      if (!profile.badges.includes(ach.id) && ach.check(profile)) {
+        profile.badges.push(ach.id);
+      }
+    }
+  }
+
+  saveProfile(profile);
+  return profile;
+}
 
 const SCORES_KEY = 'necrodancer_scores';
 const MAX_SCORES_PER_DIFF = 5;

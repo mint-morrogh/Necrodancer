@@ -221,6 +221,28 @@ function renderSetup() {
             </button>
           `).join('')}
         </div>
+        ${state.difficulty ? `
+        <div style="margin-top:20px; border-top:1px solid var(--border); padding-top:16px;">
+          <div style="font-family:var(--font-pixel); font-size:9px; color:var(--dim); letter-spacing:2px; margin-bottom:10px;">CHALLENGE MODIFIERS <span style="opacity:0.5;">(optional)</span></div>
+          <div class="challenge-grid">
+            ${(typeof CHALLENGE_MODIFIERS !== 'undefined' ? CHALLENGE_MODIFIERS : []).map(mod => {
+              const active = state.challengeMods.includes(mod.id);
+              return `
+                <button class="challenge-toggle ${active ? 'active' : ''}" style="--challenge-color:${mod.color};" onclick="toggleChallenge('${mod.id}'); renderSetup();">
+                  <span class="challenge-name">${mod.name}</span>
+                  <span class="challenge-mult">x${mod.scoreMult}</span>
+                  <span class="challenge-desc">${mod.desc}</span>
+                </button>
+              `;
+            }).join('')}
+          </div>
+          ${state.challengeMods.length > 0 ? `
+            <div style="margin-top:10px; font-family:var(--font-pixel); font-size:10px; color:var(--gold); letter-spacing:1px;">
+              CHALLENGE BONUS: x${challengeScoreMult().toFixed(1)} SCORE
+            </div>
+          ` : ''}
+        </div>
+        ` : ''}
       </div>
       ` : ''}
 
@@ -294,8 +316,10 @@ function renderDungeon() {
           <div class="song-info-item">RE-ROLLS <span class="reroll-count">${state.rerolls}</span></div>
           ${state.relics.length > 0 ? '<div class="song-info-item" style="color:var(--purple);">RELICS <span style="color:var(--purple);">' + state.relics.length + '</span></div>' : ''}
           ${state.shieldNextRoom > 0 ? `<div class="song-info-item" style="color:var(--green)">SHIELD x${state.shieldNextRoom}</div>` : ''}
+          ${state.challengeMods && state.challengeMods.length > 0 ? `<div class="song-info-item" style="color:var(--orange);">CHALLENGE x${challengeScoreMult().toFixed(1)}</div>` : ''}
         </div>
         <button class="rules-btn-fixed" onclick="showHelp()">? RULES</button>
+        <button class="profile-btn-fixed" onclick="showProfile()">PROFILE</button>
 
         <div class="room-main">
           ${mainContent}
@@ -332,6 +356,7 @@ function renderMap() {
   let html = `
     <div class="panel">
       <div class="map-floor-label">FLOOR ${state.floor}</div>
+      ${state.floorTheme ? `<div class="floor-theme-banner" style="border-color:${state.floorTheme.color};"><span class="floor-theme-name" style="color:${state.floorTheme.color};">${state.floorTheme.name}</span><span class="floor-theme-desc">${state.floorTheme.desc}</span></div>` : ''}
       <div class="map-container" id="map-container">
         <svg class="map-svg" id="map-svg"></svg>
         <div class="map-rows" id="map-rows">
@@ -872,11 +897,66 @@ function renderCampfire() {
         </div>
       </div>
 
+      ${state.postBossCampfire ? `
+        <div style="margin-top:24px; border-top:1px solid var(--border); padding-top:20px;">
+          <div style="font-family:var(--font-pixel); font-size:10px; color:var(--gold-dim); letter-spacing:2px; margin-bottom:12px; text-align:center;">FLOOR SCOUTING</div>
+          ${!state.nextFloorMap ? `
+            <div class="campfire-shop-item ${state.gold < 45 ? 'disabled' : ''}" onclick="peekNextFloor()" style="max-width:400px; margin:0 auto;">
+              <div>
+                <div style="color:var(--teal);">Peek at Next Floor</div>
+                <div style="font-size:13px; color:var(--dim);">Reveal the first two rows of rooms on the next floor</div>
+              </div>
+              <div style="font-family:var(--font-pixel); font-size:12px; color:var(--gold);">45g</div>
+            </div>
+          ` : `
+            <div style="max-width:500px; margin:0 auto; text-align:center;">
+              <div style="color:var(--dim); font-size:14px; margin-bottom:16px;">Next floor rooms revealed. You may swap the first two rows.</div>
+              ${renderFloorPeek()}
+              <div style="margin-top:12px;">
+                <button class="btn btn-small" onclick="swapFloorRows()">SWAP ROWS</button>
+              </div>
+            </div>
+          `}
+        </div>
+      ` : ''}
+
       <div style="margin-top:24px;">
         <button class="btn" onclick="leaveCampfire()">LEAVE THE CAMPFIRE</button>
       </div>
     </div>
   `;
+}
+
+function renderFloorPeek() {
+  if (!state.nextFloorMap || state.nextFloorMap.rows.length < 3) return '';
+  const row1 = state.nextFloorMap.rows[1];
+  const row2 = state.nextFloorMap.rows[2];
+
+  function renderPeekRow(row, label) {
+    return `
+      <div style="margin-bottom:12px;">
+        <div style="font-family:var(--font-pixel); font-size:9px; color:var(--dim); letter-spacing:2px; margin-bottom:6px;">${label}</div>
+        <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+          ${row.map(node => {
+            const nt = NODE_TYPES[node.type] || NODE_TYPES.standard;
+            return `
+              <div style="background:var(--panel-alt); border:1px solid var(--border); border-left:3px solid ${nt.color}; border-radius:4px; padding:8px 12px; min-width:90px; text-align:left;">
+                <div style="font-family:var(--font-pixel); font-size:9px; color:${nt.color}; letter-spacing:1px;">${nt.label}</div>
+                ${node.trackType ? `<div style="font-size:12px; color:var(--gold); margin-top:3px;">${node.trackType}</div>` : ''}
+                <div style="font-size:11px; color:var(--dim); margin-top:2px;">
+                  ${node.preview.curseCount > 0 ? `<span style="color:var(--red);">${node.preview.curseCount} curse${node.preview.curseCount > 1 ? 's' : ''}</span> ` : ''}
+                  ${node.preview.effectCount > 0 ? `<span style="color:var(--purple);">${node.preview.effectCount} fx</span> ` : ''}
+                  ${node.preview.hasBlessing ? '<span style="color:var(--green);">blessed</span>' : ''}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  return renderPeekRow(row1, 'ROW 1') + renderPeekRow(row2, 'ROW 2');
 }
 
 function renderFloorComplete() {
