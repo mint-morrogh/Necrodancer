@@ -55,8 +55,8 @@ body {
   50% { text-shadow: 0 0 20px var(--gold), 0 0 40px rgba(212,165,116,0.5); }
 }
 @keyframes cursePulse {
-  0%, 100% { text-shadow: 0 0 8px var(--red), 0 0 16px rgba(192,57,43,0.3); }
-  50% { text-shadow: 0 0 16px var(--red), 0 0 32px rgba(192,57,43,0.5); }
+  0%, 100% { text-shadow: 0 0 8px var(--red), 0 0 16px rgba(192,57,43,0.3); box-shadow: 0 0 6px rgba(192,57,43,0.2); transform: scale(1); }
+  50% { text-shadow: 0 0 18px var(--red), 0 0 36px rgba(192,57,43,0.6); box-shadow: 0 0 14px rgba(192,57,43,0.5), 0 0 28px rgba(192,57,43,0.2); transform: scale(1.05); }
 }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes rollFlash { 0% { color: var(--dim); } 50% { color: var(--gold); } 100% { color: var(--dim); } }

@@ -581,8 +581,19 @@ async function sealRoom() {
       if (hasRelic('crown_of_the_ancients')) rollTarget -= 2;
       if (rollTarget < 1) rollTarget = 1;
       rollValue = roll(1, 20);
-      earnedReroll = rollValue >= rollTarget;
-      rerollCount = earnedReroll ? 1 : 0;
+      // Natural 20: always earns a reroll
+      if (rollValue === 20) {
+        earnedReroll = true;
+        rerollCount = 1;
+      // Natural 1: critical failure — lose a reroll if available
+      } else if (rollValue === 1) {
+        earnedReroll = false;
+        rerollCount = 0;
+        if (state.rerolls > 0) state.rerolls -= 1;
+      } else {
+        earnedReroll = rollValue >= rollTarget;
+        rerollCount = earnedReroll ? 1 : 0;
+      }
     }
   }
 
@@ -632,6 +643,8 @@ async function sealRoom() {
     rerollCount,
     rollTarget,
     rollValue,
+    isNat20: rollValue === 20,
+    isNat1: rollValue === 1,
     streakReward,
     streakCount,
     curseSurvivor,
@@ -651,16 +664,25 @@ async function sealRoom() {
   }
 }
 
+function setD20Face(el, value) {
+  const col = (value - 1) % 5;
+  const row = Math.floor((value - 1) / 5);
+  // CSS background-position %: position = col/(cols-1)*100, row/(rows-1)*100
+  const xPct = col * 25;    // 5 cols → 0, 25, 50, 75, 100
+  const yPct = row * 33.33; // 4 rows → 0, 33.33, 66.67, 100
+  el.style.backgroundPosition = `${xPct}% ${yPct}%`;
+}
+
 async function animateSpell() {
   const decorGlyphs = ['✧','✦','✶','❋','✺','❈'];
-  const spellEl = document.getElementById('spell-glyph');
+  const dieEl = document.querySelector('.spell-display');
   const container = document.getElementById('spell-container');
-  if (!spellEl) return;
+  if (!dieEl) return;
 
   const td = state.transitionData;
   const finalValue = td.rollValue;
 
-  // Spawn small dust glyphs floating off the number
+  // Spawn small dust glyphs floating off the die
   const dustInterval = setInterval(() => {
     if (!container) return;
     const dust = document.createElement('span');
@@ -672,18 +694,25 @@ async function animateSpell() {
     setTimeout(() => dust.remove(), 800);
   }, 100);
 
-  // Cycle through random d20 values — fast and clean
+  // Cycle through random d20 faces — fast and clean
   const steps = 18;
   for (let i = 0; i < steps; i++) {
-    spellEl.textContent = Math.floor(Math.random() * 20) + 1;
+    setD20Face(dieEl, Math.floor(Math.random() * 20) + 1);
     await sleep(40 + i * 5); // starts fast, slows slightly
   }
 
   clearInterval(dustInterval);
 
   // Land on the actual roll value
-  spellEl.textContent = finalValue;
-  spellEl.parentElement.classList.add('resolved');
+  setD20Face(dieEl, finalValue);
+  dieEl.classList.add('resolved');
+
+  // Natural 20 / Natural 1 visual effects
+  if (td.isNat20) {
+    dieEl.classList.add('nat20');
+  } else if (td.isNat1) {
+    dieEl.classList.add('nat1');
+  }
 
   if (td.earnedReroll) {
     state.rerolls += td.rerollCount;
@@ -694,12 +723,18 @@ async function animateSpell() {
   const resultEl = document.getElementById('transition-result');
   if (resultEl) {
     resultEl.style.display = 'block';
-    if (td.earnedReroll) {
+    if (td.isNat20) {
+      resultEl.className = 'transition-result nat20-text';
+      resultEl.innerHTML = 'NATURAL 20! +1 REROLL';
+    } else if (td.isNat1) {
+      resultEl.className = 'transition-result nat1-text';
+      resultEl.innerHTML = state.rerolls >= 0 ? 'CRITICAL FAILURE! -1 REROLL' : 'CRITICAL FAILURE!';
+    } else if (td.earnedReroll) {
       resultEl.className = 'transition-result earned';
-      resultEl.innerHTML = 'REROLL EARNED! +1';
+      resultEl.innerHTML = 'SUCCESS! +1 REROLL';
     } else {
       resultEl.className = 'transition-result denied';
-      resultEl.innerHTML = 'THE SPIRITS DENY YOU';
+      resultEl.innerHTML = 'FAILURE';
     }
   }
 
@@ -771,10 +806,10 @@ async function doubleOrNothing() {
 
   // Reset and re-animate the dice
   const container = document.getElementById('spell-container');
-  const spellEl = document.getElementById('spell-glyph');
-  if (!container || !spellEl) return;
-  spellEl.textContent = '✧';
-  spellEl.parentElement.classList.remove('resolved');
+  const dieEl = document.querySelector('.spell-display');
+  if (!container || !dieEl) return;
+  setD20Face(dieEl, 1);
+  dieEl.classList.remove('resolved', 'nat20', 'nat1');
 
   const decorGlyphs = ['✧','✦','✶','❋','✺','❈'];
 
@@ -790,17 +825,21 @@ async function doubleOrNothing() {
 
   const steps = 18;
   for (let i = 0; i < steps; i++) {
-    spellEl.textContent = Math.floor(Math.random() * 20) + 1;
+    setD20Face(dieEl, Math.floor(Math.random() * 20) + 1);
     await sleep(40 + i * 5);
   }
 
   clearInterval(dustInterval);
 
   const finalValue = roll(1, 20);
-  const won = finalValue >= rollTarget;
+  const isNat20 = finalValue === 20;
+  const isNat1 = finalValue === 1;
+  const won = isNat20 || (!isNat1 && finalValue >= rollTarget);
 
-  spellEl.textContent = finalValue;
-  spellEl.parentElement.classList.add('resolved');
+  setD20Face(dieEl, finalValue);
+  dieEl.classList.add('resolved');
+  if (isNat20) dieEl.classList.add('nat20');
+  if (isNat1) dieEl.classList.add('nat1');
 
   // Show rolled value in same row
   const rollVal = document.getElementById('roll-result-value');
@@ -813,14 +852,26 @@ async function doubleOrNothing() {
 
   if (resultEl) {
     resultEl.style.display = 'block';
-    if (won) {
+    if (isNat20) {
+      state.rerolls += 1;
+      resultEl.className = 'transition-result nat20-text';
+      resultEl.innerHTML = 'CRITICAL SUCCESS! +2 REROLLS';
+    } else if (isNat1) {
+      // Nat 1 on double or nothing: lose the original reroll AND an extra one
+      state.rerolls -= 1;
+      if (state.rerolls > 0) state.rerolls -= 1;
+      if (state.rerolls < 0) state.rerolls = 0;
+      resultEl.className = 'transition-result nat1-text';
+      resultEl.innerHTML = 'CRITICAL FAILURE! REROLLS LOST';
+    } else if (won) {
       state.rerolls += 1;
       resultEl.className = 'transition-result earned';
-      resultEl.innerHTML = 'DOUBLE! +2 REROLLS TOTAL';
+      resultEl.innerHTML = 'SUCCESS! +2 REROLLS';
     } else {
       state.rerolls -= 1;
+      if (state.rerolls < 0) state.rerolls = 0;
       resultEl.className = 'transition-result denied';
-      resultEl.innerHTML = 'NOTHING! REROLL LOST';
+      resultEl.innerHTML = 'FAILURE! REROLL LOST';
     }
   }
 
@@ -1096,82 +1147,112 @@ function endSession() {
   const sideQuestsCompleted = state.rooms.filter(r => r.isSideQuest).length;
   const bossesDefeated = state.rooms.filter(r => r.isBoss).length;
 
+  // Reroll bonus: remaining rerolls * 10 * score multiplier
+  const rerollBonus = Math.round(state.rerolls * 10 * diff().scoreMultiplier);
+  const baseScore = state.score;
+  state.score += rerollBonus;
+
+  const diffColors = { easy: 'var(--green)', normal: 'var(--text)', hard: 'var(--orange)', nightmare: 'var(--red)' };
+  const sourceLabel = state.spliceRatio === 100 ? 'Splice' : state.spliceRatio === 0 ? 'Production' : state.spliceRatio + '% Splice / ' + (100 - state.spliceRatio) + '% Production';
+
   app.innerHTML = `
     <div class="screen active" style="max-width:800px; margin:0 auto; padding-top:40px;">
-      <div class="panel" style="text-align:center; padding:40px 30px;">
-        <div style="font-family:var(--font-pixel); font-size:12px; color:var(--dim); margin-bottom:16px; letter-spacing:3px;">* * *</div>
-        <div class="title-main" style="font-size:22px; margin-bottom:8px;">SESSION COMPLETE</div>
-        <div class="title-divider"></div>
+      <div class="panel" style="text-align:center; padding:48px 30px;">
 
-        <div style="margin:30px 0;">
-          <div class="song-info-item" style="font-size:14px; margin:10px 0;">KEY <span style="font-size:18px;">${state.key} ${state.scale}</span></div>
-          <div class="song-info-item" style="font-size:14px; margin:10px 0;">BPM <span style="font-size:18px;">${state.bpm}</span></div>
-          <div class="song-info-item" style="font-size:14px; margin:10px 0; color:${{easy:'var(--green)',normal:'var(--text)',hard:'var(--orange)',nightmare:'var(--red)'}[state.difficulty]};">DIFFICULTY <span style="font-size:14px;">${diff().label}</span></div>
-          ${state.seed ? `<div class="song-info-item" style="font-size:14px; margin:10px 0;">SEED <span style="font-size:14px;">${state.seed}</span></div>` : ''}
-          <div class="song-info-item" style="font-size:14px; margin:10px 0;">GOLD <span style="font-size:18px; color:var(--gold);">${state.gold}g</span></div>
-          <div class="song-info-item" style="font-size:14px; margin:10px 0;">SCORE <span style="font-size:18px; color:var(--purple);">${state.score}</span></div>
+        <!-- Header -->
+        <div style="font-family:var(--font-pixel); font-size:12px; color:var(--dim); margin-bottom:20px; letter-spacing:3px;">* * *</div>
+        <div class="title-main" style="font-size:22px; margin-bottom:8px;">SESSION COMPLETE</div>
+        <div class="title-divider" style="margin:20px auto 32px auto;"></div>
+
+        <!-- Session Info -->
+        <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:24px; margin-bottom:36px;">
+          <div><span style="font-family:var(--font-pixel); font-size:9px; color:var(--dim); letter-spacing:2px;">KEY</span><br><span style="font-family:var(--font-pixel); font-size:14px; color:var(--gold);">${state.key} ${state.scale}</span></div>
+          <div><span style="font-family:var(--font-pixel); font-size:9px; color:var(--dim); letter-spacing:2px;">BPM</span><br><span style="font-family:var(--font-pixel); font-size:14px; color:var(--gold);">${state.bpm}</span></div>
+          <div><span style="font-family:var(--font-pixel); font-size:9px; color:var(--dim); letter-spacing:2px;">DIFFICULTY</span><br><span style="font-family:var(--font-pixel); font-size:14px; color:${diffColors[state.difficulty] || 'var(--text)'};">${diff().label}</span></div>
+          <div><span style="font-family:var(--font-pixel); font-size:9px; color:var(--dim); letter-spacing:2px;">SEED</span><br><span style="font-family:var(--font-pixel); font-size:14px; color:var(--text);">${state.seed || 'daily'}</span></div>
+          <div><span style="font-family:var(--font-pixel); font-size:9px; color:var(--dim); letter-spacing:2px;">SOURCE</span><br><span style="font-family:var(--font-pixel); font-size:11px; color:var(--text);">${sourceLabel}</span></div>
         </div>
 
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:16px; margin:30px 0; text-align:center;">
-          <div class="panel panel-accent">
-            <div style="font-family:var(--font-pixel); font-size:24px; color:var(--gold);">${totalRooms}</div>
-            <div style="font-size:13px; color:var(--dim); margin-top:4px;">Rooms Cleared</div>
+        <!-- Score Breakdown -->
+        <div style="margin-bottom:36px; padding:20px; border:1px solid var(--border); border-radius:4px; background:var(--panel-alt);">
+          <div style="font-family:var(--font-pixel); font-size:9px; color:var(--dim); letter-spacing:2px; margin-bottom:16px;">SCORE BREAKDOWN</div>
+          <div style="display:flex; justify-content:center; gap:24px; flex-wrap:wrap; margin-bottom:16px;">
+            <div style="text-align:center;">
+              <div style="font-family:var(--font-pixel); font-size:10px; color:var(--dim); letter-spacing:1px;">BASE</div>
+              <div style="font-family:var(--font-pixel); font-size:16px; color:var(--purple); margin-top:4px;">${baseScore}</div>
+            </div>
+            ${rerollBonus > 0 ? `
+            <div style="text-align:center;">
+              <div style="font-family:var(--font-pixel); font-size:10px; color:var(--dim); letter-spacing:1px;">REROLL BONUS</div>
+              <div style="font-family:var(--font-pixel); font-size:16px; color:var(--green); margin-top:4px;">+${rerollBonus}</div>
+              <div style="font-size:11px; color:var(--dim); margin-top:2px;">${state.rerolls} remaining</div>
+            </div>
+            ` : ''}
           </div>
-          <div class="panel panel-accent">
-            <div style="font-family:var(--font-pixel); font-size:24px; color:var(--red);">${totalCurses}</div>
-            <div style="font-size:13px; color:var(--dim); margin-top:4px;">Curses Endured</div>
+          <div style="border-top:1px solid var(--border); padding-top:14px;">
+            <div style="font-family:var(--font-pixel); font-size:10px; color:var(--dim); letter-spacing:1px;">FINAL SCORE</div>
+            <div style="font-family:var(--font-pixel); font-size:28px; color:var(--purple); margin-top:6px;">${state.score}</div>
           </div>
-          <div class="panel panel-accent">
-            <div style="font-family:var(--font-pixel); font-size:24px; color:var(--purple);">${totalEffects}</div>
-            <div style="font-size:13px; color:var(--dim); margin-top:4px;">Effects Applied</div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-bottom:36px; text-align:center;">
+          <div class="panel panel-accent" style="padding:14px 8px;">
+            <div style="font-family:var(--font-pixel); font-size:20px; color:var(--gold);">${totalRooms}</div>
+            <div style="font-size:12px; color:var(--dim); margin-top:6px;">Rooms</div>
           </div>
-          <div class="panel panel-accent">
-            <div style="font-family:var(--font-pixel); font-size:24px; color:var(--green);">${totalBlessings}</div>
-            <div style="font-size:13px; color:var(--dim); margin-top:4px;">Blessings Received</div>
+          <div class="panel panel-accent" style="padding:14px 8px;">
+            <div style="font-family:var(--font-pixel); font-size:20px; color:var(--teal);">${state.floor}</div>
+            <div style="font-size:12px; color:var(--dim); margin-top:6px;">Floors</div>
+          </div>
+          <div class="panel panel-accent" style="padding:14px 8px;">
+            <div style="font-family:var(--font-pixel); font-size:20px; color:var(--gold);">${state.gold}g</div>
+            <div style="font-size:12px; color:var(--dim); margin-top:6px;">Gold</div>
+          </div>
+          <div class="panel panel-accent" style="padding:14px 8px;">
+            <div style="font-family:var(--font-pixel); font-size:20px; color:var(--red);">${totalCurses}</div>
+            <div style="font-size:12px; color:var(--dim); margin-top:6px;">Curses</div>
+          </div>
+          <div class="panel panel-accent" style="padding:14px 8px;">
+            <div style="font-family:var(--font-pixel); font-size:20px; color:var(--purple);">${totalEffects}</div>
+            <div style="font-size:12px; color:var(--dim); margin-top:6px;">Effects</div>
+          </div>
+          <div class="panel panel-accent" style="padding:14px 8px;">
+            <div style="font-family:var(--font-pixel); font-size:20px; color:var(--green);">${totalBlessings}</div>
+            <div style="font-size:12px; color:var(--dim); margin-top:6px;">Blessings</div>
           </div>
           ${bossesDefeated > 0 ? `
-            <div class="panel panel-accent">
-              <div style="font-family:var(--font-pixel); font-size:24px; color:var(--red);">${bossesDefeated}</div>
-              <div style="font-size:13px; color:var(--dim); margin-top:4px;">Bosses Defeated</div>
-            </div>
+          <div class="panel panel-accent" style="padding:14px 8px;">
+            <div style="font-family:var(--font-pixel); font-size:20px; color:var(--red);">${bossesDefeated}</div>
+            <div style="font-size:12px; color:var(--dim); margin-top:6px;">Bosses</div>
+          </div>
           ` : ''}
           ${sideQuestsCompleted > 0 ? `
-            <div class="panel panel-accent">
-              <div style="font-family:var(--font-pixel); font-size:24px; color:var(--orange);">${sideQuestsCompleted}</div>
-              <div style="font-size:13px; color:var(--dim); margin-top:4px;">Side Quests</div>
-            </div>
+          <div class="panel panel-accent" style="padding:14px 8px;">
+            <div style="font-family:var(--font-pixel); font-size:20px; color:var(--orange);">${sideQuestsCompleted}</div>
+            <div style="font-size:12px; color:var(--dim); margin-top:6px;">Side Quests</div>
+          </div>
           ` : ''}
           ${state.relics.length > 0 ? `
-            <div class="panel panel-accent">
-              <div style="font-family:var(--font-pixel); font-size:24px; color:var(--purple);">${state.relics.length}</div>
-              <div style="font-size:13px; color:var(--dim); margin-top:4px;">Relics Found</div>
-            </div>
+          <div class="panel panel-accent" style="padding:14px 8px;">
+            <div style="font-family:var(--font-pixel); font-size:20px; color:var(--purple);">${state.relics.length}</div>
+            <div style="font-size:12px; color:var(--dim); margin-top:6px;">Relics</div>
+          </div>
           ` : ''}
-          <div class="panel panel-accent">
-            <div style="font-family:var(--font-pixel); font-size:24px; color:var(--gold);">${state.gold}g</div>
-            <div style="font-size:13px; color:var(--dim); margin-top:4px;">Gold Earned</div>
-          </div>
-          <div class="panel panel-accent">
-            <div style="font-family:var(--font-pixel); font-size:24px; color:var(--teal);">${state.floor}</div>
-            <div style="font-size:13px; color:var(--dim); margin-top:4px;">Floors Explored</div>
-          </div>
-          <div class="panel panel-accent">
-            <div style="font-family:var(--font-pixel); font-size:24px; color:var(--purple);">${state.score}</div>
-            <div style="font-size:13px; color:var(--dim); margin-top:4px;">Final Score</div>
-          </div>
         </div>
 
         ${pendingCurses > 0 ? `
-          <div style="color:var(--red); margin:16px 0; font-size:15px;">
-            WARNING: ${pendingCurses} deferred curse${pendingCurses > 1 ? 's' : ''} still incomplete!
+          <div style="color:var(--red); margin-bottom:28px; font-size:14px; padding:12px 16px; border:1px solid var(--red); border-radius:4px; background:rgba(192,57,43,0.08);">
+            ${pendingCurses} deferred curse${pendingCurses > 1 ? 's' : ''} still incomplete
           </div>
         ` : ''}
 
-        <div style="margin:30px 0; text-align:left;">
-          <div class="panel-header">Tracklist</div>
+        <!-- Tracklist -->
+        <div style="margin-bottom:32px; text-align:left;">
+          <div class="panel-header" style="margin-bottom:12px;">Tracklist</div>
           ${state.rooms.map(r => {
-            const tag = r.isBoss ? 'BOSS' : r.isSideQuest ? 'SIDE QUEST' : r.isAlchemist ? 'ALCHEMIST' : r.isYouTube ? 'YOUTUBE' : '';
-            const tagColor = r.isBoss ? 'var(--red)' : r.isSideQuest ? 'var(--orange)' : r.isAlchemist ? 'var(--teal)' : r.isYouTube ? 'var(--youtube-red)' : '';
+            const tag = r.isBoss ? 'BOSS' : r.isSideQuest ? 'SIDE QUEST' : r.isAlchemist ? 'ALCHEMIST' : r.isYouTube ? 'YOUTUBE' : r.isProductionRoom ? 'PRODUCTION' : '';
+            const tagColor = r.isBoss ? 'var(--red)' : r.isSideQuest ? 'var(--orange)' : r.isAlchemist ? 'var(--teal)' : r.isYouTube ? 'var(--youtube-red)' : r.isProductionRoom ? 'var(--blue)' : '';
             return `
             <div style="padding:12px 0; border-bottom:1px solid var(--border);">
               <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:4px;">
@@ -1179,28 +1260,28 @@ function endSession() {
                 ${tag ? `<span style="font-family:var(--font-pixel); font-size:9px; color:${tagColor}; letter-spacing:1px;">${tag}</span>` : ''}
               </div>
               <div style="color:var(--teal); font-size:15px; margin-bottom:2px;">${r.genre}${r.sampleType ? ' (' + r.sampleType + ')' : ''}</div>
-              ${r.curses.map(c => `<div style="color:var(--red); font-size:14px; padding-left:12px;">Curse: ${c.text}</div>`).join('')}
-              ${r.effects.map(e => `<div style="color:var(--blue); font-size:14px; padding-left:12px;">Effect: ${e.name} @ ${e.min}\u2013${e.max}% wet</div>`).join('')}
-              ${r.blessing ? `<div style="color:var(--green); font-size:14px; padding-left:12px;">Blessing: ${r.blessing}</div>` : ''}
-              ${r.flavorRoll ? `<div style="color:var(--gold-dim); font-size:13px; padding-left:12px;">${r.flavorRoll.label}: ${r.flavorRoll.text} ${r.bonusCompleted ? '<span style="color:var(--green);">(done)</span>' : '<span style="opacity:0.4;">(skipped)</span>'}</div>` : ''}
+              ${r.curses.map(c => `<div style="color:var(--red); font-size:13px; padding-left:12px; margin-top:2px;">Curse: ${c.text}</div>`).join('')}
+              ${r.effects.map(e => `<div style="color:var(--blue); font-size:13px; padding-left:12px; margin-top:2px;">Effect: ${e.name} @ ${e.min}\u2013${e.max}% wet</div>`).join('')}
+              ${r.blessing ? `<div style="color:var(--green); font-size:13px; padding-left:12px; margin-top:2px;">Blessing: ${r.blessing}</div>` : ''}
+              ${r.flavorRoll ? `<div style="color:var(--gold-dim); font-size:12px; padding-left:12px; margin-top:2px;">${r.flavorRoll.label}: ${r.flavorRoll.text} ${r.bonusCompleted ? '<span style="color:var(--green);">(done)</span>' : '<span style="opacity:0.4;">(skipped)</span>'}</div>` : ''}
             </div>`;
           }).join('')}
         </div>
 
         ${state.deferredCurses.length > 0 ? `
-          <div style="margin:20px 0; text-align:left;">
-            <div class="panel-header" style="color:var(--red);">Deferred Curses</div>
+          <div style="margin-bottom:28px; text-align:left;">
+            <div class="panel-header" style="color:var(--red); margin-bottom:8px;">Deferred Curses</div>
             ${state.deferredCurses.map(c => `
-              <div style="padding:4px 0; color:${c.completed ? 'var(--dim)' : 'var(--red)'}; ${c.completed ? 'text-decoration:line-through;' : ''} font-size:14px;">
-                ${c.completed ? '[x]' : '[ ]'} ${c.text}
+              <div style="padding:5px 0; color:${c.completed ? 'var(--dim)' : 'var(--red)'}; ${c.completed ? 'text-decoration:line-through;' : ''} font-size:13px;">
+                ${c.completed ? '\u2713' : '\u25CB'} ${c.text}
               </div>
             `).join('')}
           </div>
         ` : ''}
 
         ${state.relics.length > 0 ? `
-          <div style="margin:20px 0; text-align:left;">
-            <div class="panel-header" style="color:var(--purple);">Relics Collected</div>
+          <div style="margin-bottom:28px; text-align:left;">
+            <div class="panel-header" style="color:var(--purple); margin-bottom:8px;">Relics Collected</div>
             ${state.relics.map(id => {
               const r = getRelic(id);
               if (!r) return '';
@@ -1208,15 +1289,16 @@ function endSession() {
               return `
                 <div class="relic-log-item">
                   <div>
-                    <div style="color:${tierInfo.color}; font-size:15px;">${r.name} <span style="font-size:10px; opacity:0.6; text-transform:uppercase; letter-spacing:1px;">${tierInfo.label}</span></div>
-                    <div style="color:var(--dim); font-size:13px;">${r.description}</div>
+                    <div style="color:${tierInfo.color}; font-size:14px;">${r.name} <span style="font-size:9px; opacity:0.6; text-transform:uppercase; letter-spacing:1px;">${tierInfo.label}</span></div>
+                    <div style="color:var(--dim); font-size:12px; margin-top:2px;">${r.description}</div>
                   </div>
                 </div>`;
             }).join('')}
           </div>
         ` : ''}
 
-        <div style="margin-top:30px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+        <!-- Actions -->
+        <div style="margin-top:36px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
           <button class="btn" onclick="newSession()">NEW SESSION</button>
           <button class="btn btn-small" onclick="exportLog()">COPY BEAT SHEET</button>
           <button class="btn btn-small" onclick="downloadBeatSheet()">SAVE AS FILE</button>

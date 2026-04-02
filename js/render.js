@@ -711,7 +711,7 @@ function renderTransition() {
       </div>
 
       <div class="spell-container" id="spell-container">
-        <div class="spell-display"><span id="spell-glyph">✧</span></div>
+        <div class="spell-display"></div>
       </div>
 
       <div id="roll-info" class="roll-info">
@@ -727,8 +727,7 @@ function renderTransition() {
       </div>
 
       <div id="survivor-banner" class="reward-banner survivor-banner" style="display:none;">
-        <span class="survivor-icon">🛡️💀</span>
-        <span>CURSE SURVIVOR!<br>+1 REROLL</span>
+        <span>CURSE SURVIVOR! +1 REROLL</span>
       </div>
 
       <button id="don-btn" class="btn don-btn" style="display:none;" onclick="doubleOrNothing()">DOUBLE OR NOTHING?</button>
