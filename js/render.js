@@ -451,6 +451,7 @@ function renderMap() {
           <option value="">— Choose your instrument —</option>
           ${TRACK_TYPES.map(t => `<option value="${t}">${t}</option>`).join('')}
         </select>
+        <div id="boss-block-warning" class="deferred-warning" style="display:none; margin-top:12px;"></div>
         <div style="margin-top:14px;">
           <button class="btn" style="border-color:var(--red); color:var(--red);" onclick="enterBossNode()">FACE THE BOSS</button>
         </div>
@@ -756,8 +757,8 @@ function renderTransition() {
         <div style="color:var(--green); font-family:var(--font-pixel); font-size:14px; margin:16px 0;">
           +2 REROLLS EARNED!
         </div>
-        ${td.streakReward ? '<div class="reward-banner streak-banner" title="You completed every task in multiple rooms in a row. Streak rewards trigger after consecutive fully-completed rooms.">COMPLETION STREAK!<br>+1 REROLL</div>' : ''}
-        ${td.curseSurvivor ? '<div class="reward-banner survivor-banner" title="You completed all curses in this room. Surviving every curse earns a bonus reroll.">CURSE SURVIVOR!<br>+1 REROLL</div>' : ''}
+        ${td.streakReward ? '<div class="reward-banner streak-banner info-tip">COMPLETION STREAK!<br>+1 REROLL<span class="info-tip-content"><div class="info-tip-title" style="color:var(--orange);">Completion Streak</div><div class="info-tip-desc">You completed every task in multiple rooms in a row. Streak rewards trigger after consecutive fully-completed rooms.</div></span></div>' : ''}
+        ${td.curseSurvivor ? '<div class="reward-banner survivor-banner info-tip">CURSE SURVIVOR!<br>+1 REROLL<span class="info-tip-content"><div class="info-tip-title" style="color:var(--green);">Curse Survivor</div><div class="info-tip-desc">You completed all curses in each of the last 3 rooms. Surviving curses across consecutive rooms earns a bonus reroll.</div></span></div>' : ''}
         ${td.bossBlessing ? `
           <div style="margin:16px 0; padding:12px 16px; border:1px solid var(--green); border-radius:4px; background:rgba(39,174,96,0.08);">
             <div style="font-family:var(--font-pixel); font-size:10px; color:var(--green); letter-spacing:2px; margin-bottom:8px;">BOSS BLESSING</div>
@@ -779,8 +780,8 @@ function renderTransition() {
         <div style="color:var(--green); font-family:var(--font-pixel); font-size:16px; margin:20px 0; animation: glowPulse 2s infinite;">
           +2 REROLLS EARNED!
         </div>
-        ${td.streakReward ? '<div class="reward-banner streak-banner" title="You completed every task in multiple rooms in a row. Streak rewards trigger after consecutive fully-completed rooms.">COMPLETION STREAK!<br>+1 REROLL</div>' : ''}
-        ${td.curseSurvivor ? '<div class="reward-banner survivor-banner" title="You completed all curses in this room. Surviving every curse earns a bonus reroll.">CURSE SURVIVOR!<br>+1 REROLL</div>' : ''}
+        ${td.streakReward ? '<div class="reward-banner streak-banner info-tip">COMPLETION STREAK!<br>+1 REROLL<span class="info-tip-content"><div class="info-tip-title" style="color:var(--orange);">Completion Streak</div><div class="info-tip-desc">You completed every task in multiple rooms in a row. Streak rewards trigger after consecutive fully-completed rooms.</div></span></div>' : ''}
+        ${td.curseSurvivor ? '<div class="reward-banner survivor-banner info-tip">CURSE SURVIVOR!<br>+1 REROLL<span class="info-tip-content"><div class="info-tip-title" style="color:var(--green);">Curse Survivor</div><div class="info-tip-desc">You completed all curses in each of the last 3 rooms. Surviving curses across consecutive rooms earns a bonus reroll.</div></span></div>' : ''}
         <div style="color:var(--dim); font-size:16px; margin-bottom:24px;">
           The spirits reward your bravery.
         </div>
@@ -810,9 +811,9 @@ function renderTransition() {
           <span style="color:var(--gold);">+${td.masteryGoldBonus}g Gold</span>
         </div>
 
-        ${td.streakReward ? '<div class="reward-banner streak-banner" title="You completed every task in multiple rooms in a row. Streak rewards trigger after consecutive fully-completed rooms.">COMPLETION STREAK!<br>+1 REROLL</div>' : ''}
+        ${td.streakReward ? '<div class="reward-banner streak-banner info-tip">COMPLETION STREAK!<br>+1 REROLL<span class="info-tip-content"><div class="info-tip-title" style="color:var(--orange);">Completion Streak</div><div class="info-tip-desc">You completed every task in multiple rooms in a row. Streak rewards trigger after consecutive fully-completed rooms.</div></span></div>' : ''}
         ${td.streakCount > 0 && !td.streakReward ? '<div class="streak-counter">STREAK: ' + td.streakCount + '/' + (hasRelic('streak_talisman') ? 2 : 3) + '</div>' : ''}
-        ${td.curseSurvivor ? '<div class="reward-banner survivor-banner" title="You completed all curses in this room. Surviving every curse earns a bonus reroll.">CURSE SURVIVOR!<br>+1 REROLL</div>' : ''}
+        ${td.curseSurvivor ? '<div class="reward-banner survivor-banner info-tip">CURSE SURVIVOR!<br>+1 REROLL<span class="info-tip-content"><div class="info-tip-title" style="color:var(--green);">Curse Survivor</div><div class="info-tip-desc">You completed all curses in each of the last 3 rooms. Surviving curses across consecutive rooms earns a bonus reroll.</div></span></div>' : ''}
 
         <div style="margin-top:20px;">
           <button class="btn" onclick="continueFromTransition()">CONTINUE</button>
@@ -840,15 +841,17 @@ function renderTransition() {
 
       ${td.streakCount > 0 && !td.streakReward ? '<div id="streak-line" class="streak-counter">STREAK: ' + td.streakCount + '/' + (hasRelic('streak_talisman') ? 2 : 3) + '</div>' : ''}
 
-      <div id="streak-banner" class="reward-banner streak-banner" style="display:none;" title="You completed every task in multiple rooms in a row. Streak rewards trigger after consecutive fully-completed rooms.">
+      <div id="streak-banner" class="reward-banner streak-banner info-tip" style="display:none;">
         COMPLETION STREAK!<br>+1 REROLL
+        <span class="info-tip-content"><div class="info-tip-title" style="color:var(--orange);">Completion Streak</div><div class="info-tip-desc">You completed every task in multiple rooms in a row. Streak rewards trigger after consecutive fully-completed rooms.</div></span>
       </div>
 
-      <div id="survivor-banner" class="reward-banner survivor-banner" style="display:none;" title="You completed all curses in this room. Surviving every curse earns a bonus reroll.">
+      <div id="survivor-banner" class="reward-banner survivor-banner info-tip" style="display:none;">
         CURSE SURVIVOR!<br>+1 REROLL
+        <span class="info-tip-content"><div class="info-tip-title" style="color:var(--green);">Curse Survivor</div><div class="info-tip-desc">You completed all curses in each of the last 3 rooms. Surviving curses across consecutive rooms earns a bonus reroll.</div></span>
       </div>
 
-      <button id="don-btn" class="btn don-btn" style="display:none;" onclick="doubleOrNothing()" title="Gamble your earned reroll for a chance at double. Win: +2 total. Lose: reroll lost.">DOUBLE OR NOTHING?</button>
+      <button id="don-btn" class="btn don-btn info-tip" style="display:none;" onclick="doubleOrNothing()">DOUBLE OR NOTHING?<span class="info-tip-content"><div class="info-tip-title" style="color:var(--gold);">Double or Nothing</div><div class="info-tip-desc">Gamble your earned reroll for a chance at double. Win: +2 total. Lose: reroll lost.</div></span></button>
 
       <div id="transition-continue" style="display:none;">
         <button class="btn" onclick="continueFromTransition()">CONTINUE</button>

@@ -188,6 +188,21 @@ function enterStartNode() {
 }
 
 function enterBossNode() {
+  // Block entry if deferred curses or road event debts are pending
+  const pendingDeferred = state.deferredCurses.filter(c => !c.completed).length;
+  const pendingDebts = (state.acceptedEvents || []).filter(e => e.cost && !e.completed).length;
+  if (pendingDeferred > 0 || pendingDebts > 0) {
+    const warn = document.getElementById('boss-block-warning');
+    if (warn) {
+      const parts = [];
+      if (pendingDeferred > 0) parts.push(pendingDeferred + ' deferred curse' + (pendingDeferred > 1 ? 's' : ''));
+      if (pendingDebts > 0) parts.push(pendingDebts + ' road event debt' + (pendingDebts > 1 ? 's' : ''));
+      warn.textContent = 'You cannot enter the boss fight until you complete: ' + parts.join(' and ');
+      warn.style.display = 'block';
+    }
+    return;
+  }
+
   const select = document.getElementById('boss-track-select');
   if (!select || !select.value) {
     if (select) {
@@ -772,10 +787,10 @@ async function sealRoom() {
     state.completionStreak = 0;
   }
 
-  // Curse survivor: completed room with 2+ curses
+  // Curse survivor: last 3 completed rooms all had curses and all curses completed in each
   let curseSurvivor = false;
-  const lastRoom = state.rooms[state.rooms.length - 1];
-  if (allCompleted && lastRoom && lastRoom.curses && lastRoom.curses.length >= 2) {
+  const recentRooms = state.rooms.slice(-3);
+  if (recentRooms.length >= 3 && recentRooms.every(r => r.curses && r.curses.length > 0 && r.curses.filter(c => !c.removed).every(c => c.completed))) {
     curseSurvivor = true;
     state.rerolls += 1;
   }

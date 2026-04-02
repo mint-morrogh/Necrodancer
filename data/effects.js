@@ -50,7 +50,7 @@ const BLESSINGS = [
   '\u2600 Mastercraft \u2014 this element is exempt from ALL deferred curses',
   '\u2600 Potion of Creativity \u2014 break any ONE rule of your choosing in this room',
   '\u2600 Scroll of Silence \u2014 this room has zero constraints. Complete creative freedom',
-  '\u2600 Necromancer\'s Gift \u2014 revive and reuse a sample from any previous room',
+  '\u2600 Necromancer\'s Gift \u2014 if you wish, you may revive and reuse a sample or sound from any previous room',
   '\u2600 Fortune\'s Favor \u2014 gain +1 re-roll token',
   '\u2600 Elder Scroll \u2014 the next room you enter will have its curse count reduced by 1',
   '\u2600 Ancestral Power \u2014 if you wish, you may add an extra layer of any instrument alongside your {trackType} with no constraints (completely optional)',
