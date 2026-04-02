@@ -26,7 +26,7 @@ const ACHIEVEMENTS = [
   { id: 'masochist',       name: 'Masochist',           desc: 'Complete a Nightmare session',                    check: (p) => p.nightmareCompleted },
 
   // Score badges
-  { id: 'high_roller',     name: 'High Roller',         desc: 'Score over 500 in a single session',             check: (p) => p.maxScore >= 500 },
+  { id: 'high_roller',     name: 'High Roller',         desc: 'Score over 1000 in a single session',            check: (p) => p.maxScore >= 1000 },
   { id: 'legend',          name: 'Legend',               desc: 'Score over 2000 in a single session',            check: (p) => p.maxScore >= 2000 },
 
   // Fun badges

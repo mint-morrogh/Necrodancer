@@ -162,6 +162,8 @@ function renderLeaderboard() {
 function renderSetup() {
   const step = state.setupStep;
   const seedVal = state.seedMode === 'daily' ? getTodaySeed() : (state.seed || generateRandomSeed());
+  const hasChallengeMods = getProfile().totalSessions >= 1;
+  const seedStep = hasChallengeMods ? 6 : 5;
 
   app.innerHTML = `
     <div id="setup-screen" class="screen active">
@@ -244,33 +246,39 @@ function renderSetup() {
             </button>
           `).join('')}
         </div>
-        ${state.difficulty && getProfile().totalSessions >= 1 ? `
-        <div style="margin-top:20px; border-top:1px solid var(--border); padding-top:16px;">
-          <div style="font-family:var(--font-pixel); font-size:9px; color:var(--dim); letter-spacing:2px; margin-bottom:10px;">CHALLENGE MODIFIERS <span style="opacity:0.5;">(optional)</span></div>
-          <div class="challenge-grid">
-            ${(typeof CHALLENGE_MODIFIERS !== 'undefined' ? CHALLENGE_MODIFIERS : []).map(mod => {
-              const active = state.challengeMods.includes(mod.id);
-              return `
-                <button class="challenge-toggle ${active ? 'active' : ''}" style="--challenge-color:${mod.color};" onclick="toggleChallenge('${mod.id}'); renderSetup();">
-                  <span class="challenge-name">${mod.name}</span>
-                  <span class="challenge-mult">x${mod.scoreMult}</span>
-                  <span class="challenge-desc">${mod.desc}</span>
-                </button>
-              `;
-            }).join('')}
+      </div>
+      ` : ''}
+
+      ${step >= 5 && getProfile().totalSessions >= 1 ? `
+      <div class="panel${step === 5 ? ' setup-step' : ''}${step > 5 ? ' setup-locked' : ''}" style="text-align:center;">
+        <div class="panel-header">Challenge Modifiers</div>
+        <div class="challenge-grid">
+          ${(typeof CHALLENGE_MODIFIERS !== 'undefined' ? CHALLENGE_MODIFIERS : []).map(mod => {
+            const active = state.challengeMods.includes(mod.id);
+            return `
+              <button class="challenge-toggle ${active ? 'active' : ''}" style="--challenge-color:${mod.color};" onclick="toggleChallenge('${mod.id}'); if(state.setupStep < 6){ state.setupStep = 6; } renderSetup();">
+                <span class="challenge-name">${mod.name}</span>
+                <span class="challenge-mult">x${mod.scoreMult}</span>
+                <span class="challenge-desc">${mod.desc}</span>
+              </button>
+            `;
+          }).join('')}
+        </div>
+        ${state.challengeMods.length > 0 ? `
+          <div style="margin-top:10px; font-family:var(--font-pixel); font-size:10px; color:var(--gold); letter-spacing:1px;">
+            CHALLENGE BONUS: x${challengeScoreMult().toFixed(1)} SCORE
           </div>
-          ${state.challengeMods.length > 0 ? `
-            <div style="margin-top:10px; font-family:var(--font-pixel); font-size:10px; color:var(--gold); letter-spacing:1px;">
-              CHALLENGE BONUS: x${challengeScoreMult().toFixed(1)} SCORE
-            </div>
-          ` : ''}
+        ` : ''}
+        ${step < 6 ? `
+        <div style="margin-top:16px;">
+          <button class="btn btn-small" onclick="state.setupStep = 6; renderSetup();">NO CHALLENGE</button>
         </div>
         ` : ''}
       </div>
       ` : ''}
 
-      ${step >= 5 ? `
-      <div class="panel${step === 5 ? ' setup-step' : ''}" style="text-align:center;">
+      ${step >= seedStep ? `
+      <div class="panel${step === seedStep ? ' setup-step' : ''}" style="text-align:center;">
         <div class="panel-header">Dungeon Seed</div>
         <div style="margin-top:8px;">
           <div class="seed-toggle">
@@ -292,8 +300,8 @@ function renderSetup() {
       </div>
       ` : ''}
 
-      ${step >= 5 ? `
-        <div${step === 5 ? ' class="setup-step"' : ''} style="text-align:center; margin-top:24px;">
+      ${step >= seedStep ? `
+        <div${step === seedStep ? ' class="setup-step"' : ''} style="text-align:center; margin-top:24px;">
           <button class="btn" onclick="startDungeon()">DESCEND INTO THE DUNGEON</button>
         </div>
       ` : ''}

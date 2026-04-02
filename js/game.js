@@ -1350,6 +1350,10 @@ function showProfile() {
         <div style="font-family:var(--font-pixel); font-size:18px; color:var(--green);">${unlocked.length}/${allAch.length}</div>
         <div style="font-size:12px; color:var(--dim); margin-top:4px;">Badges</div>
       </div>
+      <div class="panel panel-accent" style="padding:12px 8px; text-align:center;">
+        <div style="font-family:var(--font-pixel); font-size:18px; color:var(--gold);">${profile.skeletonKeys || 0}</div>
+        <div style="font-size:12px; color:var(--dim); margin-top:4px;">Skeleton Keys</div>
+      </div>
     </div>
 
     <div style="margin-top:20px;">
