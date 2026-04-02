@@ -739,15 +739,15 @@
 
 /* ========== TRANSITION SCREEN ========== */
 @keyframes spellPulse {
-  0%, 100% { text-shadow: 0 0 10px var(--purple), 0 0 20px rgba(155,89,182,0.4); transform: scale(1) rotate(0deg); }
-  25% { text-shadow: 0 0 20px var(--gold), 0 0 40px rgba(212,165,116,0.5); transform: scale(1.08) rotate(3deg); }
-  50% { text-shadow: 0 0 30px var(--purple), 0 0 60px rgba(155,89,182,0.6), 0 0 80px rgba(212,165,116,0.3); transform: scale(1.15) rotate(0deg); }
-  75% { text-shadow: 0 0 20px var(--gold), 0 0 40px rgba(212,165,116,0.5); transform: scale(1.08) rotate(-3deg); }
+  0%, 100% { text-shadow: 0 0 10px var(--purple), 0 0 20px rgba(155,89,182,0.4); transform: rotate(0deg) scale(1); }
+  25% { text-shadow: 0 0 20px var(--gold), 0 0 40px rgba(212,165,116,0.5); transform: rotate(8deg) scale(1.06); }
+  50% { text-shadow: 0 0 30px var(--purple), 0 0 60px rgba(155,89,182,0.6); transform: rotate(0deg) scale(1.1); }
+  75% { text-shadow: 0 0 20px var(--gold), 0 0 40px rgba(212,165,116,0.5); transform: rotate(-8deg) scale(1.06); }
 }
 @keyframes spellResolve {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.5); filter: brightness(2); }
-  100% { transform: scale(1.3); filter: brightness(1); }
+  0% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.4) rotate(0deg); filter: brightness(2); }
+  100% { transform: scale(1.2) rotate(0deg); filter: brightness(1); }
 }
 @keyframes dustFloat {
   0% { opacity: 0; transform: translateY(10px) scale(0.5); }
@@ -756,14 +756,25 @@
 }
 .transition-panel { text-align: center; padding: 48px 30px; }
 .spell-display {
-  font-size: 48px;
-  margin: 24px 0;
-  animation: spellPulse 1.2s ease-in-out infinite;
-  display: inline-block;
+  font-size: 36px;
+  font-family: var(--font-pixel);
+  width: 80px;
+  height: 80px;
+  line-height: 80px;
+  text-align: center;
+  margin: 24px auto;
+  animation: spellPulse 0.8s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--purple);
+  background: rgba(155,89,182,0.08);
+  border: 2px solid var(--purple);
+  clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
 }
 .spell-display.resolved {
   animation: spellResolve 0.6s ease forwards;
+  background: rgba(155,89,182,0.15);
 }
 .spell-dust {
   font-size: 12px;
@@ -1100,12 +1111,13 @@
   font-size: 13px;
   letter-spacing: 2px;
   text-align: center;
-  padding: 12px 32px;
+  padding: 14px 32px;
   margin: 12px auto;
   border-radius: 4px;
   animation: bannerReveal 0.6s ease-out;
   display: inline-block;
   max-width: 400px;
+  line-height: 2.2;
 }
 @keyframes bannerReveal {
   0% { opacity: 0; transform: translateY(10px) scale(0.95); }
@@ -1426,7 +1438,7 @@
   .campfire-icon { font-size: 48px; }
   .campfire-shop-item { padding: 10px 12px; font-size: 14px; }
   .transition-panel { padding: 30px 20px; }
-  .spell-display { font-size: 36px; }
+  .spell-display { font-size: 30px; width: 70px; height: 70px; line-height: 70px; }
   .relic-panel { padding: 30px 16px; }
   .relic-chamber-icon { font-size: 48px; }
   .relic-choices { gap: 12px; }
@@ -1530,7 +1542,7 @@
   .campfire-icon { font-size: 40px; }
   .campfire-shop-item { padding: 8px 10px; }
   .transition-panel { padding: 24px 14px; }
-  .spell-display { font-size: 32px; }
+  .spell-display { font-size: 26px; width: 60px; height: 60px; line-height: 60px; }
   .relic-panel { padding: 24px 12px; }
   .relic-chamber-icon { font-size: 40px; }
   .relic-choices { grid-template-columns: 1fr; gap: 10px; }
@@ -1583,7 +1595,7 @@
   .result-text { font-size: 15px; }
   .checklist-text { font-size: 14px; }
   .help-content { padding: 14px 10px; }
-  .spell-display { font-size: 28px; }
+  .spell-display { font-size: 22px; width: 52px; height: 52px; line-height: 52px; }
   .relic-card-name { font-size: 10px; }
   .mastery-popup { padding: 16px 12px; }
 }

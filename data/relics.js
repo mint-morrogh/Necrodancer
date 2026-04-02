@@ -15,7 +15,7 @@ const RELICS = [
     name: 'Lucky Die',
     tier: 'common',
     icon: '\uD83C\uDFB2',
-    description: '+10% reroll success chance when sealing rooms',
+    description: '-2 to d20 reroll threshold when sealing rooms',
     effectType: 'reroll_boost'
   },
   {
@@ -137,7 +137,7 @@ const RELICS = [
     name: 'Crown of the Ancients',
     tier: 'legendary',
     icon: '\uD83D\uDC7D',
-    description: '+25% score AND +10% reroll chance',
+    description: '+25% score AND -2 to d20 reroll threshold',
     effectType: 'score_multiplier'
   },
   {

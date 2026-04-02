@@ -225,7 +225,7 @@ function generateRoom(trackType, opts = {}) {
         markRelicUsed('curse_ward');
         // Curse blocked — skip curse generation
       }
-    } else if (!state.shieldNextRoom && chance(diff().curseChance)) {
+    } else if (state.shieldNextRoom <= 0 && chance(diff().curseChance)) {
       const ctw = diff().curseTypeWeights;
       const curseType = weightedPick([
         { value: 'immediate', weight: ctw.immediate },
@@ -245,13 +245,13 @@ function generateRoom(trackType, opts = {}) {
       }
     }
 
-    if (!state.shieldNextRoom && chance(diff().trackCurseChance)) {
+    if (state.shieldNextRoom <= 0 && chance(diff().trackCurseChance)) {
       const pool = TRACK_CURSES[trackType] || immediateCursePool;
       curses.push({ text: pickUniqueCurse(pool), type: 'track', completed: false });
     }
   }
 
-  state.shieldNextRoom = false;
+  if (state.shieldNextRoom > 0) state.shieldNextRoom--;
 
   const effectCount = weightedPick(diff().effectWeights);
   const effects = [];
@@ -317,7 +317,8 @@ function generateRoom(trackType, opts = {}) {
       .replace(/\{trackType\}/g, hl(trackType))
       .replace(/\{key\}/g, hl(state.key + ' ' + state.scale));
     if (blessing.includes('re-roll token') || blessing.includes('reroll token')) state.rerolls++;
-    if (blessing.includes('NEXT room cannot be cursed') || blessing.includes('next 2 rooms cannot be cursed')) state.shieldNextRoom = true;
+    if (blessing.includes('next 2 rooms cannot be cursed')) state.shieldNextRoom += 2;
+    else if (blessing.includes('NEXT room cannot be cursed')) state.shieldNextRoom += 1;
   }
 
   state.deferredCurses.push(...newDeferredCurses);

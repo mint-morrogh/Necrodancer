@@ -68,7 +68,7 @@ const BLESSINGS = [
   '\u2600 Arcane Knowledge \u2014 fuse {genre} with any second genre into one hybrid',
   '\u2600 Echo of the Fallen \u2014 use an element from a previous room as raw material for this one',
   '\u2600 The Undying \u2014 this track cannot be affected by any future curses for the rest of the session',
-  '\u2600 Blood Pact \u2014 sacrifice half your effects to gain a second genre alongside {genre}',
+  '\u2600 Blood Pact \u2014 remove half of your assigned effects (round down, your choice which). In exchange, choose any second genre and blend it with {genre} in this room\'s track',
   '\u2600 Whisper of the Void \u2014 ignore all volume constraints in this room',
   '\u2600 Mirror Image \u2014 copy the exact processing chain from any previous room onto this element',
   '\u2600 Second Chance \u2014 if you fail a curse, you may re-attempt it with a different approach',

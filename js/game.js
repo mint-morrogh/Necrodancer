@@ -394,6 +394,7 @@ function toggleCheck(index) {
   }
   updateSealButton();
   checkAndShowMasteryPopup();
+  saveGame();
 }
 
 function updateSealButton() {
@@ -401,9 +402,8 @@ function updateSealButton() {
   if (!room) return;
   const total = room.checklist.length;
   const done = room.checklist.filter(i => i.completed).length;
-  const pct = total > 0 ? done / total : 0;
-  const threshold = room.isSideQuest ? 1.0 : 0.5;
-  const canSeal = pct >= threshold;
+  const required = room.isSideQuest ? total : Math.max(1, total - 1);
+  const canSeal = done >= required;
 
   const btn = document.getElementById('seal-btn');
   if (btn) {
@@ -414,7 +414,6 @@ function updateSealButton() {
   }
 
   // Update the progress hint below the buttons
-  const thresholdLabel = room.isSideQuest ? '100%' : '50%';
   const btnRow = document.querySelector('.btn-row');
   if (btnRow) {
     let hint = btnRow.nextElementSibling;
@@ -426,7 +425,7 @@ function updateSealButton() {
         hint.style.cssText = 'text-align:center; margin-top:8px; font-size:14px; color:var(--dim);';
         btnRow.parentNode.insertBefore(hint, btnRow.nextSibling);
       }
-      hint.textContent = `Complete at least ${thresholdLabel} of tasks to seal (${Math.round(pct * 100)}% done)`;
+      hint.textContent = `Complete at least ${required} of ${total} tasks to seal (${done} done)`;
     }
   }
 }
@@ -444,6 +443,7 @@ function toggleBonus() {
     if (text) { text.classList.toggle('done', done); }
   }
   checkAndShowMasteryPopup();
+  saveGame();
 }
 
 function toggleDeferred(index) {
@@ -462,9 +462,20 @@ function toggleDeferred(index) {
   // Update quest log toggle button pulse
   const toggle = document.getElementById('log-toggle');
   if (toggle) {
-    const hasPending = state.deferredCurses.some(c => !c.completed);
+    const hasPending = state.deferredCurses.some(c => !c.completed) ||
+      (state.acceptedEvents && state.acceptedEvents.some(e => e.cost && !e.completed));
     toggle.classList.toggle('has-curses', hasPending);
   }
+  saveGame();
+}
+
+function toggleEventDebt(index) {
+  if (!state.acceptedEvents) return;
+  const costEvents = state.acceptedEvents.filter(e => e.cost);
+  if (!costEvents[index]) return;
+  costEvents[index].completed = !costEvents[index].completed;
+  renderSessionLog();
+  render();
 }
 
 // ════════════════════════════════════════════════════════
@@ -564,11 +575,12 @@ async function sealRoom() {
       state.rerolls += 2;
     } else {
       rollTarget = bonusCompleted ? d.rerollBonusChance : d.rerollChance;
-      // Relic: Lucky Die — +10% reroll success chance
-      if (hasRelic('lucky_die')) rollTarget -= 10;
-      // Relic: Crown of the Ancients — +10% reroll chance
-      if (hasRelic('crown_of_the_ancients')) rollTarget -= 10;
-      rollValue = roll(1, 100);
+      // Relic: Lucky Die — -2 to d20 threshold
+      if (hasRelic('lucky_die')) rollTarget -= 2;
+      // Relic: Crown of the Ancients — -2 to d20 threshold
+      if (hasRelic('crown_of_the_ancients')) rollTarget -= 2;
+      if (rollTarget < 1) rollTarget = 1;
+      rollValue = roll(1, 20);
       earnedReroll = rollValue >= rollTarget;
       rerollCount = earnedReroll ? 1 : 0;
     }
@@ -660,10 +672,10 @@ async function animateSpell() {
     setTimeout(() => dust.remove(), 800);
   }, 100);
 
-  // Cycle through random numbers 0-100 — fast and clean
+  // Cycle through random d20 values — fast and clean
   const steps = 18;
   for (let i = 0; i < steps; i++) {
-    spellEl.textContent = Math.floor(Math.random() * 101);
+    spellEl.textContent = Math.floor(Math.random() * 20) + 1;
     await sleep(40 + i * 5); // starts fast, slows slightly
   }
 
@@ -747,8 +759,7 @@ async function doubleOrNothing() {
   const rollInfo = document.getElementById('roll-info');
   if (rollInfo) {
     rollInfo.innerHTML = `
-      <div class="roll-info-row"><span class="roll-info-label">CHANCE</span><span class="roll-info-value" style="color:var(--gold);">${101 - rollTarget}%</span></div>
-      <div class="roll-info-row"><span class="roll-info-label">SUCCESS</span><span class="roll-info-value" style="color:var(--green);">${rollTarget} OR HIGHER</span></div>
+      <div class="roll-info-row"><span class="roll-info-label">SUCCESS</span><span class="roll-info-value" style="color:var(--green);">${rollTarget}+</span></div>
     `;
   }
 
@@ -779,13 +790,13 @@ async function doubleOrNothing() {
 
   const steps = 18;
   for (let i = 0; i < steps; i++) {
-    spellEl.textContent = Math.floor(Math.random() * 101);
+    spellEl.textContent = Math.floor(Math.random() * 20) + 1;
     await sleep(40 + i * 5);
   }
 
   clearInterval(dustInterval);
 
-  const finalValue = roll(1, 100);
+  const finalValue = roll(1, 20);
   const won = finalValue >= rollTarget;
 
   spellEl.textContent = finalValue;
@@ -860,7 +871,8 @@ function skipSideQuest() {
 
   if (room.blessing) {
     if (room.blessing.includes('re-roll token')) state.rerolls = Math.max(0, state.rerolls - 1);
-    if (room.blessing.includes('NEXT room cannot be cursed')) state.shieldNextRoom = false;
+    if (room.blessing.includes('next 2 rooms cannot be cursed')) state.shieldNextRoom = Math.max(0, state.shieldNextRoom - 2);
+    else if (room.blessing.includes('NEXT room cannot be cursed')) state.shieldNextRoom = Math.max(0, state.shieldNextRoom - 1);
   }
 
   state.currentRoom = null;
@@ -877,7 +889,7 @@ function collectChest() {
   } else if (state.chestData.reward === 'blessing') {
     state.chestData.blessingText = pick(BLESSINGS);
   } else if (state.chestData.reward === 'shield') {
-    state.shieldNextRoom = true;
+    state.shieldNextRoom += 1;
   } else if (state.chestData.reward === 'relic') {
     const relic = pickSingleRelic();
     if (relic) {
@@ -909,7 +921,7 @@ function proceedFromChest() {
     state.currentRoom.blessing = state.chestData.blessingText;
     const b = state.currentRoom.blessing;
     if (b.includes('re-roll token') || b.includes('reroll token')) state.rerolls++;
-    if (b.includes('NEXT room cannot be cursed')) state.shieldNextRoom = true;
+    if (b.includes('NEXT room cannot be cursed')) state.shieldNextRoom += 1;
   }
 
   // Apply pending blessing from road event (if no blessing yet)
@@ -918,7 +930,7 @@ function proceedFromChest() {
       state.currentRoom.blessing = pick(BLESSINGS);
       const b = state.currentRoom.blessing;
       if (b.includes('re-roll token') || b.includes('reroll token')) state.rerolls++;
-      if (b.includes('NEXT room cannot be cursed')) state.shieldNextRoom = true;
+      if (b.includes('NEXT room cannot be cursed')) state.shieldNextRoom += 1;
     }
     state.pendingBlessing = false;
   }
@@ -942,7 +954,7 @@ function buyCampfireItem(type) {
       state.gold -= curseRemovalCost;
     }
   } else if (type === 'shield' && state.gold >= 10) {
-    state.shieldNextRoom = true;
+    state.shieldNextRoom += 1;
     state.gold -= 10;
   } else if (type === 'reroll' && state.gold >= 20) {
     state.rerolls += 1;
@@ -989,7 +1001,7 @@ function acceptRoadEvent() {
   } else if (reward.type === 'gold') {
     state.gold += reward.value;
   } else if (reward.type === 'shield') {
-    state.shieldNextRoom = true;
+    state.shieldNextRoom += 1;
   } else if (reward.type === 'blessing') {
     state.pendingBlessing = true;
   } else if (reward.type === 'relic') {
@@ -1055,7 +1067,7 @@ function continueFromRoadEvent(pending) {
       state.currentRoom.blessing = pick(BLESSINGS);
       const b = state.currentRoom.blessing;
       if (b.includes('re-roll token') || b.includes('reroll token')) state.rerolls++;
-      if (b.includes('NEXT room cannot be cursed')) state.shieldNextRoom = true;
+      if (b.includes('NEXT room cannot be cursed')) state.shieldNextRoom += 1;
     }
     state.pendingBlessing = false;
   }
@@ -1219,7 +1231,7 @@ function newSession() {
     screen: 'title', key: null, scale: null, bpm: 128,
     difficulty: null, rerolls: 1, rooms: [], currentRoom: null,
     roomPhase: 'map', transitionData: null, deferredCurses: [],
-    nextRoomCurses: [], completionStreak: 0, shieldNextRoom: false, usedRoomNames: [],
+    nextRoomCurses: [], completionStreak: 0, shieldNextRoom: 0, usedRoomNames: [],
     seed: null, seedMode: 'daily', gold: 0, score: 0, chestData: null, pendingRoom: null,
     roadEventData: null, acceptedEvents: [], pendingBlessing: false, postBossCampfire: false,
     floor: 1, map: null, currentNodeId: null, floorHistory: [], setupStep: 1,
@@ -1273,8 +1285,9 @@ function generateBeatSheet() {
     sheet += `ROAD EVENT DEALS\n`;
     sheet += `${'─'.repeat(44)}\n`;
     for (const ev of state.acceptedEvents) {
-      sheet += `${ev.name} (${ev.reward})\n`;
-      sheet += `   Cost: ${ev.cost}\n`;
+      const check = ev.cost ? (ev.completed ? '[x]' : '[ ]') : '[~]';
+      sheet += `${check} ${ev.name} (${ev.reward})\n`;
+      if (ev.cost) sheet += `   Cost: ${ev.cost}\n`;
     }
     sheet += `\n`;
   }

@@ -8,7 +8,7 @@
 
 1. **Roll for Key & Scale** — The dungeon picks your session's musical key (C through B) and scale (Major or Minor).
 2. **Set Your Tempo** — Choose a BPM between 40 and 300.
-3. **Choose Source Mode** — Set the balance between Splice sampling and Production (VST/synth) with a 0–100% slider. Quick presets for All Production, Balanced, and All Splice.
+3. **Choose Source Mode** — Set the balance between Splice sampling and Production (VST/synth) with a 0–100% slider.
 4. **Pick a Difficulty** — Easy, Normal, Hard, or Nightmare. Higher difficulty means more curses, fewer blessings, and a bigger score multiplier.
 5. **Set Dungeon Seed** — Use the daily seed for a shared daily run, generate a random seed, or enter a custom seed. Seeds make runs fully reproducible and shareable.
 6. **Enter the Dungeon** — A branching map generates with multiple paths from start to boss.
