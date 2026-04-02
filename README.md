@@ -43,28 +43,13 @@ Constraints that force unusual creative decisions. 600+ total curses across four
 112 mandatory audio effects with a randomized wet percentage. The dungeon might demand Reverb (Hall) at 73% or Bitcrusher at 42%. Organized across categories: reverbs, delays, modulation, distortion, compression, and 65+ creative effects (vocoder, granular, spectral, lo-fi, physical modeling, and more). Each effect has a hover tooltip with plugin recommendations and DAW-specific tips.
 
 ### Blessings
-40+ positive effects that grant creative freedom, protection from curses, bonus rerolls, or rule-breaking privileges. Many blessings have real mechanical effects:
-- **The Spirits Favor You** — Sets all effect wet ranges to 1-100% (full freedom)
-- **Enchanter's Freedom** — Effect bars become adjustable sliders you can drag to set your own range
-- **Ancient Knowledge** — First reroll in this room is free (no token cost)
-- **Blessing of Clarity** — Actually removes all curses (shown with strikethrough)
-- **Divine Intervention** — Removes the first curse (shown with strikethrough)
-- **Spirit Walk** — Reveals all hidden node info on the map for the rest of the floor (future nodes normally show ???)
-- **Enchanted Ears** — Halves all effect wet percentages in the room
-- Other blessings grant creative permissions like choosing your own genre, track type, or key.
+40+ positive effects that grant creative freedom, protection from curses, bonus rerolls, or rule-breaking privileges. Some blessings are purely creative permissions, while others have real mechanical effects — removing curses, adjusting effect ranges, revealing hidden map information, or granting free rerolls. Discover them as you play.
 
 ### Boss Encounters
-Boss rooms cap each floor with mix-level challenges:
-- **Boss Curses** (20 standard + 15 Nightmare-exclusive) — Master bus constraints like "Run the master through tape saturation" or "Apply a ring modulator to the master bus."
-- **Boss Blessings** (10) — Powerful rewards like +3 rerolls, multi-room curse immunity, or removing all deferred curses.
-- Boss curse count scales with difficulty (1 on Easy, up to 2–4 on Nightmare).
-- Defeating a boss grants +2 rerolls and a boss blessing. A campfire appears afterward for shopping.
+Boss rooms cap each floor with mix-level challenges. Boss curses apply constraints to your entire mix bus, and boss curse count scales with difficulty. Defeating a boss grants rerolls and a powerful boss blessing. A campfire appears afterward for shopping. You cannot enter the boss room with unfinished deferred curses or road event debts.
 
 ### Relics
-16 persistent passive bonuses found at Relic Chambers, rare chest drops, road events, and the campfire shop. Three tiers:
-- **Common** (55% drop weight) — Lucky Die (+10% reroll chance), Echo Crystal (effect % capped at 60%), Golden Chalice (+50% gold), Score Amplifier (+25% score), Thief's Glove (+5% chest chance), Dampening Orb, Purifying Flame.
-- **Rare** (35%) — Streak Talisman, Completion Crown (+1 guaranteed reroll), Curse Ward, Divine Favor (+15% blessing chance), Quest Magnet, Alchemist's Key.
-- **Legendary** (10%) — Metronome of Mercy (first reroll each floor free), Crown of the Ancients (+25% score AND +10% reroll), Gambler's Coin (+50% gold AND +5% chest chance).
+Persistent passive bonuses that last the entire run. Found at Relic Chambers on the map, as rare treasure chest drops, from road events, or purchased at the campfire. Three tiers — Common, Rare, and Legendary — with effects ranging from reroll boosts and gold bonuses to curse protection and effect reduction. Discover what each one does as you find them.
 
 ### Skeleton Keys
 Completing a session earns a **Skeleton Key** — a persistent reward stored in your profile. During setup, you can spend a skeleton key to **choose your own key and scale** instead of rolling randomly. Once used, the key is consumed.
@@ -94,14 +79,7 @@ You **cannot enter the boss room** with pending deferred curses or road event de
 A random chance (5–10% depending on difficulty) the dungeon ignores the assigned track type and gives you a completely different instrument. Complete all tasks for 2 guaranteed rerolls, or skip with no penalty.
 
 ### Road Events
-30 random encounters between rooms offering creative challenges in exchange for rewards. Accept or decline with no penalty. Examples:
-- **The Wandering Bard** — Change your tempo by ±15 BPM for +3 rerolls.
-- **The Chaos Merchant** — Blindly pick a sample with no auditioning for +4 rerolls.
-- **The Relic Peddler** — Layer white noise under your entire track for a random relic.
-- **Free pickups** — "A Glinting Die," "The Fallen Adventurer," "Dungeon Cache" grant free reroll tokens.
-- **Wandering Merchants** — Accept deferred creative debts for reroll tokens.
-
-Road event chance ranges from 15% (Easy) to 25% (Nightmare).
+30 random encounters between rooms offering creative challenges in exchange for rewards. Characters offer deals — accept for rerolls, gold, blessings, or relics at the cost of a creative constraint. Or decline and move on with no penalty. Some events are free pickups with no cost at all. Road event chance ranges from 15% (Easy) to 25% (Nightmare).
 
 ### Special Rooms
 - **YouTube Sample Room** (~10% of Splice rooms) — Source your sample from YouTube instead of Splice.
