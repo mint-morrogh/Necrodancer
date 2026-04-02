@@ -1183,7 +1183,10 @@
   padding: 14px 18px;
   min-width: 280px;
   max-width: 380px;
+  font-family: var(--font-medieval);
   font-size: 14px;
+  font-weight: normal;
+  letter-spacing: 0;
   text-align: left;
   z-index: 1000;
   pointer-events: none;

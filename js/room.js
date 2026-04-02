@@ -187,10 +187,11 @@ function generateRoom(trackType, opts = {}) {
   }
 
   if (state.nextRoomCurses.length > 0) {
+    const shieldedCarried = state.shieldNextRoom > 0;
     for (const c of state.nextRoomCurses) {
       const text = stripNextRoomPrefix(c);
       usedCurseTexts.push(text);
-      curses.push({ text, type: 'carried', completed: false });
+      curses.push({ text, type: 'carried', completed: shieldedCarried, removed: shieldedCarried ? 'Shield of Protection' : null });
     }
     state.nextRoomCurses = [];
   }
@@ -209,13 +210,14 @@ function generateRoom(trackType, opts = {}) {
     // Sanctuary: no curses at all
   } else if (isCursed) {
     // Cursed Chamber: guaranteed 2-3 curses
+    const shieldedCursed = state.shieldNextRoom > 0;
     const cursedCount = roll(2, 3);
     for (let i = 0; i < cursedCount; i++) {
       if (i === 0) {
-        curses.push({ text: pickUniqueCurse(immediateCursePool), type: 'immediate', completed: false });
+        curses.push({ text: pickUniqueCurse(immediateCursePool), type: 'immediate', completed: shieldedCursed, removed: shieldedCursed ? 'Shield of Protection' : null });
       } else {
         const pool = TRACK_CURSES[trackType] || immediateCursePool;
-        curses.push({ text: pickUniqueCurse(pool), type: 'track', completed: false });
+        curses.push({ text: pickUniqueCurse(pool), type: 'track', completed: shieldedCursed, removed: shieldedCursed ? 'Shield of Protection' : null });
       }
     }
   } else {
@@ -237,11 +239,11 @@ function generateRoom(trackType, opts = {}) {
       ]);
       if (curseType === 'immediate') {
         const text = pickUniqueCurse(immediateCursePool);
-        curses.push({ text, type: 'immediate', completed: shielded, removed: shielded ? 'Curse Shield' : null });
+        curses.push({ text, type: 'immediate', completed: shielded, removed: shielded ? 'Shield of Protection' : null });
       } else if (curseType === 'track') {
         const pool = TRACK_CURSES[trackType] || immediateCursePool;
         const text = pickUniqueCurse(pool);
-        curses.push({ text, type: 'track', completed: shielded, removed: shielded ? 'Curse Shield' : null });
+        curses.push({ text, type: 'track', completed: shielded, removed: shielded ? 'Shield of Protection' : null });
       } else if (curseType === 'deferred') {
         if (!shielded) newDeferredCurses.push({ text: pickUniqueCurse(CURSES_DEFERRED), completed: false, fromRoom: state.rooms.length + 1 });
       } else {
@@ -253,7 +255,7 @@ function generateRoom(trackType, opts = {}) {
       const shielded = state.shieldNextRoom > 0;
       const pool = TRACK_CURSES[trackType] || immediateCursePool;
       const text = pickUniqueCurse(pool);
-      curses.push({ text, type: 'track', completed: shielded, removed: shielded ? 'Curse Shield' : null });
+      curses.push({ text, type: 'track', completed: shielded, removed: shielded ? 'Shield of Protection' : null });
     }
   }
 
