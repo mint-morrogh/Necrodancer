@@ -481,7 +481,7 @@
   transition: all 0.2s;
   position: fixed;
   bottom: 16px;
-  right: 100px;
+  right: 130px;
   z-index: 90;
 }
 .profile-btn-fixed:hover { color: var(--purple); border-color: var(--purple-dim); }
