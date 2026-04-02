@@ -430,6 +430,10 @@ function updateSealButton() {
   }
 }
 
+function updateRoomNotes(value) {
+  if (state.currentRoom) state.currentRoom.notes = value;
+}
+
 function toggleBonus() {
   if (!state.currentRoom) return;
   state.currentRoom.bonusCompleted = !state.currentRoom.bonusCompleted;
@@ -1264,6 +1268,7 @@ function endSession() {
               ${r.effects.map(e => `<div style="color:var(--blue); font-size:13px; padding-left:12px; margin-top:2px;">Effect: ${e.name} @ ${e.min}\u2013${e.max}% wet</div>`).join('')}
               ${r.blessing ? `<div style="color:var(--green); font-size:13px; padding-left:12px; margin-top:2px;">Blessing: ${r.blessing}</div>` : ''}
               ${r.flavorRoll ? `<div style="color:var(--gold-dim); font-size:12px; padding-left:12px; margin-top:2px;">${r.flavorRoll.label}: ${r.flavorRoll.text} ${r.bonusCompleted ? '<span style="color:var(--green);">(done)</span>' : '<span style="opacity:0.4;">(skipped)</span>'}</div>` : ''}
+              ${r.notes ? `<div style="color:var(--dim); font-size:12px; padding-left:12px; margin-top:4px; font-style:italic;">Notes: ${r.notes}</div>` : ''}
             </div>`;
           }).join('')}
         </div>
@@ -1349,6 +1354,7 @@ function generateBeatSheet() {
     }
     if (room.blessing) sheet += `   Blessing: ${room.blessing}\n`;
     if (room.flavorRoll) sheet += `   Bonus: ${room.flavorRoll.label}: ${room.flavorRoll.text} ${room.bonusCompleted ? '(done)' : '(skipped)'}\n`;
+    if (room.notes) sheet += `   Notes: ${room.notes}\n`;
     sheet += `\n`;
   }
 

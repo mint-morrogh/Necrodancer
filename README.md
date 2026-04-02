@@ -85,6 +85,12 @@ Road event chance ranges from 15% (Easy) to 25% (Nightmare).
 - **Alchemist's Lair** (3–5% chance) — Record real-world sounds as source material. 12 unique recording prompts and 15 bonus objectives.
 - **Treasure Chest** (3–12% chance based on difficulty) — Random reward before entering a room: reroll tokens, blessings, curse shields, or relics.
 
+### Room Notes
+Each room has a notes field where you can jot down what you used — sample names, patch names, ideas, anything. Notes persist in the quest log, appear on the session complete tracklist, and are included in the exported beat sheet.
+
+### Room Timeline
+The quest log features a horizontal scrollable timeline strip at the top showing all completed rooms as compact cards. Each card shows the room number, track type, and genre. Hover (or tap on mobile) to see a tooltip with full details including curses, effects, blessings, and your notes.
+
 ### Tooltips & Info System
 Hover tooltips throughout the game provide contextual information:
 - **Effects** — Plugin recommendations and DAW-specific tips for every effect.

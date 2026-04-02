@@ -355,6 +355,7 @@ function generateRoom(trackType, opts = {}) {
     isBoss,
     completed: false,
     isSideQuest: false,
-    originalTrackType: null
+    originalTrackType: null,
+    notes: ''
   };
 }

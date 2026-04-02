@@ -596,6 +596,12 @@ function renderRoomActive(room) {
         </div>
       ` : ''}
 
+      <!-- Room Notes -->
+      <div class="room-notes-section">
+        <div class="room-notes-label">Notes</div>
+        <textarea class="room-notes-input" id="room-notes" placeholder="What did you use? Sample names, patch names, ideas..." oninput="updateRoomNotes(this.value)">${room.notes || ''}</textarea>
+      </div>
+
       <!-- Actions -->
       ${(() => {
         const totalMandatory = room.checklist.length;
@@ -980,6 +986,31 @@ function renderSessionLog() {
     html += '<div style="color:var(--dim); font-size:13px;">No rooms completed yet. Choose your path and enter...</div>';
   }
 
+  // Room timeline strip
+  if (state.rooms.length > 0) {
+    html += '<div class="room-timeline">';
+    for (const room of state.rooms) {
+      const borderColor = room.isBoss ? 'var(--red)' : room.isAlchemist ? 'var(--teal)' : room.isYouTube ? 'var(--youtube-red)' : room.isProductionRoom ? 'var(--blue)' : 'var(--gold-dim)';
+      const typeLabel = room.trackType.split('/')[0].split(' ')[0];
+      html += `
+        <div class="timeline-card" style="border-color:${borderColor};" data-room="${room.number}">
+          <div class="timeline-card-num">#${room.number}</div>
+          <div class="timeline-card-track">${typeLabel}</div>
+          <div class="timeline-card-genre">${room.genre}</div>
+          <div class="timeline-tooltip">
+            <div style="font-family:var(--font-pixel); font-size:10px; color:var(--gold); margin-bottom:6px;">${room.name}</div>
+            <div style="font-size:12px; color:var(--text); margin-bottom:4px;">${room.trackType} · ${room.genre}</div>
+            ${room.curses.length > 0 ? `<div style="font-size:11px; color:var(--red);">${room.curses.length} curse${room.curses.length > 1 ? 's' : ''}</div>` : ''}
+            ${room.effects.length > 0 ? `<div style="font-size:11px; color:var(--purple);">${room.effects.length} effect${room.effects.length > 1 ? 's' : ''}</div>` : ''}
+            ${room.blessing ? '<div style="font-size:11px; color:var(--green);">Blessed</div>' : ''}
+            ${room.bonusCompleted ? '<div style="font-size:11px; color:var(--gold);">Bonus done</div>' : ''}
+            ${room.notes ? `<div style="font-size:11px; color:var(--dim); margin-top:4px; font-style:italic;">${room.notes.length > 60 ? room.notes.substring(0, 60) + '...' : room.notes}</div>` : ''}
+          </div>
+        </div>`;
+    }
+    html += '</div>';
+  }
+
   for (const room of state.rooms) {
     const logClass = room.isBoss ? 'boss-log' : room.isAlchemist ? 'alchemist-log' : room.isYouTube ? 'youtube-log' : room.isProductionRoom ? 'production-log' : '';
     const logPrefix = room.isBoss ? '[BOSS] ' : room.isSideQuest ? '[SIDE QUEST] ' : room.isAlchemist ? '[ALCHEMIST] ' : room.isYouTube ? '[YOUTUBE] ' : '';
@@ -991,6 +1022,7 @@ function renderSessionLog() {
         ${room.curses.map(c => `<div class="log-entry-detail curse">${c.text}</div>`).join('')}
         ${room.effects.map(e => `<div class="log-entry-detail effect">${e.name}: ${e.min}–${e.max}% wet</div>`).join('')}
         ${room.blessing ? `<div class="log-entry-detail blessing">${room.blessing}</div>` : ''}
+        ${room.notes ? `<div class="log-entry-detail" style="color:var(--dim); font-style:italic; margin-top:4px;">Notes: ${room.notes}</div>` : ''}
       </div>
     `;
   }
