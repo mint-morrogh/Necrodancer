@@ -43,7 +43,8 @@ let state = {
   floorTheme: null,
   challengeMods: [],
   spiritWalkActive: false,
-  campfireStock: null
+  campfireStock: null,
+  ambushData: null
 };
 
 
@@ -85,7 +86,7 @@ const DIFFICULTY_SETTINGS = {
     effectRange: [3, 100], effectTolerance: 30,
     bossCurseRange: [1, 1],
     rerollChance: 8, rerollBonusChance: 4,
-    chestChance: 12, sideQuestChance: 5, alchemistChance: 3, roadEventChance: 15,
+    chestChance: 12, sideQuestChance: 5, alchemistChance: 3, roadEventChance: 15, ambushChance: 5,
     startingRerolls: 2,
     curseTypeWeights: { immediate: 50, track: 15, deferred: 20, nextRoom: 15 },
     goldMultiplier: 1.0, scoreMultiplier: 0.5,
@@ -98,7 +99,7 @@ const DIFFICULTY_SETTINGS = {
     effectRange: [3, 100], effectTolerance: 22,
     bossCurseRange: [1, 2],
     rerollChance: 11, rerollBonusChance: 6,
-    chestChance: 8, sideQuestChance: 5, alchemistChance: 3, roadEventChance: 18,
+    chestChance: 8, sideQuestChance: 5, alchemistChance: 3, roadEventChance: 18, ambushChance: 7,
     startingRerolls: 1,
     curseTypeWeights: { immediate: 40, track: 20, deferred: 25, nextRoom: 15 },
     goldMultiplier: 1.0, scoreMultiplier: 1.0,
@@ -111,7 +112,7 @@ const DIFFICULTY_SETTINGS = {
     effectRange: [30, 100], effectTolerance: 8,
     bossCurseRange: [2, 3],
     rerollChance: 14, rerollBonusChance: 10,
-    chestChance: 5, sideQuestChance: 7, alchemistChance: 4, roadEventChance: 22,
+    chestChance: 5, sideQuestChance: 7, alchemistChance: 4, roadEventChance: 22, ambushChance: 9,
     startingRerolls: 1,
     curseTypeWeights: { immediate: 35, track: 25, deferred: 25, nextRoom: 15 },
     goldMultiplier: 0.7, scoreMultiplier: 2.0,
@@ -124,7 +125,7 @@ const DIFFICULTY_SETTINGS = {
     effectRange: [70, 100], effectTolerance: 3,
     bossCurseRange: [2, 4],
     rerollChance: 17, rerollBonusChance: 13,
-    chestChance: 3, sideQuestChance: 10, alchemistChance: 5, roadEventChance: 25,
+    chestChance: 3, sideQuestChance: 10, alchemistChance: 5, roadEventChance: 25, ambushChance: 12,
     startingRerolls: 0,
     curseTypeWeights: { immediate: 30, track: 25, deferred: 30, nextRoom: 15 },
     goldMultiplier: 0.5, scoreMultiplier: 4.0,

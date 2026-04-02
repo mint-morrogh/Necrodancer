@@ -392,6 +392,20 @@ function enterRoomFromNode(node, trackType) {
     return;
   }
 
+  // Ambush roll (non-boss, non-campfire, requires 3+ completed rooms on floor 1, any after)
+  const ambushChance = diff().ambushChance || 0;
+  const ambushEligible = !isBoss && node.type !== 'campfire' && (state.floor > 1 || state.rooms.length >= 3);
+  if (ambushEligible && chance(ambushChance)) {
+    state.ambushData = {
+      phase: 'stake',  // 'stake' → 'active'
+      pendingRoom: { trackType, isSideQuest, originalTrackType, isAlchemist, isBoss, nodeId: node.id, isCursed, isSanctuary, preview: node.preview }
+    };
+    state.roomPhase = 'ambush';
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
+
   // Chest roll (non-boss, non-campfire)
   const chestChance = diff().chestChance + (hasRelic('thiefs_glove') ? 5 : 0) + (hasRelic('gamblers_coin') ? 5 : 0);
   if (!isBoss && node.type !== 'campfire' && chance(chestChance)) {
@@ -1250,9 +1264,85 @@ function declineRoadEvent() {
   continueFromRoadEvent(rd.pendingRoom);
 }
 
+// ── Ambush Handlers ──────────────────────────────────────
+
+function stakeTrackForAmbush(roomIndex) {
+  const ad = state.ambushData;
+  if (!ad || ad.phase !== 'stake') return;
+
+  const room = state.rooms[roomIndex];
+  if (!room) return;
+
+  const trackType = room.trackType;
+  const tasks = (typeof AMBUSH_TASKS !== 'undefined' && AMBUSH_TASKS[trackType]) || [];
+  const task = tasks.length > 0 ? pick(tasks) : 'Make a meaningful modification to this track — add, change, or rearrange something that alters how it sounds';
+
+  ad.phase = 'active';
+  ad.stakedRoomIndex = roomIndex;
+  ad.stakedTrackType = trackType;
+  ad.stakedRoomNumber = room.number;
+  ad.task = task;
+  ad.taskCompleted = false;
+  ad.name = pick(AMBUSH_NAMES);
+  ad.description = pick(AMBUSH_DESCRIPTIONS);
+
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleAmbushTask() {
+  const ad = state.ambushData;
+  if (!ad || ad.phase !== 'active') return;
+  ad.taskCompleted = !ad.taskCompleted;
+  render();
+}
+
+function completeAmbush() {
+  const ad = state.ambushData;
+  if (!ad) return;
+
+  // Award gold for surviving the ambush
+  state.gold += 15;
+
+  continueFromAmbush(ad.pendingRoom);
+}
+
+function failAmbush() {
+  const ad = state.ambushData;
+  if (!ad) return;
+
+  // Remove the staked track from completed rooms
+  if (ad.stakedRoomIndex != null && ad.stakedRoomIndex < state.rooms.length) {
+    state.rooms.splice(ad.stakedRoomIndex, 1);
+  }
+
+  continueFromAmbush(ad.pendingRoom);
+}
+
+function continueFromAmbush(pending) {
+  state.ambushData = null;
+  state._skipAmbushRoll = true;  // prevent re-rolling ambush after one just resolved
+  continueFromRoadEvent(pending);
+}
+
 function continueFromRoadEvent(pending) {
   state.roadEventData = null;
   const node = getNodeById(pending.nodeId);
+
+  // Ambush roll after road event (independent — can stack with road events)
+  const ambushChancePost = diff().ambushChance || 0;
+  const ambushEligiblePost = !state._skipAmbushRoll && !pending.isBoss && node.type !== 'campfire' && (state.floor > 1 || state.rooms.length >= 3);
+  state._skipAmbushRoll = false;
+  if (!state.ambushData && ambushEligiblePost && chance(ambushChancePost)) {
+    state.ambushData = {
+      phase: 'stake',
+      pendingRoom: pending
+    };
+    state.roomPhase = 'ambush';
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
 
   // Check for chest (same roll as normal flow)
   const chestChanceRoad = diff().chestChance + (hasRelic('thiefs_glove') ? 5 : 0) + (hasRelic('gamblers_coin') ? 5 : 0);
@@ -1565,7 +1655,7 @@ function newSession() {
     roomPhase: 'map', transitionData: null, deferredCurses: [],
     nextRoomCurses: [], completionStreak: 0, shieldNextRoom: 0, usedRoomNames: [],
     seed: null, seedMode: 'daily', gold: 0, score: 0, chestData: null, pendingRoom: null,
-    roadEventData: null, acceptedEvents: [], pendingBlessing: false, postBossCampfire: false,
+    roadEventData: null, acceptedEvents: [], pendingBlessing: false, postBossCampfire: false, ambushData: null,
     floor: 1, map: null, currentNodeId: null, floorHistory: [], setupStep: 1,
     relics: [], relicUses: {}, pendingRelicChoice: null, pendingRelicRoom: null, rerollsUsedThisRoom: 0,
     spliceRatio: 50, nextFloorMap: null, floorTheme: null, spiritWalkActive: false, campfireStock: null

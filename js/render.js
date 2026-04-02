@@ -342,6 +342,8 @@ function renderDungeon() {
     mainContent = renderCampfire();
   } else if (state.roomPhase === 'road-event') {
     mainContent = renderRoadEvent();
+  } else if (state.roomPhase === 'ambush') {
+    mainContent = renderAmbush();
   } else if (state.roomPhase === 'floor-complete') {
     mainContent = renderFloorComplete();
   } else if (state.roomPhase === 'relic-choice') {
@@ -1151,6 +1153,89 @@ function renderRoadEvent() {
       </div>
     </div>
   `;
+}
+
+function renderAmbush() {
+  const ad = state.ambushData;
+  if (!ad) return '';
+
+  // Phase 1: Stake a track
+  if (ad.phase === 'stake') {
+    const completedRooms = state.rooms.filter(r => !r.isBoss);
+    if (completedRooms.length === 0) return '';
+
+    return `
+      <div class="panel" style="border-color:var(--red); background:#1a0909; box-shadow:0 0 25px rgba(231,76,60,0.15), inset 0 0 40px rgba(231,76,60,0.05);">
+        <div style="text-align:center;">
+          <div style="font-family:var(--font-pixel); font-size:10px; color:var(--red); letter-spacing:3px; margin-bottom:8px;">AMBUSH</div>
+          <div class="room-header" style="color:var(--red); animation:none; text-shadow:0 0 15px rgba(231,76,60,0.4);">You Are Under Attack!</div>
+        </div>
+        <div style="color:var(--dim); font-size:17px; text-align:center; margin:20px 0; line-height:1.7;">
+          The dungeon turns hostile — one of your tracks is under threat. Stake a track to defend it, or risk losing it forever.
+        </div>
+
+        <div style="max-width:500px; margin:0 auto;">
+          <div style="font-family:var(--font-pixel); font-size:10px; color:var(--red); letter-spacing:2px; margin-bottom:12px;">CHOOSE A TRACK TO STAKE</div>
+          ${completedRooms.map((room, i) => {
+            const actualIndex = state.rooms.indexOf(room);
+            return `
+              <button class="btn" onclick="stakeTrackForAmbush(${actualIndex})" style="display:block; width:100%; margin-bottom:8px; text-align:left; border-color:var(--red); color:var(--text);">
+                <span style="color:var(--red); font-family:var(--font-pixel); font-size:10px;">ROOM ${room.number}</span>
+                <span style="margin-left:8px; text-transform:uppercase;">${room.trackType}</span>
+                <span style="margin-left:8px; color:var(--dim);">— ${room.genre}</span>
+              </button>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // Phase 2: Complete the task
+  if (ad.phase === 'active') {
+    return `
+      <div class="panel" style="border-color:var(--red); background:#1a0909; box-shadow:0 0 25px rgba(231,76,60,0.15), inset 0 0 40px rgba(231,76,60,0.05);">
+        <div style="text-align:center;">
+          <div style="font-family:var(--font-pixel); font-size:10px; color:var(--red); letter-spacing:3px; margin-bottom:8px;">AMBUSH</div>
+          <div class="room-header" style="color:var(--red); animation:none; text-shadow:0 0 15px rgba(231,76,60,0.4);">${ad.name}</div>
+        </div>
+        <div style="color:var(--dim); font-size:17px; text-align:center; margin:20px 0; line-height:1.7;">
+          ${ad.description}
+        </div>
+
+        <div style="max-width:500px; margin:0 auto;">
+          <div style="padding:12px; border:1px solid rgba(231,76,60,0.3); border-radius:4px; background:rgba(231,76,60,0.05); margin-bottom:16px;">
+            <div style="font-family:var(--font-pixel); font-size:10px; color:var(--red); letter-spacing:2px; margin-bottom:6px;">STAKED TRACK</div>
+            <div style="color:var(--text); font-size:17px;">
+              Room ${ad.stakedRoomNumber} — <span style="text-transform:uppercase; color:var(--gold);">${ad.stakedTrackType}</span>
+            </div>
+          </div>
+
+          <div style="padding:16px; border:1px solid rgba(231,76,60,0.3); border-radius:4px; background:rgba(231,76,60,0.05); margin-bottom:16px;">
+            <div style="font-family:var(--font-pixel); font-size:10px; color:var(--red); letter-spacing:2px; margin-bottom:8px;">TASK</div>
+            <div class="checklist-item" onclick="toggleAmbushTask()" style="border-bottom:none; padding-bottom:0; cursor:pointer;">
+              <div class="check-box ${ad.taskCompleted ? 'checked' : ''}">${ad.taskCompleted ? '✓' : ''}</div>
+              <div class="checklist-text ${ad.taskCompleted ? 'done' : ''}">${ad.task}</div>
+            </div>
+          </div>
+
+          <div style="padding:12px; border:1px solid rgba(255,255,255,0.08); border-radius:4px; background:rgba(255,255,255,0.02); margin-bottom:16px;">
+            <div style="font-size:13px; color:var(--dim); line-height:1.6; font-style:italic;">
+              If this task is impossible based on what you have for this track, use your best judgment — do the closest thing you can that represents the spirit of the task before continuing.
+            </div>
+          </div>
+
+          <div style="display:flex; gap:12px; justify-content:center; margin-top:24px;">
+            <button class="btn btn-green" onclick="completeAmbush()" ${ad.taskCompleted ? '' : 'disabled style="opacity:0.3; cursor:not-allowed; pointer-events:none;"'}>TASK COMPLETE — DEFEND TRACK</button>
+            <button class="btn" onclick="failAmbush()" style="border-color:var(--red); color:var(--red);">FORFEIT TRACK</button>
+          </div>
+          ${ad.taskCompleted ? '<div style="text-align:center; margin-top:8px; font-size:14px; color:var(--green);">+15 Gold for surviving the ambush</div>' : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  return '';
 }
 
 function renderRelicChoice() {
