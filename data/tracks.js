@@ -742,7 +742,13 @@ const TRACK_FLAVOR = {
     'Breakbeat Kit (chopped from classic breaks — Amen, Think, Funky Drummer)',
     'World Percussion Kit (djembe, tabla, congas, frame drums as your kit pieces)',
     'Foley Kit (non-instrument sounds as drums — slaps, clicks, drops, objects)',
-    'Layered Kit (every single hit must be 2+ samples stacked together)'
+    'Layered Kit (every single hit must be 2+ samples stacked together)',
+    'Minimal Kit (kick and one other element only — keep it stripped back)',
+    'Pitched Kit (every drum hit must be tuned to a specific note)',
+    'Reversed Kit (use reversed hits for some or all of your drum sounds)',
+    'Saturated Kit (drive every hit through distortion or tape saturation)',
+    'Compressed Kit (heavily compressed, punchy, in-your-face drum sound)',
+    'Sparse Kit (use as few hits as possible — leave lots of space and silence)'
   ]},
   'Bass': { label: 'Bass Style', options: [
     'Sub bass (pure low-end below 100Hz — felt more than heard)',
@@ -754,7 +760,13 @@ const TRACK_FLAVOR = {
     'Walking bass line (melodic movement — jazz/funk style, note-to-note motion)',
     'Wobble bass (LFO-modulated filter — dubstep/bass music style)',
     'Distorted/growl bass (heavy saturation — aggressive mid-range growl)',
-    'Clean electric bass (DI or amp sim — natural finger/pick tone)'
+    'Clean electric bass (DI or amp sim — natural finger/pick tone)',
+    'Octave bass (layer sub and mid-range an octave apart for fullness)',
+    'Filtered bass (automate a low-pass filter sweep for movement)',
+    'Staccato 808 (short, punchy 808 hits — no sustained tail)',
+    'Unison bass (stack multiple voices with slight detuning for width)',
+    'Legato bass (smooth gliding between notes — portamento style)',
+    'Chorus bass (add chorus/ensemble to thicken a simple bass patch)'
   ]},
   'Synth Lead': { label: 'Synth Type', options: [
     'Saw wave lead (bright, buzzy, classic analog — Juno/Moog style)',
@@ -766,7 +778,13 @@ const TRACK_FLAVOR = {
     'Chiptune/8-bit (retro game console — hard square/triangle waves)',
     'Granular synthesis (sample-based micro-texture — clouds of sound)',
     'Additive synthesis (built from individual harmonics — organ-like control)',
-    'Physical modeling (simulates real instrument physics — pluck, blow, bow)'
+    'Physical modeling (simulates real instrument physics — pluck, blow, bow)',
+    'Mono lead (single voice, no polyphony — classic monosynth character)',
+    'Portamento lead (smooth pitch glides between notes — expressive and vocal)',
+    'Distorted lead (push the signal through overdrive or fuzz for aggression)',
+    'Filtered lead (automate the cutoff for sweeping, evolving tones)',
+    'Unison lead (detune multiple voices for a thick, wide sound)',
+    'Pluck lead (short attack, fast decay — percussive melodic hits)'
   ]},
   'Pads': { label: 'Pad Type', options: [
     'Warm analog pad (soft, round, low-pass filtered — vintage poly synth)',
@@ -778,7 +796,13 @@ const TRACK_FLAVOR = {
     'Noise-based pad (filtered white/pink noise — airy, wind-like texture)',
     'Bitcrushed/lo-fi pad (low sample rate — gritty, degraded, digital warmth)',
     'Shimmer pad (octave-up pitch-shifted reverb tail — ethereal, sparkling)',
-    'Hybrid pad (layer a synth with an acoustic recording — blended texture)'
+    'Hybrid pad (layer a synth with an acoustic recording — blended texture)',
+    'Pulsing pad (rhythmic volume or filter modulation — not static)',
+    'Detuned pad (heavily detuned oscillators for a thick, warbly wash)',
+    'Reversed pad (play the pad sample in reverse for a swelling, dreamy effect)',
+    'Stacked pad (layer 3+ different pad sources for a massive wall of sound)',
+    'Minimal pad (one simple oscillator with a long release — understated)',
+    'Stereo pad (focus on extreme stereo width and movement between channels)'
   ]},
   'Vocals': { label: 'Vocal Type', options: [
     'Lead vocal phrase (a sung melodic line — topline or hook)',

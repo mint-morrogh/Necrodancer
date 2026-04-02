@@ -125,6 +125,7 @@ function generateRoom(trackType, opts = {}) {
   const isBoss = opts.isBoss || false;
   const isCursed = opts.isCursed || false;
   const isSanctuary = opts.isSanctuary || false;
+  const preview = opts.preview || null;
 
   // Determine room source mode (splice vs production)
   const isProductionRoom = !isAlchemist && !chance(state.spliceRatio);
@@ -225,7 +226,8 @@ function generateRoom(trackType, opts = {}) {
         markRelicUsed('curse_ward');
         // Curse blocked — skip curse generation
       }
-    } else if (state.shieldNextRoom <= 0 && chance(diff().curseChance)) {
+    } else if (chance(diff().curseChance)) {
+      const shielded = state.shieldNextRoom > 0;
       const ctw = diff().curseTypeWeights;
       const curseType = weightedPick([
         { value: 'immediate', weight: ctw.immediate },
@@ -234,26 +236,30 @@ function generateRoom(trackType, opts = {}) {
         { value: 'nextRoom', weight: ctw.nextRoom }
       ]);
       if (curseType === 'immediate') {
-        curses.push({ text: pickUniqueCurse(immediateCursePool), type: 'immediate', completed: false });
+        const text = pickUniqueCurse(immediateCursePool);
+        curses.push({ text, type: 'immediate', completed: shielded, removed: shielded ? 'Curse Shield' : null });
       } else if (curseType === 'track') {
         const pool = TRACK_CURSES[trackType] || immediateCursePool;
-        curses.push({ text: pickUniqueCurse(pool), type: 'track', completed: false });
+        const text = pickUniqueCurse(pool);
+        curses.push({ text, type: 'track', completed: shielded, removed: shielded ? 'Curse Shield' : null });
       } else if (curseType === 'deferred') {
-        newDeferredCurses.push({ text: pickUniqueCurse(CURSES_DEFERRED), completed: false, fromRoom: state.rooms.length + 1 });
+        if (!shielded) newDeferredCurses.push({ text: pickUniqueCurse(CURSES_DEFERRED), completed: false, fromRoom: state.rooms.length + 1 });
       } else {
-        newNextRoomCurses.push(pickUniqueCurse(CURSES_NEXT_ROOM));
+        if (!shielded) newNextRoomCurses.push(pickUniqueCurse(CURSES_NEXT_ROOM));
       }
     }
 
-    if (state.shieldNextRoom <= 0 && chance(diff().trackCurseChance)) {
+    if (chance(diff().trackCurseChance)) {
+      const shielded = state.shieldNextRoom > 0;
       const pool = TRACK_CURSES[trackType] || immediateCursePool;
-      curses.push({ text: pickUniqueCurse(pool), type: 'track', completed: false });
+      const text = pickUniqueCurse(pool);
+      curses.push({ text, type: 'track', completed: shielded, removed: shielded ? 'Curse Shield' : null });
     }
   }
 
   if (state.shieldNextRoom > 0) state.shieldNextRoom--;
 
-  const effectCount = weightedPick(diff().effectWeights);
+  const effectCount = (preview && typeof preview.effectCount === 'number') ? preview.effectCount : weightedPick(diff().effectWeights);
   const effects = [];
   const usedEffects = [];
 
@@ -302,10 +308,17 @@ function generateRoom(trackType, opts = {}) {
   }
 
   let blessing = null;
+  const previewBlessing = preview ? preview.hasBlessing : null;
   if (isBoss) {
     blessing = pick(buildBlessingPool(BOSS_BLESSINGS));
   } else if (isSanctuary) {
     blessing = pick(buildBlessingPool(BLESSINGS));
+  } else if (previewBlessing === true) {
+    // Preview promised a blessing — deliver it
+    blessing = pick(buildBlessingPool(BLESSINGS));
+  } else if (previewBlessing === false) {
+    // Preview said no blessing — skip
+    blessing = null;
   } else if (chance(diff().blessingChance + (hasRelic('divine_favor') ? 15 : 0))) {
     blessing = pick(buildBlessingPool(BLESSINGS));
   }
@@ -319,7 +332,41 @@ function generateRoom(trackType, opts = {}) {
     if (blessing.includes('re-roll token') || blessing.includes('reroll token')) state.rerolls++;
     if (blessing.includes('next 2 rooms cannot be cursed')) state.shieldNextRoom += 2;
     else if (blessing.includes('NEXT room cannot be cursed')) state.shieldNextRoom += 1;
+    if (blessing.includes('Spirit Walk')) state.spiritWalkActive = true;
+    if (blessing.includes('spirits favor you')) {
+      for (const eff of effects) { eff.min = 1; eff.max = 100; }
+    }
+    if (blessing.includes('Enchanted Ears')) {
+      // Halve all effect percentages in this room
+      for (const eff of effects) {
+        eff.min = Math.max(3, Math.round(eff.min / 2));
+        eff.max = Math.max(3, Math.round(eff.max / 2));
+      }
+    }
+    if (blessing.includes('Divine Intervention') && curses.length > 0) {
+      curses[0].removed = 'Divine Intervention';
+      curses[0].completed = true;
+    }
+    if (blessing.includes('Blessing of Clarity') && curses.length > 0) {
+      for (const c of curses) { c.removed = 'Blessing of Clarity'; c.completed = true; }
+    }
+    if (blessing.includes('Necrolord\'s Pact') && state.rerolls >= 1) {
+      const pending = state.deferredCurses.filter(c => !c.completed);
+      if (pending.length > 0) {
+        state.rerolls--;
+        const toRemove = pending.slice(0, 2);
+        for (const c of toRemove) c.completed = true;
+      }
+    }
+    if (blessing.includes('Plunderer\'s Bounty')) {
+      for (const c of state.deferredCurses) c.completed = true;
+    }
+    if (blessing.includes('Victor\'s Spoils')) {
+      state.shieldNextRoom += 3;
+    }
   }
+
+  const enchantersFreedom = blessing && blessing.includes('Enchanter\'s Freedom');
 
   state.deferredCurses.push(...newDeferredCurses);
   state.nextRoomCurses.push(...newNextRoomCurses);
@@ -328,7 +375,8 @@ function generateRoom(trackType, opts = {}) {
   checklist.push({ id: 'genre', text: genreDirective, completed: false, type: 'genre' });
   for (let i = 0; i < curses.length; i++) {
     const cType = curses[i].type === 'boss-curse' ? 'boss-curse' : 'curse';
-    checklist.push({ id: 'curse-' + i, text: curses[i].text, completed: false, type: cType });
+    const removed = curses[i].removed || null;
+    checklist.push({ id: 'curse-' + i, text: curses[i].text, completed: !!removed, type: cType, removed });
   }
   for (let i = 0; i < effects.length; i++) {
     checklist.push({ id: 'fx-' + i, text: `${effects[i].name} at ${effects[i].min}–${effects[i].max}% wet`, completed: false, type: 'effect' });
@@ -356,6 +404,7 @@ function generateRoom(trackType, opts = {}) {
     completed: false,
     isSideQuest: false,
     originalTrackType: null,
-    notes: ''
+    notes: '',
+    enchantersFreedom
   };
 }

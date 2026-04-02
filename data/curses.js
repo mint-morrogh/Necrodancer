@@ -518,7 +518,7 @@ const CURSES_IMMEDIATE = [
   'Must layer at least 3 samples together','Only one sample allowed for this entire track',
   'Chop sample into 8+ pieces and rearrange randomly','Must use a sample shorter than 0.5 seconds',
   'Volume must never exceed -12dB on this track','Must be the quietest element in the mix',
-  'Must use heavy sidechain compression against the kick','Must duck under every other element',
+  'Must use heavy sidechain compression against the kick — this track pumps down whenever the kick hits','Must use sidechain compression so this track ducks in volume whenever any other element in the mix is playing',
   'Must fade in over at least 8 bars','Must fade out over the last 8 bars',
   'Must automate volume to create a pumping effect',
   'No copy/paste — every bar must be slightly different','Must add a 1/4 note delay to everything',

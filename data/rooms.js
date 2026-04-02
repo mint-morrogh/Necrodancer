@@ -154,5 +154,5 @@ const BOSS_BLESSINGS = [
   '☀ Victor\'s Spoils — gain immunity to next-room curses for 3 rooms',
   '☀ Battle Hymn — your next track gets a guaranteed blessing with no curse',
   '☀ Dragon\'s Hoard — all gold earned is doubled for the next 3 rooms',
-  '☀ Necrolord\'s Pact — sacrifice 1 reroll to remove any 2 active curses from your quest log'
+  '☀ Necrolord\'s Pact — automatically sacrifices 1 reroll token to clear up to 2 deferred curses from your quest log (only triggers if you have both)'
 ];

@@ -149,20 +149,25 @@ function renderSetup() {
     <div id="setup-screen" class="screen active">
       <div class="setup-title">THE RITUAL BEGINS</div>
 
-      <div class="panel" style="text-align:center;">
+      <div class="panel${step >= 2 ? ' setup-locked' : ''}" style="text-align:center;">
         <div class="panel-header">Roll for Key & Scale</div>
         <div id="key-display" class="roll-display">${state.key ? `${state.key} ${state.scale}` : '? ? ?'}</div>
         ${!state.key ? `
-        <div style="margin-top:16px;">
+        <div style="margin-top:16px; display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap;">
           <button class="btn btn-small" onclick="rollForKey()" id="roll-key-btn">
             ROLL THE BONES
           </button>
+          ${getProfile().skeletonKeys > 0 ? `
+            <button class="btn btn-small" onclick="useSkeletonKey()" style="color:var(--gold); border-color:var(--gold-dim);">
+              USE SKELETON KEY (${getProfile().skeletonKeys})
+            </button>
+          ` : ''}
         </div>
         ` : ''}
       </div>
 
       ${step >= 2 ? `
-      <div class="panel${step === 2 ? ' setup-step' : ''}" style="text-align:center;">
+      <div class="panel${step === 2 ? ' setup-step' : ''}${step > 2 ? ' setup-locked' : ''}" style="text-align:center;">
         <div class="panel-header">Set Your Tempo</div>
         <div class="setup-row">
           <span class="setup-label">BPM</span>
@@ -186,7 +191,7 @@ function renderSetup() {
       ` : ''}
 
       ${step >= 3 ? `
-      <div class="panel${step === 3 ? ' setup-step' : ''}" style="text-align:center;">
+      <div class="panel${step === 3 ? ' setup-step' : ''}${step > 3 ? ' setup-locked' : ''}" style="text-align:center;">
         <div class="panel-header">Source Mode</div>
         <div class="source-slider-container">
           <div class="source-slider-labels">
@@ -211,7 +216,7 @@ function renderSetup() {
       ` : ''}
 
       ${step >= 4 ? `
-      <div class="panel${step === 4 ? ' setup-step' : ''}" style="text-align:center;">
+      <div class="panel${step === 4 ? ' setup-step' : ''}${step > 4 ? ' setup-locked' : ''}" style="text-align:center;">
         <div class="panel-header">Difficulty</div>
         <div class="difficulty-row">
           ${Object.entries(DIFFICULTY_SETTINGS).map(([key, d]) => `
@@ -221,7 +226,7 @@ function renderSetup() {
             </button>
           `).join('')}
         </div>
-        ${state.difficulty ? `
+        ${state.difficulty && getProfile().totalSessions >= 1 ? `
         <div style="margin-top:20px; border-top:1px solid var(--border); padding-top:16px;">
           <div style="font-family:var(--font-pixel); font-size:9px; color:var(--dim); letter-spacing:2px; margin-bottom:10px;">CHALLENGE MODIFIERS <span style="opacity:0.5;">(optional)</span></div>
           <div class="challenge-grid">
@@ -396,9 +401,18 @@ function renderMap() {
             <div class="map-tooltip-row" style="color:${nt.color}; font-family:var(--font-pixel); font-size:10px;">${nt.label}</div>
             <div class="map-tooltip-row" style="color:var(--dim); font-size:12px;">${nt.desc}</div>
             ${node.trackType ? `<div class="map-tooltip-row">Track: <span style="color:var(--gold);">${node.trackType}</span></div>` : ''}
-            ${node.preview.curseCount > 0 ? `<div class="map-tooltip-row" style="color:var(--red);">Curses: ${node.preview.curseCount}</div>` : ''}
-            ${node.preview.effectCount > 0 ? `<div class="map-tooltip-row" style="color:var(--blue);">Effects: ${node.preview.effectCount}</div>` : ''}
-            ${node.preview.hasBlessing ? `<div class="map-tooltip-row" style="color:var(--green);">Blessing present</div>` : ''}
+            ${(() => {
+              const revealed = isReachable || isCompleted || state.spiritWalkActive;
+              if (!revealed && node.type !== 'start' && node.type !== 'campfire') {
+                return '<div class="map-tooltip-row" style="color:var(--dim);">Curses: ???</div><div class="map-tooltip-row" style="color:var(--dim);">Effects: ???</div><div class="map-tooltip-row" style="color:var(--dim);">Blessing: ???</div>';
+              }
+              let details = '';
+              if (state.spiritWalkActive && node.preview.genre) details += '<div class="map-tooltip-row" style="color:var(--teal);">Genre: ' + node.preview.genre + '</div>';
+              details += '<div class="map-tooltip-row" style="color:' + (node.preview.curseCount > 0 ? 'var(--red)' : 'var(--dim)') + ';">Curses: ' + (node.preview.curseCount > 0 ? node.preview.curseCount : 'None') + '</div>';
+              details += '<div class="map-tooltip-row" style="color:' + (node.preview.effectCount > 0 ? 'var(--blue)' : 'var(--dim)') + ';">Effects: ' + (node.preview.effectCount > 0 ? node.preview.effectCount : 'None') + '</div>';
+              details += '<div class="map-tooltip-row" style="color:' + (node.preview.hasBlessing ? 'var(--green)' : 'var(--dim)') + ';">Blessing: ' + (node.preview.hasBlessing ? 'Yes' : 'None') + '</div>';
+              return details;
+            })()}
             ${node.type === 'campfire' ? `<div class="map-tooltip-row" style="color:var(--orange);">No track — shop only</div>` : ''}
             ${node.type === 'relic' ? `<div class="map-tooltip-row" style="color:var(--purple);">You sense a relic in this room</div>` : ''}
             ${isReachable && !isCompleted ? `<button class="btn btn-small map-tooltip-enter" onclick="event.stopPropagation(); _blockNextEnter=false; enterNodeFromMap('${node.id}')">ENTER</button>` : ''}
@@ -541,11 +555,33 @@ function renderRoomActive(room) {
 
       ${(() => {
         const pendingDeferred = state.deferredCurses.filter(c => !c.completed).length;
+        const pendingDebts = (state.acceptedEvents || []).filter(e => e.cost && !e.completed).length;
+        const totalPending = pendingDeferred + pendingDebts;
+
         if (room.isBoss && room.forcedDeferredCount > 0) {
           return '<div class="deferred-warning">Your deferred curses have been applied to this battle!</div>';
-        } else if (!room.isBoss && pendingDeferred > 0) {
-          return `<div class="deferred-warning">You have ${pendingDeferred} deferred curse${pendingDeferred > 1 ? 's' : ''} pending. Complete them before the boss or they'll be forced upon you!</div>`;
         }
+
+        // Check if the boss is the next reachable node
+        const reachable = getReachableNodes();
+        const bossIsNext = reachable.some(id => { const n = getNodeById(id); return n && n.type === 'boss'; });
+
+        if (!room.isBoss && bossIsNext && totalPending > 0) {
+          // Strong warning — boss is next
+          let msg = 'The boss awaits in the next room. You cannot bring unfinished business into the boss fight.';
+          if (pendingDeferred > 0) msg += ` Complete your ${pendingDeferred} deferred curse${pendingDeferred > 1 ? 's' : ''} now.`;
+          if (pendingDebts > 0) msg += ` Fulfill your ${pendingDebts} road event debt${pendingDebts > 1 ? 's' : ''} now.`;
+          return `<div class="deferred-warning">${msg}</div>`;
+        }
+
+        if (!room.isBoss && totalPending > 0) {
+          // Subtle reminder
+          const parts = [];
+          if (pendingDeferred > 0) parts.push(`${pendingDeferred} deferred curse${pendingDeferred > 1 ? 's' : ''}`);
+          if (pendingDebts > 0) parts.push(`${pendingDebts} road event debt${pendingDebts > 1 ? 's' : ''}`);
+          return `<div class="pending-reminder">Reminder: You have ${parts.join(' and ')} in your quest log.</div>`;
+        }
+
         return '';
       })()}
 
@@ -608,6 +644,19 @@ function renderRoomActive(room) {
                 ${effectTip(e.name)}
                 ${state.rerolls > 0 ? `<button class="reroll-inline" onclick="rerollEffect(${i})" title="Reroll this effect (${state.rerolls} left)">↻</button>` : ''}
               </div>
+              ${room.enchantersFreedom ? `
+              <div class="effect-bar">
+                <div class="effect-bar-label-dry">DRY</div>
+                <div class="effect-bar-track" style="position:relative;">
+                  <input type="range" class="effect-slider" min="0" max="100" value="${Math.round((e.min + e.max) / 2)}"
+                    oninput="updateEffectSlider(${i}, parseInt(this.value))"
+                    style="width:100%; position:absolute; top:-4px; left:0; opacity:0.8; cursor:pointer; z-index:2;">
+                  <div class="effect-bar-range" id="effect-range-${i}" style="left:${e.min}%; width:${e.max - e.min}%; background:var(--green);"></div>
+                </div>
+                <div class="effect-bar-label-wet">WET</div>
+                <div class="effect-pct" id="effect-pct-${i}" style="color:var(--green);">${e.min}–${e.max}%</div>
+              </div>
+              ` : `
               <div class="effect-bar">
                 <div class="effect-bar-label-dry">DRY</div>
                 <div class="effect-bar-track">
@@ -616,8 +665,10 @@ function renderRoomActive(room) {
                 <div class="effect-bar-label-wet">WET</div>
                 <div class="effect-pct">${e.min}–${e.max}%</div>
               </div>
+              `}
             </div>
           `).join('')}
+          <div style="font-size:12px; color:var(--dim); font-style:italic; margin-top:6px;">Your effect must fall within the shown dry/wet range</div>
         </div>
       ` : `
         <div class="result-section">
@@ -637,10 +688,10 @@ function renderRoomActive(room) {
       <div class="result-section" style="margin-top:20px; border-top: 1px solid var(--border); padding-top:16px;">
         <div class="result-label" style="color:var(--gold);">Room Checklist</div>
         ${room.checklist.map((item, i) => `
-          <div class="checklist-item" onclick="toggleCheck(${i})">
+          <div class="checklist-item" ${item.removed ? '' : `onclick="toggleCheck(${i})"`}>
             <div class="check-box ${item.completed ? 'checked' : ''}">${item.completed ? '✓' : ''}</div>
-            <div class="checklist-text ${item.completed ? 'done' : ''}">${item.text}</div>
-            <span style="font-family:var(--font-pixel); font-size:10px; color:var(--gold-dim); white-space:nowrap; margin-left:auto;">+${goldForType(item.type)}g</span>
+            <div class="checklist-text ${item.completed ? 'done' : ''}">${item.removed ? `<span style="text-decoration:line-through; opacity:0.5;">${item.text}</span> <span style="color:var(--green); font-size:13px;">(removed — ${item.removed})</span>` : item.text}</div>
+            ${item.removed ? '' : `<span style="font-family:var(--font-pixel); font-size:10px; color:var(--gold-dim); white-space:nowrap; margin-left:auto;">+${goldForType(item.type)}g</span>`}
           </div>
         `).join('')}
       </div>
@@ -659,7 +710,7 @@ function renderRoomActive(room) {
 
       <!-- Room Notes -->
       <div class="room-notes-section">
-        <div class="room-notes-label">Notes</div>
+        <div class="room-notes-label">Notes <span style="font-family:inherit; font-size:12px; color:var(--dim); font-style:italic; letter-spacing:0;">— optional, saved to your beat sheet</span></div>
         <textarea class="room-notes-input" id="room-notes" placeholder="What did you use? Sample names, patch names, ideas..." oninput="updateRoomNotes(this.value)">${room.notes || ''}</textarea>
       </div>
 
@@ -705,8 +756,8 @@ function renderTransition() {
         <div style="color:var(--green); font-family:var(--font-pixel); font-size:14px; margin:16px 0;">
           +2 REROLLS EARNED!
         </div>
-        ${td.streakReward ? '<div class="reward-banner streak-banner">COMPLETION STREAK!<br>+1 REROLL</div>' : ''}
-        ${td.curseSurvivor ? '<div class="reward-banner survivor-banner">CURSE SURVIVOR!<br>+1 REROLL</div>' : ''}
+        ${td.streakReward ? '<div class="reward-banner streak-banner" title="You completed every task in multiple rooms in a row. Streak rewards trigger after consecutive fully-completed rooms.">COMPLETION STREAK!<br>+1 REROLL</div>' : ''}
+        ${td.curseSurvivor ? '<div class="reward-banner survivor-banner" title="You completed all curses in this room. Surviving every curse earns a bonus reroll.">CURSE SURVIVOR!<br>+1 REROLL</div>' : ''}
         ${td.bossBlessing ? `
           <div style="margin:16px 0; padding:12px 16px; border:1px solid var(--green); border-radius:4px; background:rgba(39,174,96,0.08);">
             <div style="font-family:var(--font-pixel); font-size:10px; color:var(--green); letter-spacing:2px; margin-bottom:8px;">BOSS BLESSING</div>
@@ -728,8 +779,8 @@ function renderTransition() {
         <div style="color:var(--green); font-family:var(--font-pixel); font-size:16px; margin:20px 0; animation: glowPulse 2s infinite;">
           +2 REROLLS EARNED!
         </div>
-        ${td.streakReward ? '<div class="reward-banner streak-banner">COMPLETION STREAK!<br>+1 REROLL</div>' : ''}
-        ${td.curseSurvivor ? '<div class="reward-banner survivor-banner">CURSE SURVIVOR!<br>+1 REROLL</div>' : ''}
+        ${td.streakReward ? '<div class="reward-banner streak-banner" title="You completed every task in multiple rooms in a row. Streak rewards trigger after consecutive fully-completed rooms.">COMPLETION STREAK!<br>+1 REROLL</div>' : ''}
+        ${td.curseSurvivor ? '<div class="reward-banner survivor-banner" title="You completed all curses in this room. Surviving every curse earns a bonus reroll.">CURSE SURVIVOR!<br>+1 REROLL</div>' : ''}
         <div style="color:var(--dim); font-size:16px; margin-bottom:24px;">
           The spirits reward your bravery.
         </div>
@@ -759,9 +810,9 @@ function renderTransition() {
           <span style="color:var(--gold);">+${td.masteryGoldBonus}g Gold</span>
         </div>
 
-        ${td.streakReward ? '<div class="reward-banner streak-banner">COMPLETION STREAK!<br>+1 REROLL</div>' : ''}
+        ${td.streakReward ? '<div class="reward-banner streak-banner" title="You completed every task in multiple rooms in a row. Streak rewards trigger after consecutive fully-completed rooms.">COMPLETION STREAK!<br>+1 REROLL</div>' : ''}
         ${td.streakCount > 0 && !td.streakReward ? '<div class="streak-counter">STREAK: ' + td.streakCount + '/' + (hasRelic('streak_talisman') ? 2 : 3) + '</div>' : ''}
-        ${td.curseSurvivor ? '<div class="reward-banner survivor-banner">CURSE SURVIVOR!<br>+1 REROLL</div>' : ''}
+        ${td.curseSurvivor ? '<div class="reward-banner survivor-banner" title="You completed all curses in this room. Surviving every curse earns a bonus reroll.">CURSE SURVIVOR!<br>+1 REROLL</div>' : ''}
 
         <div style="margin-top:20px;">
           <button class="btn" onclick="continueFromTransition()">CONTINUE</button>
@@ -789,15 +840,15 @@ function renderTransition() {
 
       ${td.streakCount > 0 && !td.streakReward ? '<div id="streak-line" class="streak-counter">STREAK: ' + td.streakCount + '/' + (hasRelic('streak_talisman') ? 2 : 3) + '</div>' : ''}
 
-      <div id="streak-banner" class="reward-banner streak-banner" style="display:none;">
+      <div id="streak-banner" class="reward-banner streak-banner" style="display:none;" title="You completed every task in multiple rooms in a row. Streak rewards trigger after consecutive fully-completed rooms.">
         COMPLETION STREAK!<br>+1 REROLL
       </div>
 
-      <div id="survivor-banner" class="reward-banner survivor-banner" style="display:none;">
-        <span>CURSE SURVIVOR! +1 REROLL</span>
+      <div id="survivor-banner" class="reward-banner survivor-banner" style="display:none;" title="You completed all curses in this room. Surviving every curse earns a bonus reroll.">
+        CURSE SURVIVOR!<br>+1 REROLL
       </div>
 
-      <button id="don-btn" class="btn don-btn" style="display:none;" onclick="doubleOrNothing()">DOUBLE OR NOTHING?</button>
+      <button id="don-btn" class="btn don-btn" style="display:none;" onclick="doubleOrNothing()" title="Gamble your earned reroll for a chance at double. Win: +2 total. Lose: reroll lost.">DOUBLE OR NOTHING?</button>
 
       <div id="transition-continue" style="display:none;">
         <button class="btn" onclick="continueFromTransition()">CONTINUE</button>
@@ -841,6 +892,7 @@ function renderCampfire() {
   const hasDeferredCurses = state.deferredCurses.filter(c => !c.completed).length > 0;
   const hasNextRoomCurses = state.nextRoomCurses.length > 0;
   const postBoss = state.rooms.some(r => r.isBoss);
+  const stock = state.campfireStock || { shield: 0, reroll: 0, relic: 0 };
   const campfireMsg = postBoss
     ? 'The boss has fallen. Rest by the fire and spend your gold.'
     : 'A warm glow cuts through the darkness. Rest here and spend your gold before pressing on.';
@@ -864,20 +916,20 @@ function renderCampfire() {
           <div style="font-family:var(--font-pixel); font-size:12px; color:var(--gold);">${hasRelic('purifying_flame') ? '10g' : '15g'}</div>
         </div>
 
-        <div class="campfire-shop-item ${state.gold < 10 ? 'disabled' : ''}" onclick="buyCampfireItem('shield')">
+        <div class="campfire-shop-item ${state.gold < 10 || stock.shield <= 0 ? 'disabled' : ''}" onclick="buyCampfireItem('shield')">
           <div>
             <div style="color:var(--green);">Buy Curse Shield${state.shieldNextRoom > 0 ? ` <span style="font-size:11px; opacity:0.7;">(${state.shieldNextRoom} active)</span>` : ''}</div>
             <div style="font-size:13px; color:var(--dim);">Blocks curses for 1 room — stackable</div>
           </div>
-          <div style="font-family:var(--font-pixel); font-size:12px; color:var(--gold);">10g</div>
+          <div style="font-family:var(--font-pixel); font-size:12px; color:var(--gold);">${stock.shield > 0 ? stock.shield + ' in stock · 10g' : 'SOLD OUT'}</div>
         </div>
 
-        <div class="campfire-shop-item ${state.gold < 20 ? 'disabled' : ''}" onclick="buyCampfireItem('reroll')">
+        <div class="campfire-shop-item ${state.gold < 20 || stock.reroll <= 0 ? 'disabled' : ''}" onclick="buyCampfireItem('reroll')">
           <div>
-            <div style="color:var(--purple);">Buy a Reroll</div>
+            <div style="color:var(--purple);">Buy a Reroll <span style="font-size:11px; opacity:0.7;">(${state.rerolls} owned)</span></div>
             <div style="font-size:13px; color:var(--dim);">Gain +1 reroll token</div>
           </div>
-          <div style="font-family:var(--font-pixel); font-size:12px; color:var(--gold);">20g</div>
+          <div style="font-family:var(--font-pixel); font-size:12px; color:var(--gold);">${stock.reroll > 0 ? stock.reroll + ' in stock · 20g' : 'SOLD OUT'}</div>
         </div>
 
         <div class="campfire-shop-item ${!hasNextRoomCurses || state.gold < 12 ? 'disabled' : ''}" onclick="buyCampfireItem('removeNextRoom')">
@@ -888,12 +940,12 @@ function renderCampfire() {
           <div style="font-family:var(--font-pixel); font-size:12px; color:var(--gold);">12g</div>
         </div>
 
-        <div class="campfire-shop-item ${state.gold < 50 || getAvailableRelics().length === 0 ? 'disabled' : ''}" onclick="buyCampfireItem('buyRelic')">
+        <div class="campfire-shop-item ${state.gold < 50 || getAvailableRelics().length === 0 || stock.relic <= 0 ? 'disabled' : ''}" onclick="buyCampfireItem('buyRelic')">
           <div>
-            <div style="color:var(--purple);">Buy a Relic</div>
-            <div style="font-size:13px; color:var(--dim);">Choose from 2 random relics</div>
+            <div style="color:var(--purple);">Buy a Relic <span style="font-size:11px; opacity:0.7;">(${state.relics.length} owned, ${getAvailableRelics().length} available)</span></div>
+            <div style="font-size:13px; color:var(--dim);">Choose from 3 random relics</div>
           </div>
-          <div style="font-family:var(--font-pixel); font-size:12px; color:var(--gold);">50g</div>
+          <div style="font-family:var(--font-pixel); font-size:12px; color:var(--gold);">${stock.relic > 0 ? stock.relic + ' in stock · 50g' : 'SOLD OUT'}</div>
         </div>
       </div>
 
@@ -1130,15 +1182,21 @@ function renderSessionLog() {
   for (const room of state.rooms) {
     const logClass = room.isBoss ? 'boss-log' : room.isAlchemist ? 'alchemist-log' : room.isYouTube ? 'youtube-log' : room.isProductionRoom ? 'production-log' : '';
     const logPrefix = room.isBoss ? '[BOSS] ' : room.isSideQuest ? '[SIDE QUEST] ' : room.isAlchemist ? '[ALCHEMIST] ' : room.isYouTube ? '[YOUTUBE] ' : '';
+    const detailCount = room.curses.length + room.effects.length + (room.blessing ? 1 : 0);
     html += `
-      <div class="log-entry ${logClass}">
-        <div class="log-entry-header">${logPrefix}ROOM #${room.number} — ${room.name}</div>
-        <div class="log-entry-detail">${room.trackType} · ${room.genre} ${room.isYouTube ? '(YouTube)' : ''}${room.isAlchemist ? '(Alchemist)' : ''}${room.isProductionRoom ? '(Production)' : ''}${room.isBoss ? '(BOSS)' : ''}</div>
-        ${room.flavorRoll ? `<div class="log-entry-detail">${room.flavorRoll.label}: ${room.flavorRoll.text} ${room.bonusCompleted ? '<span style="color:var(--green);">(completed)</span>' : '<span style="opacity:0.4;">(skipped)</span>'}</div>` : ''}
-        ${room.curses.map(c => `<div class="log-entry-detail curse">${c.text}</div>`).join('')}
-        ${room.effects.map(e => `<div class="log-entry-detail effect">${e.name}: ${e.min}–${e.max}% wet</div>`).join('')}
-        ${room.blessing ? `<div class="log-entry-detail blessing">${room.blessing}</div>` : ''}
-        ${room.notes ? `<div class="log-entry-detail" style="color:var(--dim); font-style:italic; margin-top:4px;">Notes: ${room.notes}</div>` : ''}
+      <div class="log-entry ${logClass}" onclick="this.classList.toggle('expanded')">
+        <div class="log-entry-header">
+          ${logPrefix}ROOM #${room.number} — ${room.name}
+          <span class="log-expand-hint">${detailCount > 0 ? '(' + detailCount + ' details)' : ''}</span>
+        </div>
+        <div class="log-entry-summary">${room.trackType} · ${room.genre} ${room.isYouTube ? '(YouTube)' : ''}${room.isAlchemist ? '(Alchemist)' : ''}${room.isProductionRoom ? '(Production)' : ''}${room.isBoss ? '(BOSS)' : ''}</div>
+        <div class="log-entry-expanded">
+          ${room.flavorRoll ? `<div class="log-entry-detail">${room.flavorRoll.label}: ${room.flavorRoll.text} ${room.bonusCompleted ? '<span style="color:var(--green);">(completed)</span>' : '<span style="opacity:0.4;">(skipped)</span>'}</div>` : ''}
+          ${room.curses.map(c => `<div class="log-entry-detail curse">${c.removed ? '<span style="text-decoration:line-through; opacity:0.5;">' + c.text + '</span> <span style="color:var(--green);">(removed)</span>' : c.text}</div>`).join('')}
+          ${room.effects.map(e => `<div class="log-entry-detail effect">${e.name}: ${e.min}–${e.max}% wet</div>`).join('')}
+          ${room.blessing ? `<div class="log-entry-detail blessing">${room.blessing}</div>` : ''}
+          ${room.notes ? `<div class="log-entry-detail" style="color:var(--dim); font-style:italic; margin-top:4px;">Notes: ${room.notes}</div>` : ''}
+        </div>
       </div>
     `;
   }
@@ -1157,7 +1215,7 @@ function renderSessionLog() {
     `;
   }
 
-  if (state.acceptedEvents && state.acceptedEvents.filter(e => e.cost && !e.completed).length > 0) {
+  if (state.acceptedEvents && state.acceptedEvents.filter(e => e.cost).length > 0) {
     html += `
       <div class="pending-section">
         <div class="panel-header" style="color:var(--orange);">Road Event Debts</div>

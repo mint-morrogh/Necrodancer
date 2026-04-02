@@ -37,8 +37,8 @@ const EFFECTS = [
 
 // ── BLESSINGS ───────────────────────────────────────────
 const BLESSINGS = [
-  '\u2600 The spirits favor you \u2014 add any effect you desire, no percentage restriction',
-  '\u2600 Ancient Knowledge \u2014 re-roll any ONE constraint in this room',
+  '\u2600 The spirits favor you \u2014 ignore all dry/wet percentage requirements for this room, use any percentage you want',
+  '\u2600 Ancient Knowledge \u2014 re-roll any ONE constraint in this room for free (does not cost a reroll token)',
   '\u2600 Blessing of Clarity \u2014 remove the curse from this room (if any)',
   '\u2600 Golden Sample \u2014 ignore {genre} and use any genre you want',
   '\u2600 Time Warp \u2014 no time or pattern constraints in this room',
@@ -52,16 +52,16 @@ const BLESSINGS = [
   '\u2600 Scroll of Silence \u2014 this room has zero constraints. Complete creative freedom',
   '\u2600 Necromancer\'s Gift \u2014 revive and reuse a sample from any previous room',
   '\u2600 Fortune\'s Favor \u2014 gain +1 re-roll token',
-  '\u2600 Elder Scroll \u2014 peek at the next room\'s curse before entering (if any)',
-  '\u2600 Ancestral Power \u2014 your track type choice also grants a bonus percussion layer',
+  '\u2600 Elder Scroll \u2014 the next room you enter will have its curse count reduced by 1',
+  '\u2600 Ancestral Power \u2014 if you wish, you may add an extra layer of any instrument alongside your {trackType} with no constraints (completely optional)',
   '\u2600 Cloak of Shadows \u2014 this room\'s constraints are invisible to deferred curses',
   // ── added ──
-  '\u2600 Spirit Walk \u2014 preview the next 3 rooms\' track types and choose which order to face them',
+  '\u2600 Spirit Walk \u2014 all reachable nodes on the current floor are fully revealed (track types, curses, effects, blessings)',
   '\u2600 Resurrection \u2014 completely redo any previously completed room with brand new constraints',
   '\u2600 Sacred Harmony \u2014 this track automatically complements whatever came before (no conflicting constraints)',
-  '\u2600 Alchemist\'s Touch \u2014 combine any two track types into one hybrid instrument',
+  '\u2600 Alchemist\'s Touch \u2014 you may blend a second instrument of your choice into your {trackType} with no constraints',
   '\u2600 Temporal Rift \u2014 ignore all timing and pattern constraints for the next 2 rooms',
-  '\u2600 Ethereal Vision \u2014 see all available curses for this room and choose the easiest one',
+  '\u2600 Ethereal Vision \u2014 all curses in this room have their severity reduced (you may interpret any curse loosely)',
   '\u2600 Divine Intervention \u2014 swap this room\'s curse with a blessing instead',
   '\u2600 Soul Collector \u2014 steal a positive trait from any previous room\'s element',
   '\u2600 Mystic Shield \u2014 immune to next-room curses for 2 rooms',
@@ -75,5 +75,6 @@ const BLESSINGS = [
   '\u2600 The Oracle\'s Favor \u2014 choose your own track type \u2014 ignore the assigned {trackType} in {genre}',
   '\u2600 Harmonic Convergence \u2014 freely use any scale degree \u2014 ignore the key of {key}',
   '\u2600 Treasure Hoard \u2014 gain +2 re-roll tokens AND peek at the next room',
-  '\u2600 Blessing of Abundance \u2014 build a second track type alongside your {trackType}'
+  '\u2600 Blessing of Abundance \u2014 you may build any second track type of your choice with no restrictions alongside your {trackType}',
+  '\u2600 Enchanter\'s Freedom \u2014 you may adjust the dry/wet range of all effects in this room to any values you prefer'
 ];

@@ -52,7 +52,9 @@ function generateNodePreview(nodeType, trackType) {
     hasBlessing = chance(diff().blessingChance);
   }
 
-  return { curseCount, effectCount, hasBlessing };
+  // Store a preview genre for Spirit Walk reveals
+  const genre = trackType ? pickGenreForDifficulty(trackType) : null;
+  return { curseCount, effectCount, hasBlessing, genre };
 }
 
 function pickNodeType(allowCampfire) {

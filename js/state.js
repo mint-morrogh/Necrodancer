@@ -41,7 +41,9 @@ let state = {
   spliceRatio: 50,
   nextFloorMap: null,
   floorTheme: null,
-  challengeMods: []
+  challengeMods: [],
+  spiritWalkActive: false,
+  campfireStock: null
 };
 
 
@@ -80,7 +82,7 @@ const DIFFICULTY_SETTINGS = {
     label: 'EASY', desc: 'Lighter constraints, more blessings',
     curseChance: 8, trackCurseChance: 2, blessingChance: 35,
     effectWeights: [{ value: 0, weight: 82 }, { value: 1, weight: 18 }],
-    effectRange: [5, 30], effectTolerance: 15,
+    effectRange: [3, 100], effectTolerance: 30,
     bossCurseRange: [1, 1],
     rerollChance: 8, rerollBonusChance: 4,
     chestChance: 12, sideQuestChance: 5, alchemistChance: 3, roadEventChance: 15,
@@ -93,7 +95,7 @@ const DIFFICULTY_SETTINGS = {
     label: 'NORMAL', desc: 'The standard dungeon experience',
     curseChance: 22, trackCurseChance: 8, blessingChance: 20,
     effectWeights: [{ value: 0, weight: 50 }, { value: 1, weight: 38 }, { value: 2, weight: 12 }],
-    effectRange: [5, 50], effectTolerance: 10,
+    effectRange: [3, 100], effectTolerance: 22,
     bossCurseRange: [1, 2],
     rerollChance: 11, rerollBonusChance: 6,
     chestChance: 8, sideQuestChance: 5, alchemistChance: 3, roadEventChance: 18,
@@ -106,7 +108,7 @@ const DIFFICULTY_SETTINGS = {
     label: 'HARD', desc: 'More curses, fewer blessings, no mercy',
     curseChance: 55, trackCurseChance: 25, blessingChance: 8,
     effectWeights: [{ value: 0, weight: 10 }, { value: 1, weight: 30 }, { value: 2, weight: 40 }, { value: 3, weight: 20 }],
-    effectRange: [20, 100], effectTolerance: 5,
+    effectRange: [30, 100], effectTolerance: 8,
     bossCurseRange: [2, 3],
     rerollChance: 14, rerollBonusChance: 10,
     chestChance: 5, sideQuestChance: 7, alchemistChance: 4, roadEventChance: 22,
@@ -119,7 +121,7 @@ const DIFFICULTY_SETTINGS = {
     label: 'NIGHTMARE', desc: 'Basically impossible. Good luck.',
     curseChance: 80, trackCurseChance: 45, blessingChance: 3,
     effectWeights: [{ value: 0, weight: 3 }, { value: 1, weight: 12 }, { value: 2, weight: 35 }, { value: 3, weight: 35 }, { value: 4, weight: 15 }],
-    effectRange: [40, 100], effectTolerance: 3,
+    effectRange: [70, 100], effectTolerance: 3,
     bossCurseRange: [2, 4],
     rerollChance: 17, rerollBonusChance: 13,
     chestChance: 3, sideQuestChance: 10, alchemistChance: 5, roadEventChance: 25,
@@ -293,14 +295,14 @@ function getProfile() {
       maxScore: 0, maxGold: 0, maxFloor: 0, maxRelics: 0, maxCursesInRoom: 0,
       masteryInSession: 0, floorNoRerolls: false, floorNoCurses: false,
       nightmareCompleted: false, challengeSessionCompleted: false,
-      badges: []
+      badges: [], skeletonKeys: 0
     };
   } catch (e) {
     return { totalSessions: 0, totalRooms: 0, totalBosses: 0, totalSideQuests: 0,
       maxScore: 0, maxGold: 0, maxFloor: 0, maxRelics: 0, maxCursesInRoom: 0,
       masteryInSession: 0, floorNoRerolls: false, floorNoCurses: false,
       nightmareCompleted: false, challengeSessionCompleted: false,
-      badges: [] };
+      badges: [], skeletonKeys: 0 };
   }
 }
 
@@ -325,6 +327,9 @@ function updateProfileFromSession() {
   for (const room of state.rooms) {
     if (room.curses.length > profile.maxCursesInRoom) profile.maxCursesInRoom = room.curses.length;
   }
+
+  // Grant a skeleton key for completing a run
+  profile.skeletonKeys = (profile.skeletonKeys || 0) + 1;
 
   // Difficulty and challenge checks
   if (state.difficulty === 'nightmare') profile.nightmareCompleted = true;

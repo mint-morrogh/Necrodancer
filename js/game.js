@@ -16,6 +16,16 @@ function startSetup() {
   render();
 }
 
+function generateCampfireStock() {
+  state.campfireStock = {
+    shield: roll(1, 3),
+    reroll: roll(1, 3),
+    removeCurse: 99,  // unlimited — depends on having deferred curses
+    removeNextRoom: 99,
+    relic: 1
+  };
+}
+
 function toggleChallenge(id) {
   if (state.challengeMods.includes(id)) {
     state.challengeMods = state.challengeMods.filter(m => m !== id);
@@ -35,6 +45,51 @@ function continueSavedGame() {
     // Save was invalid, fall back to new session
     startSetup();
   }
+}
+
+function useSkeletonKey() {
+  const profile = getProfile();
+  if (!profile.skeletonKeys || profile.skeletonKeys <= 0) return;
+
+  // Replace the roll area with key/scale selectors
+  const display = document.getElementById('key-display');
+  const btnRow = display ? display.nextElementSibling : null;
+  if (!display) return;
+
+  display.innerHTML = `
+    <div style="display:flex; gap:12px; align-items:center; justify-content:center;">
+      <select id="skeleton-key-select" class="bpm-input" style="width:80px; font-size:16px; cursor:pointer;">
+        ${KEYS.map(k => `<option value="${k}">${k}</option>`).join('')}
+      </select>
+      <select id="skeleton-scale-select" class="bpm-input" style="width:120px; font-size:16px; cursor:pointer;">
+        ${SCALES.map(s => `<option value="${s}">${s}</option>`).join('')}
+      </select>
+    </div>
+  `;
+  display.classList.remove('rolling');
+
+  if (btnRow) {
+    btnRow.innerHTML = `
+      <button class="btn btn-small" onclick="confirmSkeletonKey()">CONFIRM</button>
+    `;
+  }
+}
+
+function confirmSkeletonKey() {
+  const keyEl = document.getElementById('skeleton-key-select');
+  const scaleEl = document.getElementById('skeleton-scale-select');
+  if (!keyEl || !scaleEl) return;
+
+  state.key = keyEl.value;
+  state.scale = scaleEl.value;
+
+  // Consume the skeleton key
+  const profile = getProfile();
+  profile.skeletonKeys = Math.max(0, (profile.skeletonKeys || 0) - 1);
+  saveProfile(profile);
+
+  if (state.setupStep < 2) state.setupStep = 2;
+  render();
 }
 
 async function rollForKey() {
@@ -167,6 +222,7 @@ function enterNodeFromMap(nodeId) {
   // Campfire nodes go straight to campfire shop
   if (node.type === 'campfire') {
     node.completed = true;
+    generateCampfireStock();
     state.roomPhase = 'campfire';
     render();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -313,7 +369,7 @@ function enterRoomFromNode(node, trackType) {
     const event = pick(ROAD_EVENTS);
     state.roadEventData = {
       event,
-      pendingRoom: { trackType, isSideQuest, originalTrackType, isAlchemist, isBoss, nodeId: node.id, isCursed, isSanctuary }
+      pendingRoom: { trackType, isSideQuest, originalTrackType, isAlchemist, isBoss, nodeId: node.id, isCursed, isSanctuary, preview: node.preview }
     };
     state.roomPhase = 'road-event';
     render();
@@ -335,14 +391,14 @@ function enterRoomFromNode(node, trackType) {
       ]),
       collected: false
     };
-    state.pendingRoom = { trackType, isSideQuest, originalTrackType, isAlchemist, isBoss, nodeId: node.id, isCursed, isSanctuary };
+    state.pendingRoom = { trackType, isSideQuest, originalTrackType, isAlchemist, isBoss, nodeId: node.id, isCursed, isSanctuary, preview: node.preview };
     state.roomPhase = 'chest';
     render();
     window.scrollTo({ top: 0, behavior: 'smooth' });
     return;
   }
 
-  const opts = { isAlchemist, isBoss, isCursed, isSanctuary };
+  const opts = { isAlchemist, isBoss, isCursed, isSanctuary, preview: node.preview };
   state.currentRoom = generateRoom(trackType, opts);
   state.currentRoom.isSideQuest = isSideQuest;
   state.currentRoom.originalTrackType = originalTrackType;
@@ -365,6 +421,7 @@ function nextFloor() {
   });
 
   state.floor++;
+  state.spiritWalkActive = false;
   state.floorTheme = (typeof pickFloorTheme === 'function') ? pickFloorTheme(state.floor) : null;
   // Use pre-generated map from room trading peek, or generate fresh
   if (state.nextFloorMap) {
@@ -469,6 +526,32 @@ function updateSealButton() {
   }
 }
 
+function updateEffectSlider(index, value) {
+  const room = state.currentRoom;
+  if (!room || !room.enchantersFreedom) return;
+  const effect = room.effects[index];
+  if (!effect) return;
+  const tol = 10;
+  effect.min = Math.max(0, value - tol);
+  effect.max = Math.min(100, value + tol);
+  const range = document.getElementById('effect-range-' + index);
+  const pct = document.getElementById('effect-pct-' + index);
+  if (range) { range.style.left = effect.min + '%'; range.style.width = (effect.max - effect.min) + '%'; }
+  if (pct) pct.textContent = effect.min + '–' + effect.max + '%';
+  // Update checklist text (data and DOM)
+  const clEntry = room.checklist.find(c => c.id === 'fx-' + index);
+  if (clEntry) {
+    clEntry.text = effect.name + ' at ' + effect.min + '\u2013' + effect.max + '% wet';
+    // Update the visible checklist item
+    const items = document.querySelectorAll('.room-main .checklist-item');
+    const clIdx = room.checklist.indexOf(clEntry);
+    if (clIdx >= 0 && items[clIdx]) {
+      const textEl = items[clIdx].querySelector('.checklist-text');
+      if (textEl) textEl.innerHTML = clEntry.text;
+    }
+  }
+}
+
 function updateRoomNotes(value) {
   if (state.currentRoom) state.currentRoom.notes = value;
 }
@@ -517,8 +600,34 @@ function toggleEventDebt(index) {
   const costEvents = state.acceptedEvents.filter(e => e.cost);
   if (!costEvents[index]) return;
   costEvents[index].completed = !costEvents[index].completed;
-  renderSessionLog();
-  render();
+  const done = costEvents[index].completed;
+
+  // Targeted DOM update — find debt entries in the Road Event Debts section
+  const debtSection = document.querySelectorAll('.pending-section');
+  let debtEntries = null;
+  for (const section of debtSection) {
+    const header = section.querySelector('.panel-header');
+    if (header && header.textContent.includes('Road Event Debts')) {
+      debtEntries = section.querySelectorAll('.pending-curse');
+      break;
+    }
+  }
+  if (debtEntries && debtEntries[index]) {
+    const box = debtEntries[index].querySelector('.check-box');
+    const text = debtEntries[index].querySelector('.pending-text');
+    if (box) { box.classList.toggle('checked', done); box.textContent = done ? '✓' : ''; }
+    if (text) { text.classList.toggle('done', done); }
+    debtEntries[index].classList.toggle('resolved', done);
+  }
+
+  // Update quest log toggle button pulse
+  const toggle = document.getElementById('log-toggle');
+  if (toggle) {
+    const hasPending = state.deferredCurses.some(c => !c.completed) ||
+      state.acceptedEvents.some(e => e.cost && !e.completed);
+    toggle.classList.toggle('has-curses', hasPending);
+  }
+  saveGame();
 }
 
 // ════════════════════════════════════════════════════════
@@ -928,6 +1037,7 @@ function continueFromTransition() {
   const td = state.transitionData;
   if (td && td.isBoss) {
     state.postBossCampfire = true;
+    generateCampfireStock();
     state.roomPhase = 'campfire';
     state.transitionData = null;
     render();
@@ -1004,7 +1114,8 @@ function proceedFromChest() {
 
   state.currentRoom = generateRoom(pr.trackType, {
     isAlchemist: pr.isAlchemist, isBoss: pr.isBoss,
-    isCursed: pr.isCursed || false, isSanctuary: pr.isSanctuary || false
+    isCursed: pr.isCursed || false, isSanctuary: pr.isSanctuary || false,
+    preview: pr.preview
   });
   state.currentRoom.isSideQuest = pr.isSideQuest;
   state.currentRoom.originalTrackType = pr.originalTrackType;
@@ -1040,7 +1151,8 @@ function proceedFromChest() {
 }
 
 function buyCampfireItem(type) {
-  if (hasChallenge('minimalist')) return; // Minimalist challenge blocks purchases
+  if (hasChallenge('minimalist')) return;
+  const stock = state.campfireStock || {};
   const curseRemovalCost = hasRelic('purifying_flame') ? 10 : 15;
   if (type === 'removeCurse' && state.gold >= curseRemovalCost) {
     const idx = state.deferredCurses.findIndex(c => !c.completed);
@@ -1048,21 +1160,24 @@ function buyCampfireItem(type) {
       state.deferredCurses[idx].completed = true;
       state.gold -= curseRemovalCost;
     }
-  } else if (type === 'shield' && state.gold >= 10) {
+  } else if (type === 'shield' && state.gold >= 10 && (stock.shield || 0) > 0) {
     state.shieldNextRoom += 1;
     state.gold -= 10;
-  } else if (type === 'reroll' && state.gold >= 20) {
+    stock.shield--;
+  } else if (type === 'reroll' && state.gold >= 20 && (stock.reroll || 0) > 0) {
     state.rerolls += 1;
     state.gold -= 20;
+    stock.reroll--;
   } else if (type === 'removeNextRoom' && state.gold >= 12) {
     if (state.nextRoomCurses.length > 0) {
       state.nextRoomCurses.shift();
       state.gold -= 12;
     }
-  } else if (type === 'buyRelic' && state.gold >= 50) {
+  } else if (type === 'buyRelic' && state.gold >= 50 && (stock.relic || 0) > 0) {
     const relics = pickRelicsForChoice(3);
     if (relics.length > 0) {
       state.gold -= 50;
+      stock.relic--;
       state.pendingRelicChoice = { relics, source: 'campfire' };
       state.roomPhase = 'relic-choice';
       render();
@@ -1146,7 +1261,7 @@ function continueFromRoadEvent(pending) {
   }
 
   // Generate room
-  const opts = { isAlchemist: pending.isAlchemist, isBoss: pending.isBoss, isCursed: pending.isCursed, isSanctuary: pending.isSanctuary };
+  const opts = { isAlchemist: pending.isAlchemist, isBoss: pending.isBoss, isCursed: pending.isCursed, isSanctuary: pending.isSanctuary, preview: pending.preview };
   state.currentRoom = generateRoom(pending.trackType, opts);
   state.currentRoom.isSideQuest = pending.isSideQuest;
   state.currentRoom.originalTrackType = pending.originalTrackType;
@@ -1434,7 +1549,7 @@ function newSession() {
     roadEventData: null, acceptedEvents: [], pendingBlessing: false, postBossCampfire: false,
     floor: 1, map: null, currentNodeId: null, floorHistory: [], setupStep: 1,
     relics: [], relicUses: {}, pendingRelicChoice: null, pendingRelicRoom: null, rerollsUsedThisRoom: 0,
-    spliceRatio: 50, nextFloorMap: null, floorTheme: null
+    spliceRatio: 50, nextFloorMap: null, floorTheme: null, spiritWalkActive: false, campfireStock: null
   };
   render();
 }
@@ -1549,17 +1664,38 @@ function rebuildGenreDirective(room) {
   });
 }
 
-function rerollSampleType() {
+// Check if the current room has the Ancient Knowledge blessing (free reroll)
+function hasAncientKnowledge() {
   const room = state.currentRoom;
-  if (!room || state.rerolls <= 0 || room.isAlchemist) return;
-  // Relic: Metronome of Mercy — first room reroll each floor is free
+  if (!room || !room.blessing) return false;
+  return room.blessing.includes('Ancient Knowledge') && !room._ancientKnowledgeUsed;
+}
+
+function useAncientKnowledge() {
+  if (state.currentRoom) state.currentRoom._ancientKnowledgeUsed = true;
+}
+
+// Deduct reroll cost, respecting free-reroll sources
+function deductReroll() {
+  if (hasAncientKnowledge()) {
+    useAncientKnowledge();
+    return;
+  }
   if (hasRelic('metronome_of_mercy') && !relicUsedThisFloor('metronome_of_mercy')) {
     markRelicUsed('metronome_of_mercy');
-  } else {
-    state.rerolls--;
+    return;
   }
+  state.rerolls--;
+}
+
+function rerollSampleType() {
+  const room = state.currentRoom;
+  if (!room || (state.rerolls <= 0 && !hasAncientKnowledge() && !(hasRelic('metronome_of_mercy') && !relicUsedThisFloor('metronome_of_mercy'))) || room.isAlchemist) return;
+  deductReroll();
   state.rerollsUsedThisRoom++;
-  room.sampleType = pick(SAMPLE_TYPES[room.trackType] || ['sample']);
+  const prevSample = room.sampleType;
+  const samplePool = (SAMPLE_TYPES[room.trackType] || ['sample']).filter(s => s !== prevSample);
+  room.sampleType = samplePool.length > 0 ? pick(samplePool) : pick(SAMPLE_TYPES[room.trackType] || ['sample']);
   room.genreDirective = rebuildGenreDirective(room);
   room.checklist[0].text = room.genreDirective;
   render();
@@ -1567,31 +1703,29 @@ function rerollSampleType() {
 
 function rerollGenre() {
   const room = state.currentRoom;
-  if (!room || state.rerolls <= 0 || room.isAlchemist) return;
-  if (hasRelic('metronome_of_mercy') && !relicUsedThisFloor('metronome_of_mercy')) {
-    markRelicUsed('metronome_of_mercy');
-  } else {
-    state.rerolls--;
-  }
+  if (!room || (state.rerolls <= 0 && !hasAncientKnowledge() && !(hasRelic('metronome_of_mercy') && !relicUsedThisFloor('metronome_of_mercy'))) || room.isAlchemist) return;
+  deductReroll();
   state.rerollsUsedThisRoom++;
-  room.genre = pickGenreForDifficulty(room.trackType);
+  const prevGenre = room.genre;
+  let newGenre;
+  let genreAttempts = 0;
+  do { newGenre = pickGenreForDifficulty(room.trackType); genreAttempts++; } while (newGenre === prevGenre && genreAttempts < 20);
+  room.genre = newGenre;
   room.genreDirective = rebuildGenreDirective(room);
   room.checklist[0].text = room.genreDirective;
   // Re-pick flavor to match the new genre
-  room.flavorRoll = pickCompatibleFlavor(room.trackType, room.genre, room.isAlchemist);
+  room.flavorRoll = room.isProductionRoom
+    ? (PRODUCTION_FLAVOR[room.trackType] ? { label: PRODUCTION_FLAVOR[room.trackType].label, text: pick(PRODUCTION_FLAVOR[room.trackType].options) } : null)
+    : pickCompatibleFlavor(room.trackType, room.genre, room.isAlchemist);
   render();
 }
 
 function rerollCurse(index) {
   const room = state.currentRoom;
-  if (!room || state.rerolls <= 0) return;
+  if (!room || (state.rerolls <= 0 && !hasAncientKnowledge() && !(hasRelic('metronome_of_mercy') && !relicUsedThisFloor('metronome_of_mercy')))) return;
   const curse = room.curses[index];
   if (!curse || curse.type === 'carried' || curse.type === 'deferred-forced') return;
-  if (hasRelic('metronome_of_mercy') && !relicUsedThisFloor('metronome_of_mercy')) {
-    markRelicUsed('metronome_of_mercy');
-  } else {
-    state.rerolls--;
-  }
+  deductReroll();
   state.rerollsUsedThisRoom++;
 
   let pool;
@@ -1605,10 +1739,10 @@ function rerollCurse(index) {
     return;
   }
 
-  const otherTexts = room.curses.filter((_, i) => i !== index).map(c => c.text);
+  const excludeTexts = room.curses.map(c => c.text); // exclude all current curses including the one being rerolled
   let newText;
   let attempts = 0;
-  do { newText = pick(pool); attempts++; } while (otherTexts.includes(newText) && attempts < 20);
+  do { newText = pick(pool); attempts++; } while (excludeTexts.includes(newText) && attempts < 20);
 
   curse.text = newText;
 
@@ -1621,20 +1755,16 @@ function rerollCurse(index) {
 
 function rerollEffect(index) {
   const room = state.currentRoom;
-  if (!room || state.rerolls <= 0) return;
+  if (!room || (state.rerolls <= 0 && !hasAncientKnowledge() && !(hasRelic('metronome_of_mercy') && !relicUsedThisFloor('metronome_of_mercy')))) return;
   const effect = room.effects[index];
   if (!effect) return;
-  if (hasRelic('metronome_of_mercy') && !relicUsedThisFloor('metronome_of_mercy')) {
-    markRelicUsed('metronome_of_mercy');
-  } else {
-    state.rerolls--;
-  }
+  deductReroll();
   state.rerollsUsedThisRoom++;
 
   const NEEDS_PREVIOUS_TRACK = ['Sidechain Compression'];
   const isFirstRoom = state.rooms.length === 0;
   const prevTracks = state.rooms.map(r => r.trackType);
-  const otherNames = room.effects.filter((_, i) => i !== index).map(e => e.name.replace(/\s*\(keyed to .*?\)/, ''));
+  const allNames = room.effects.map(e => e.name.replace(/\s*\(keyed to .*?\)/, '')); // exclude all current effects including the one being rerolled
 
   let eff;
   let attempts = 0;
@@ -1642,7 +1772,7 @@ function rerollEffect(index) {
     eff = pick(EFFECTS);
     attempts++;
   } while (
-    (otherNames.includes(eff) || (isFirstRoom && NEEDS_PREVIOUS_TRACK.includes(eff))) && attempts < 20
+    (allNames.includes(eff) || (isFirstRoom && NEEDS_PREVIOUS_TRACK.includes(eff))) && attempts < 20
   );
 
   let effName = eff;
