@@ -230,3 +230,40 @@ function hasSavedGame() {
 function clearSave() {
   try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ }
 }
+
+// ════════════════════════════════════════════════════════
+// HIGH SCORES (localStorage)
+// ════════════════════════════════════════════════════════
+
+const SCORES_KEY = 'necrodancer_scores';
+const MAX_SCORES_PER_DIFF = 5;
+
+function getHighScores() {
+  try {
+    const raw = localStorage.getItem(SCORES_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) { return {}; }
+}
+
+function saveHighScore(difficulty, score, seed, date) {
+  try {
+    const scores = getHighScores();
+    if (!scores[difficulty]) scores[difficulty] = [];
+    scores[difficulty].push({ score, seed, date });
+    scores[difficulty].sort((a, b) => b.score - a.score);
+    scores[difficulty] = scores[difficulty].slice(0, MAX_SCORES_PER_DIFF);
+    localStorage.setItem(SCORES_KEY, JSON.stringify(scores));
+  } catch (e) { /* storage full or unavailable */ }
+}
+
+function getAllHighScores() {
+  const scores = getHighScores();
+  const all = [];
+  for (const diff of Object.keys(scores)) {
+    for (const entry of scores[diff]) {
+      all.push({ ...entry, difficulty: diff });
+    }
+  }
+  all.sort((a, b) => b.score - a.score);
+  return all;
+}

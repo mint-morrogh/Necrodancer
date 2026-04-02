@@ -83,6 +83,46 @@
   animation: titleFadeUp 0.3s ease-out 0.25s both;
 }
 
+/* Leaderboard */
+.leaderboard-panel {
+  padding: 20px 24px;
+  text-align: center;
+  animation: titleFadeUp 0.4s ease-out 0.5s both;
+}
+.leaderboard-header {
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: var(--gold-dim);
+  letter-spacing: 3px;
+  margin-bottom: 14px;
+}
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.leaderboard-table th {
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: var(--dim);
+  letter-spacing: 2px;
+  padding: 0 6px 8px 6px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+.leaderboard-table td {
+  padding: 8px 6px;
+  text-align: center;
+  border-bottom: 1px solid rgba(42,38,51,0.4);
+  color: var(--text);
+}
+.leaderboard-table tr:last-child td { border-bottom: none; }
+.lb-rank { width: 30px; font-family: var(--font-pixel); font-size: 11px; color: var(--dim); }
+.lb-score { font-family: var(--font-pixel); font-size: 12px; }
+.lb-diff { font-family: var(--font-pixel); font-size: 9px; letter-spacing: 1px; }
+.lb-seed { font-family: var(--font-pixel); font-size: 10px; color: var(--dim); }
+.lb-date { font-size: 12px; color: var(--dim); }
+
 /* Button shimmer */
 #title-screen .btn {
   animation: titleFadeUp 0.3s ease-out 0.35s both, titleBtnGlow 4s ease-in-out infinite;

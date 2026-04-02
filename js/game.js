@@ -1156,6 +1156,11 @@ function endSession() {
   const baseScore = state.score;
   state.score += rerollBonus;
 
+  // Save high score
+  const today = new Date();
+  const dateStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+  saveHighScore(state.difficulty, state.score, state.seed || 'daily', dateStr);
+
   const diffColors = { easy: 'var(--green)', normal: 'var(--text)', hard: 'var(--orange)', nightmare: 'var(--red)' };
   const sourceLabel = state.spliceRatio === 100 ? 'Splice' : state.spliceRatio === 0 ? 'Production' : state.spliceRatio + '% Splice / ' + (100 - state.spliceRatio) + '% Production';
 

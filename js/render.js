@@ -101,6 +101,42 @@ function renderTitle() {
           <button class="btn" onclick="startSetup()">START YOUR SESSION</button>
         `}
       </div>
+      ${renderLeaderboard()}
+    </div>
+  `;
+}
+
+function renderLeaderboard() {
+  const all = getAllHighScores();
+  if (all.length === 0) return '';
+  const diffColors = { easy: 'var(--green)', normal: 'var(--text)', hard: 'var(--orange)', nightmare: 'var(--red)' };
+  const diffLabels = { easy: 'EASY', normal: 'NORMAL', hard: 'HARD', nightmare: 'NIGHTMARE' };
+  const top = all.slice(0, 5);
+  return `
+    <div class="panel leaderboard-panel" style="max-width:650px; margin:20px auto 0 auto; position:relative; z-index:1;">
+      <div class="leaderboard-header">HALL OF FAME</div>
+      <table class="leaderboard-table">
+        <thead>
+          <tr>
+            <th class="lb-rank">#</th>
+            <th class="lb-score">SCORE</th>
+            <th class="lb-diff">DIFF</th>
+            <th class="lb-seed">SEED</th>
+            <th class="lb-date">DATE</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${top.map((entry, i) => `
+            <tr>
+              <td class="lb-rank">${i + 1}</td>
+              <td class="lb-score" style="color:var(--purple);">${entry.score}</td>
+              <td class="lb-diff" style="color:${diffColors[entry.difficulty] || 'var(--text)'};">${diffLabels[entry.difficulty] || entry.difficulty}</td>
+              <td class="lb-seed">${entry.seed}</td>
+              <td class="lb-date">${entry.date}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
     </div>
   `;
 }
