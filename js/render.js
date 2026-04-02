@@ -155,8 +155,28 @@ function renderLeaderboard() {
           `).join('')}
         </tbody>
       </table>
+      <div style="margin-top:14px; text-align:center;">
+        <button class="btn btn-small" style="opacity:0.4; font-size:9px;" id="clear-scores-btn" onclick="confirmClearScores()">CLEAR HIGH SCORES</button>
+      </div>
     </div>
   `;
+}
+
+function confirmClearScores() {
+  const btn = document.getElementById('clear-scores-btn');
+  if (!btn) return;
+  if (btn.dataset.confirming) {
+    localStorage.removeItem(SCORES_KEY);
+    render();
+    return;
+  }
+  btn.dataset.confirming = 'true';
+  btn.textContent = 'ARE YOU SURE? CLICK AGAIN TO CONFIRM';
+  btn.style.opacity = '0.7';
+  btn.style.color = 'var(--red)';
+  setTimeout(() => {
+    if (btn) { btn.textContent = 'CLEAR HIGH SCORES'; btn.style.opacity = '0.4'; btn.style.color = ''; delete btn.dataset.confirming; }
+  }, 4000);
 }
 
 function renderSetup() {
