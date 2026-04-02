@@ -155,28 +155,29 @@ function renderLeaderboard() {
           `).join('')}
         </tbody>
       </table>
-      <div style="margin-top:14px; text-align:center;">
-        <button class="btn btn-small" style="opacity:0.4; font-size:9px;" id="clear-scores-btn" onclick="confirmClearScores()">CLEAR HIGH SCORES</button>
-      </div>
+    </div>
+    <div style="text-align:center; margin-top:10px; position:relative; z-index:1;">
+      <button onclick="showClearScoresModal()" style="background:none; border:none; color:var(--dim); opacity:0.5; font-size:11px; cursor:pointer; padding:4px 8px;">clear high scores</button>
     </div>
   `;
 }
 
-function confirmClearScores() {
-  const btn = document.getElementById('clear-scores-btn');
-  if (!btn) return;
-  if (btn.dataset.confirming) {
-    localStorage.removeItem(SCORES_KEY);
-    render();
-    return;
-  }
-  btn.dataset.confirming = 'true';
-  btn.textContent = 'ARE YOU SURE? CLICK AGAIN TO CONFIRM';
-  btn.style.opacity = '0.7';
-  btn.style.color = 'var(--red)';
-  setTimeout(() => {
-    if (btn) { btn.textContent = 'CLEAR HIGH SCORES'; btn.style.opacity = '0.4'; btn.style.color = ''; delete btn.dataset.confirming; }
-  }, 4000);
+function showClearScoresModal() {
+  const overlay = document.createElement('div');
+  overlay.className = 'help-overlay';
+  overlay.style.display = 'flex';
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="panel" style="max-width:360px; text-align:center; padding:32px 28px;">
+      <div style="font-family:var(--font-pixel); font-size:12px; color:var(--red); letter-spacing:2px; margin-bottom:16px;">CLEAR HIGH SCORES</div>
+      <div style="color:var(--dim); font-size:15px; margin-bottom:24px; line-height:1.5;">Are you sure? This will permanently delete all your saved high scores.</div>
+      <div style="display:flex; gap:12px; justify-content:center;">
+        <button class="btn btn-small" style="color:var(--red); border-color:var(--red);" onclick="localStorage.removeItem(SCORES_KEY); this.closest('.help-overlay').remove(); render();">YES, CLEAR</button>
+        <button class="btn btn-small" onclick="this.closest('.help-overlay').remove();">CANCEL</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
 }
 
 function renderSetup() {

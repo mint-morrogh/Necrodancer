@@ -43,7 +43,15 @@ Constraints that force unusual creative decisions. 600+ total curses across four
 112 mandatory audio effects with a randomized wet percentage. The dungeon might demand Reverb (Hall) at 73% or Bitcrusher at 42%. Organized across categories: reverbs, delays, modulation, distortion, compression, and 65+ creative effects (vocoder, granular, spectral, lo-fi, physical modeling, and more). Each effect has a hover tooltip with plugin recommendations and DAW-specific tips.
 
 ### Blessings
-38 positive effects that grant creative freedom, protection from curses, bonus rerolls, or rule-breaking privileges. Examples include "Scroll of Silence" (zero constraints), "The Oracle's Favor" (choose your own track type), and "Divine Intervention" (swap a curse for a blessing).
+40+ positive effects that grant creative freedom, protection from curses, bonus rerolls, or rule-breaking privileges. Many blessings have real mechanical effects:
+- **The Spirits Favor You** — Sets all effect wet ranges to 1-100% (full freedom)
+- **Enchanter's Freedom** — Effect bars become adjustable sliders you can drag to set your own range
+- **Ancient Knowledge** — First reroll in this room is free (no token cost)
+- **Blessing of Clarity** — Actually removes all curses (shown with strikethrough)
+- **Divine Intervention** — Removes the first curse (shown with strikethrough)
+- **Spirit Walk** — Reveals all hidden node info on the map for the rest of the floor (future nodes normally show ???)
+- **Enchanted Ears** — Halves all effect wet percentages in the room
+- Other blessings grant creative permissions like choosing your own genre, track type, or key.
 
 ### Boss Encounters
 Boss rooms cap each floor with mix-level challenges:
@@ -58,14 +66,29 @@ Boss rooms cap each floor with mix-level challenges:
 - **Rare** (35%) — Streak Talisman, Completion Crown (+1 guaranteed reroll), Curse Ward, Divine Favor (+15% blessing chance), Quest Magnet, Alchemist's Key.
 - **Legendary** (10%) — Metronome of Mercy (first reroll each floor free), Crown of the Ancients (+25% score AND +10% reroll), Gambler's Coin (+50% gold AND +5% chest chance).
 
+### Skeleton Keys
+Completing a session earns a **Skeleton Key** — a persistent reward stored in your profile. During setup, you can spend a skeleton key to **choose your own key and scale** instead of rolling randomly. Once used, the key is consumed.
+
 ### Rerolls
-Earned by completing every task in a room before sealing it. A dice roll determines if you earn +1 reroll. Completing the optional bonus objective increases your odds. Spending a reroll in a room disqualifies you from Room Mastery. Rerolls can re-randomize a node's type, track, genre, effects, or curses on the dungeon map before entering.
+Earned by completing every task in a room before sealing it. A dice roll determines if you earn +1 reroll. Completing the optional bonus objective increases your odds. Spending a reroll in a room disqualifies you from Room Mastery. Rerolls can re-randomize a node's type, track, genre, sample type, effects, or curses on the dungeon map before entering. Rerolls never land on the current value — you're guaranteed something different.
 
 ### Room Mastery
 Complete all checklist tasks + the bonus objective + use zero rerolls in a room to achieve Room Mastery. This guarantees +1 reroll (no dice roll needed), awards +15 gold and +50 score.
 
-### Gold
-Earned by completing checklist items (genre: 5g, curse: 8g, effect: 4g, boss: 12g). Spent at Campfires to remove curses (15g, or 10g with Purifying Flame), shield rooms from curses (15g), buy rerolls (25g), or purchase relics (50g). Gold multiplier is reduced on Hard (0.7x) and Nightmare (0.5x).
+### Sealing Rooms
+You can seal a room once you've completed **all but one** of its tasks. To earn a reroll chance, complete every task before sealing. Side quests require 100% completion.
+
+### Curse Survivor
+Complete all curses in each of the **last 3 consecutive rooms** to earn a bonus +1 reroll. This is a streak-based reward — it resets if any room breaks the chain.
+
+### Gold & Campfire
+Earned by completing checklist items (genre: 5g, curse: 8g, effect: 4g, boss: 12g). Spent at Campfires to remove curses, buy shields, rerolls, or relics. Each campfire has **random stock** — shields (1-3), rerolls (1-3), and 1 relic available per visit. Items show "SOLD OUT" when depleted. Gold multiplier is reduced on Hard (0.7x) and Nightmare (0.5x).
+
+### Curse Shields
+Purchased at campfires (10g). When a shield blocks a curse, the curse is still **shown with strikethrough** text so you can see what you avoided, marked "(removed — Curse Shield)".
+
+### Boss Entry
+You **cannot enter the boss room** with pending deferred curses or road event debts. The game blocks entry and tells you what needs completing first.
 
 ### Side Quests
 A random chance (5–10% depending on difficulty) the dungeon ignores the assigned track type and gives you a completely different instrument. Complete all tasks for 2 guaranteed rerolls, or skip with no penalty.
@@ -122,11 +145,12 @@ Hover tooltips throughout the game provide contextual information:
 - **Effects** — Plugin recommendations and DAW-specific tips for every effect.
 - **Genres** — BPM ranges, characteristics, and clickable Splice links.
 - **Track Types** — Production tips and Splice search suggestions.
-- **Map Nodes** — Preview curse count, effects, and blessings before entering.
+- **Map Nodes** — Reachable nodes show curse count, effects, and blessings. Future nodes show ??? until you reach them (or activate Spirit Walk).
+- **Reward Banners** — Hover over Completion Streak, Curse Survivor, and Double or Nothing for styled explanations.
 
 ## Scoring
 
-Earn score for completing checkboxes, clearing rooms, defeating bosses, and finishing side quests. Room Mastery awards a flat +50 bonus.
+Earn score for completing checkboxes, clearing rooms, defeating bosses, and finishing side quests. Room Mastery awards a flat +50 bonus. At session end, remaining rerolls grant a **reroll bonus** (rerolls × 10 × difficulty score multiplier). Challenge modifiers multiply your total score further.
 
 | | Easy | Normal | Hard | Nightmare |
 |---|---|---|---|---|
@@ -143,7 +167,7 @@ Earn score for completing checkboxes, clearing rooms, defeating bosses, and fini
 | Curse Chance | 8% | 22% | 55% | 80% |
 | Track Curse Chance | 2% | 8% | 25% | 45% |
 | Blessing Chance | 35% | 20% | 8% | 3% |
-| Effect Wet % Range | 5–30% | 5–50% | 20–100% | 40–100% |
+| Effect Wet % Range | 3–100% (±30) | 3–100% (±22) | 30–100% (±8) | 70–100% (±3) |
 | Boss Curse Count | 1 | 1–2 | 2–3 | 2–4 |
 | Starting Rerolls | 2 | 1 | 1 | 0 |
 | Gold Multiplier | 1.0x | 1.0x | 0.7x | 0.5x |
