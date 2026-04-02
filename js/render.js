@@ -33,20 +33,38 @@ function trackTip(name) {
 }
 
 function injectGenreTip(directive, genre, showReroll) {
-  const rerollIcon = showReroll
+  const rerollGenreIcon = showReroll
     ? `<button class="reroll-inline" onclick="rerollGenre()" title="Reroll genre (${state.rerolls} left)">↻</button>`
     : '';
+  const rerollSampleIcon = showReroll
+    ? `<button class="reroll-inline" onclick="rerollSampleType()" title="Reroll sample type (${state.rerolls} left)">↻</button>`
+    : '';
+
+  let result = directive;
+
+  // Inject sample type reroll (on the first gold span that ISN'T the genre)
+  if (state.currentRoom && state.currentRoom.sampleType) {
+    const sampleSpan = `<span style="color:var(--gold);">${state.currentRoom.sampleType}</span>`;
+    if (result.includes(sampleSpan)) {
+      result = result.replace(sampleSpan, sampleSpan + rerollSampleIcon);
+    }
+  }
+
+  // Inject genre tip + reroll
   if (!genre || typeof GENRE_DESCRIPTIONS === 'undefined' || !GENRE_DESCRIPTIONS[genre]) {
-    if (!showReroll) return directive;
-    return directive.replace(
+    if (showReroll) {
+      result = result.replace(
+        `<span style="color:var(--gold);">${genre}</span>`,
+        `<span style="color:var(--gold);">${genre}</span>${rerollGenreIcon}`
+      );
+    }
+  } else {
+    result = result.replace(
       `<span style="color:var(--gold);">${genre}</span>`,
-      `<span style="color:var(--gold);">${genre}</span>${rerollIcon}`
+      genreTip(genre) + rerollGenreIcon
     );
   }
-  return directive.replace(
-    `<span style="color:var(--gold);">${genre}</span>`,
-    genreTip(genre) + rerollIcon
-  );
+  return result;
 }
 
 function render() {
