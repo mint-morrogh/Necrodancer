@@ -191,7 +191,7 @@ function renderSetup() {
     <div id="setup-screen" class="screen active">
       <div class="setup-title">THE RITUAL BEGINS</div>
 
-      <div class="panel${step >= 2 ? ' setup-locked' : ''}" style="text-align:center;">
+      <div class="panel${step >= 2 ? ' setup-truly-locked' : ''}" style="text-align:center;">
         <div class="panel-header">Roll for Key & Scale</div>
         <div id="key-display" class="roll-display">${state.key ? `${state.key} ${state.scale}` : '? ? ?'}</div>
         ${!state.key ? `
@@ -205,11 +205,7 @@ function renderSetup() {
             </button>
           ` : ''}
         </div>
-        ` : `
-        <div style="margin-top:16px;">
-          <button class="btn btn-small" onclick="rollForKey()">RE-ROLL KEY</button>
-        </div>
-        `}
+        ` : ''}
       </div>
 
       ${step >= 2 ? `
@@ -218,10 +214,10 @@ function renderSetup() {
         <div class="setup-row">
           <span class="setup-label">BPM</span>
           <div class="bpm-wrapper">
-            <input type="number" class="bpm-input" id="bpm-input" value="${state.bpm}" min="40" max="300" onchange="state.bpm = parseInt(this.value) || 128; if(state.setupStep < 3){ state.setupStep = 3; renderSetup(); }">
+            <input type="number" class="bpm-input" id="bpm-input" value="${state.bpm}" min="40" max="300" onchange="var v=parseInt(this.value)||128; if(v<40||v>300){showBpmWarning();this.value=state.bpm;return;} state.bpm=v;">
             <div class="bpm-arrows">
-              <button class="bpm-arrow" onclick="adjustBpm(1); if(state.setupStep < 3){ state.setupStep = 3; renderSetup(); }">&#9650;</button>
-              <button class="bpm-arrow" onclick="adjustBpm(-1); if(state.setupStep < 3){ state.setupStep = 3; renderSetup(); }">&#9660;</button>
+              <button class="bpm-arrow" onclick="adjustBpm(1)">&#9650;</button>
+              <button class="bpm-arrow" onclick="adjustBpm(-1)">&#9660;</button>
             </div>
           </div>
         </div>
@@ -230,7 +226,7 @@ function renderSetup() {
         </div>
         ${step < 3 ? `
         <div style="margin-top:16px;">
-          <button class="btn btn-small" onclick="state.setupStep = 3; renderSetup();">CONFIRM TEMPO</button>
+          <button class="btn btn-small" onclick="var v=parseInt(document.getElementById('bpm-input').value)||128; if(v<40||v>300){showBpmWarning();return;} state.bpm=v; state.setupStep=3; renderSetup();">CONFIRM TEMPO</button>
         </div>
         ` : ''}
       </div>
@@ -245,12 +241,12 @@ function renderSetup() {
             <span class="source-label-splice">SPLICE</span>
           </div>
           <input type="range" class="source-slider" id="source-slider" min="0" max="100" value="${state.spliceRatio}"
-            oninput="state.spliceRatio=parseInt(this.value); document.getElementById('source-value').textContent=this.value+'% Splice / '+(100-this.value)+'% Production';">
+            oninput="state.spliceRatio=parseInt(this.value); document.getElementById('source-value').textContent=this.value+'% Splice / '+(100-this.value)+'% Production'; document.getElementById('source-desc').textContent=this.value==='100'?'All rooms use Splice samples \u2014 the classic experience':this.value==='0'?'All rooms are production-based \u2014 create sounds with VSTs and synths':'Each room randomly picks between Splice samples and production with VSTs/synths';">
           <div class="source-slider-value" id="source-value">${state.spliceRatio}% Splice / ${100 - state.spliceRatio}% Production</div>
         </div>
-        <div style="color:var(--dim); font-size:14px; margin-top:10px; max-width:450px; margin-left:auto; margin-right:auto; line-height:1.5;">
-          ${state.spliceRatio === 100 ? 'All rooms use Splice samples — the classic experience'
-            : state.spliceRatio === 0 ? 'All rooms are production-based — create sounds with VSTs and synths'
+        <div id="source-desc" style="color:var(--dim); font-size:14px; margin-top:10px; max-width:450px; margin-left:auto; margin-right:auto; line-height:1.5;">
+          ${state.spliceRatio === 100 ? 'All rooms use Splice samples \u2014 the classic experience'
+            : state.spliceRatio === 0 ? 'All rooms are production-based \u2014 create sounds with VSTs and synths'
             : 'Each room randomly picks between Splice samples and production with VSTs/synths'}
         </div>
         ${step < 4 ? `

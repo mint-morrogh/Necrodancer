@@ -262,6 +262,11 @@
 .setup-locked:focus-within {
   opacity: 1;
 }
+.setup-truly-locked {
+  opacity: 0.55;
+  pointer-events: none;
+  user-select: none;
+}
 @keyframes stepReveal {
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
@@ -519,8 +524,10 @@
 .track-select {
   font-family: var(--font-pixel); font-size: 13px; background: var(--bg);
   border: 2px solid var(--border); color: var(--text); padding: 10px 16px;
-  width: 100%; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; text-align: center;
+  width: 100%; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none;
+  text-align: center; text-align-last: center;
 }
+.track-select option { text-align: center; }
 .track-select:focus { border-color: var(--gold-dim); }
 
 /* ========== ROOM DISPLAY ========== */

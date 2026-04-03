@@ -139,8 +139,25 @@ function getTodaySeed() {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
+function showBpmWarning() {
+  const overlay = document.createElement('div');
+  overlay.className = 'help-overlay';
+  overlay.innerHTML = `
+    <div class="panel" style="max-width:340px; text-align:center; padding:32px 28px;">
+      <div style="font-family:var(--font-pixel); font-size:12px; color:var(--orange); letter-spacing:2px; margin-bottom:16px;">INVALID TEMPO</div>
+      <div style="color:var(--dim); font-size:15px; margin-bottom:24px; line-height:1.5;">Please select a tempo between 40 and 300 BPM.</div>
+      <button class="btn btn-small" onclick="this.closest('.help-overlay').remove();">OK</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
 function startDungeon() {
   state.bpm = parseInt(document.getElementById('bpm-input')?.value) || state.bpm;
+  if (state.bpm < 40 || state.bpm > 300) {
+    showBpmWarning();
+    return;
+  }
   const seedInput = document.getElementById('seed-input');
   const seed = seedInput ? seedInput.value.trim() || getTodaySeed() : getTodaySeed();
   state.seed = seed;
