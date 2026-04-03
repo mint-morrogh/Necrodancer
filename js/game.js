@@ -1990,10 +1990,15 @@ function rerollEffect(index) {
   }
 
   effect.name = effName;
-  const center = roll(...diff().effectRange);
+  let center = roll(...diff().effectRange);
+  if (hasRelic('dampening_orb')) center = Math.max(5, center - 15);
   const tol = diff().effectTolerance;
   effect.min = Math.max(3, center - tol);
   effect.max = Math.min(100, center + tol);
+  if (hasRelic('echo_crystal')) {
+    effect.max = Math.min(effect.max, 60);
+    effect.min = Math.min(effect.min, effect.max);
+  }
 
   // Update matching checklist entry
   const clEntry = room.checklist.find(c => c.id === 'fx-' + index);

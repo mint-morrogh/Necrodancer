@@ -205,7 +205,11 @@ function renderSetup() {
             </button>
           ` : ''}
         </div>
-        ` : ''}
+        ` : `
+        <div style="margin-top:16px;">
+          <button class="btn btn-small" onclick="rollForKey()">RE-ROLL KEY</button>
+        </div>
+        `}
       </div>
 
       ${step >= 2 ? `
@@ -222,7 +226,7 @@ function renderSetup() {
           </div>
         </div>
         <div style="color:var(--dim); font-size:15px; margin-top:8px;">
-          40 – 300 BPM · Choose your battlefield
+          40 \u2013 300 BPM \u00B7 Choose your battlefield
         </div>
         ${step < 3 ? `
         <div style="margin-top:16px;">
@@ -256,6 +260,7 @@ function renderSetup() {
         ` : ''}
       </div>
       ` : ''}
+
 
       ${step >= 4 ? `
       <div class="panel${step === 4 ? ' setup-step' : ''}${step > 4 ? ' setup-locked' : ''}" style="text-align:center;">
@@ -323,7 +328,7 @@ function renderSetup() {
       ` : ''}
 
       ${step >= seedStep ? `
-        <div${step === seedStep ? ' class="setup-step"' : ''} style="text-align:center; margin-top:24px;">
+        <div${step === seedStep ? ' class="setup-step"' : ''} style="text-align:center; margin-top:24px; padding-bottom:40px;">
           <button class="btn" onclick="startDungeon()">DESCEND INTO THE DUNGEON</button>
         </div>
       ` : ''}
@@ -897,8 +902,8 @@ function renderTransition() {
         <div class="spell-display"></div>
       </div>
 
-      <div id="roll-info" class="roll-info">
-        <div class="roll-info-row"><span class="roll-info-label">SUCCESS</span><span class="roll-info-value" style="color:var(--green);">${td.rollTarget}+</span></div>
+      <div id="roll-info" class="roll-info" style="text-align:center;">
+        <span class="roll-info-label">SUCCESS</span> <span class="roll-info-value" style="color:var(--green);">${td.rollTarget}+</span>
       </div>
 
       <div id="transition-result" class="transition-result" style="display:none;"></div>

@@ -256,8 +256,11 @@
 .setup-step { animation: stepReveal 0.4s ease-out; }
 .setup-locked {
   opacity: 0.55;
-  pointer-events: none;
-  user-select: none;
+  transition: opacity 0.3s;
+}
+.setup-locked:hover,
+.setup-locked:focus-within {
+  opacity: 1;
 }
 @keyframes stepReveal {
   from { opacity: 0; transform: translateY(16px); }
@@ -1139,15 +1142,12 @@
   font-size: 9px;
   color: var(--dim);
   letter-spacing: 2px;
-  min-width: 75px;
-  text-align: right;
 }
 .roll-info-value {
   font-family: var(--font-pixel);
   font-size: 9px;
   letter-spacing: 2px;
-  min-width: 75px;
-  text-align: left;
+  margin-left: 6px;
 }
 .transition-result {
   font-family: var(--font-pixel);

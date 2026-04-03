@@ -298,13 +298,16 @@ function generateRoom(trackType, opts = {}) {
     }
 
     let center = roll(...diff().effectRange);
-    // Relic: Echo Crystal — cap effect % at 60
-    if (hasRelic('echo_crystal')) center = Math.min(center, 60);
     // Relic: Dampening Orb — reduce effect % by 15
     if (hasRelic('dampening_orb')) center = Math.max(5, center - 15);
     const tol = diff().effectTolerance;
-    const pctMin = Math.max(3, center - tol);
-    const pctMax = Math.min(100, center + tol);
+    let pctMin = Math.max(3, center - tol);
+    let pctMax = Math.min(100, center + tol);
+    // Relic: Echo Crystal — cap effect % at 60
+    if (hasRelic('echo_crystal')) {
+      pctMax = Math.min(pctMax, 60);
+      pctMin = Math.min(pctMin, pctMax);
+    }
     effects.push({ name: effName, min: pctMin, max: pctMax });
   }
 
