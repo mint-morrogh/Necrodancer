@@ -614,13 +614,7 @@ function toggleDeferred(index) {
     curses[index].classList.toggle('resolved', done);
   }
 
-  // Update quest log toggle button pulse
-  const toggle = document.getElementById('log-toggle');
-  if (toggle) {
-    const hasPending = state.deferredCurses.some(c => !c.completed) ||
-      (state.acceptedEvents && state.acceptedEvents.some(e => e.cost && !e.completed));
-    toggle.classList.toggle('has-curses', hasPending);
-  }
+  updatePendingUI();
   saveGame();
 }
 
@@ -649,14 +643,39 @@ function toggleEventDebt(index) {
     debtEntries[index].classList.toggle('resolved', done);
   }
 
+  updatePendingUI();
+  saveGame();
+}
+
+function updatePendingUI() {
+  const pendingDeferred = state.deferredCurses.filter(c => !c.completed).length;
+  const pendingDebts = (state.acceptedEvents || []).filter(e => e.cost && !e.completed).length;
+  const totalPending = pendingDeferred + pendingDebts;
+
   // Update quest log toggle button pulse
   const toggle = document.getElementById('log-toggle');
   if (toggle) {
-    const hasPending = state.deferredCurses.some(c => !c.completed) ||
-      state.acceptedEvents.some(e => e.cost && !e.completed);
-    toggle.classList.toggle('has-curses', hasPending);
+    toggle.classList.toggle('has-curses', totalPending > 0);
   }
-  saveGame();
+
+  // Update or remove the reminder banner in the room view
+  const reminder = document.querySelector('.pending-reminder');
+  if (reminder) {
+    if (totalPending === 0) {
+      reminder.remove();
+    } else {
+      const parts = [];
+      if (pendingDeferred > 0) parts.push(`${pendingDeferred} deferred curse${pendingDeferred > 1 ? 's' : ''}`);
+      if (pendingDebts > 0) parts.push(`${pendingDebts} road event debt${pendingDebts > 1 ? 's' : ''}`);
+      reminder.textContent = `Reminder: You have ${parts.join(' and ')} in your quest log.`;
+    }
+  }
+
+  // Also update the boss warning if present
+  const warning = document.querySelector('.deferred-warning');
+  if (warning && !warning.textContent.includes('applied') && totalPending === 0) {
+    warning.remove();
+  }
 }
 
 // ════════════════════════════════════════════════════════
