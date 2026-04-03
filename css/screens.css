@@ -473,7 +473,8 @@
   border-top-left-radius: 4px;
 }
 .rules-btn-fixed,
-.profile-btn-fixed {
+.profile-btn-fixed,
+.forfeit-btn-fixed {
   font-family: var(--font-pixel);
   font-size: 10px;
   color: var(--dim);
@@ -486,8 +487,8 @@
 }
 .rules-btn-fixed:hover { color: var(--gold); border-color: var(--gold-dim); }
 .profile-btn-fixed:hover { color: var(--purple); border-color: var(--purple-dim); }
-.forfeit-btn-fixed { color: var(--red); border-color: rgba(192,57,43,0.4); }
-.forfeit-btn-fixed:hover { color: var(--red); border-color: var(--red); background: rgba(192,57,43,0.1); }
+.forfeit-btn-fixed { color: var(--red); }
+.forfeit-btn-fixed:hover { color: var(--red); border-color: var(--red); }
 .profile-badge {
   font-family: var(--font-pixel);
   font-size: 8px;
