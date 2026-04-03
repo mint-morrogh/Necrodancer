@@ -497,6 +497,8 @@ function goldForType(type) {
 
 function toggleCheck(index) {
   if (!state.currentRoom) return;
+  // Don't toggle checklist while a tooltip is open on mobile
+  if (_activeInfoTip) return;
   const item = state.currentRoom.checklist[index];
   item.completed = !item.completed;
 
@@ -587,6 +589,7 @@ function updateRoomNotes(value) {
 
 function toggleBonus() {
   if (!state.currentRoom) return;
+  if (_activeInfoTip) return;
   state.currentRoom.bonusCompleted = !state.currentRoom.bonusCompleted;
   const done = state.currentRoom.bonusCompleted;
 
