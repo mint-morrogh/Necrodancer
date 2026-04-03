@@ -586,6 +586,15 @@
   color: var(--dim);
   letter-spacing: 2px;
   margin-bottom: 8px;
+  line-height: 1.6;
+}
+.room-notes-hint {
+  font-family: var(--font-medieval);
+  font-size: 9px;
+  color: var(--dim);
+  font-style: italic;
+  letter-spacing: 0;
+  opacity: 0.6;
 }
 .room-notes-input {
   width: 100%;

@@ -764,7 +764,7 @@ function renderRoomActive(room) {
 
       <!-- Room Notes -->
       <div class="room-notes-section">
-        <div class="room-notes-label">Notes <span style="font-family:inherit; font-size:12px; color:var(--dim); font-style:italic; letter-spacing:0;">— optional, saved to your beat sheet</span></div>
+        <div class="room-notes-label">Notes <span class="room-notes-hint">\u2014 optional, saved to your beat sheet</span></div>
         <textarea class="room-notes-input" id="room-notes" placeholder="What did you use? Sample names, patch names, ideas..." oninput="updateRoomNotes(this.value)">${room.notes || ''}</textarea>
       </div>
 
