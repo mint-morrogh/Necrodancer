@@ -87,6 +87,7 @@ function render() {
       el.classList.add('enter');
       el.addEventListener('animationend', () => el.classList.remove('enter'), { once: true });
     }
+    window.scrollTo(0, 0);
   }
 }
 
