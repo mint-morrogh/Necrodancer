@@ -145,14 +145,14 @@ const BOSS_CURSES_NIGHTMARE = [
 
 // ── BOSS BLESSINGS (powerful rewards) ────────────────
 const BOSS_BLESSINGS = [
-  '☀ Conqueror\'s Might — gain +3 reroll tokens for defeating the boss',
-  '☀ Warlord\'s Shield — the next 2 rooms cannot be cursed',
-  '☀ Plunderer\'s Bounty — remove ALL deferred curses currently in your quest log',
-  '☀ Champion\'s Freedom — your next room has zero constraints of any kind',
-  '☀ Titan\'s Echo — duplicate any completed room\'s element for free layering',
-  '☀ Overlord\'s Decree — choose your exact genre and track type for the next room',
-  '☀ Victor\'s Spoils — gain immunity to next-room curses for 3 rooms',
-  '☀ Battle Hymn — your next track gets a guaranteed blessing with no curse',
-  '☀ Dragon\'s Hoard — all gold earned is doubled for the next 3 rooms',
-  '☀ Necrolord\'s Pact — automatically sacrifices 1 reroll token to clear up to 2 deferred curses from your quest log (only triggers if you have both)'
+  'Conqueror\'s Might \u2014 gain +3 reroll tokens for defeating the boss',
+  'Warlord\'s Shield \u2014 the next 2 rooms cannot be cursed',
+  'Plunderer\'s Bounty \u2014 remove ALL deferred curses currently in your quest log',
+  'Champion\'s Freedom \u2014 your next room has zero constraints of any kind',
+  'Titan\'s Echo \u2014 duplicate any completed room\'s element for free layering',
+  'Overlord\'s Decree \u2014 choose your exact genre and track type for the next room',
+  'Victor\'s Spoils \u2014 gain immunity to next-room curses for 3 rooms',
+  'Battle Hymn \u2014 your next track gets a guaranteed blessing with no curse',
+  'Dragon\'s Hoard \u2014 all gold earned is doubled for the next 3 rooms',
+  'Necrolord\'s Pact \u2014 automatically sacrifices 1 reroll token to clear up to 2 deferred curses from your quest log (only triggers if you have both)'
 ];

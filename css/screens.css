@@ -453,37 +453,34 @@
 .song-info-item span { color: var(--gold); margin-left: 6px; }
 .song-info-divider { width: 2px; height: 20px; background: var(--border-light); flex-shrink: 0; opacity: 0.6; }
 .reroll-count { color: var(--purple) !important; }
-.rules-btn-fixed {
-  font-family: var(--font-pixel);
-  font-size: 10px;
-  color: var(--dim);
-  background: var(--panel);
-  border: 1px solid var(--border);
-  padding: 4px 10px;
-  cursor: pointer;
-  letter-spacing: 1px;
-  transition: all 0.2s;
+/* ── Bottom bar (Rules + Profile) ── */
+.bottom-bar {
   position: fixed;
-  bottom: 16px;
-  right: 16px;
+  bottom: 0;
+  right: 0;
   z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  border-top-left-radius: 4px;
 }
-.rules-btn-fixed:hover { color: var(--gold); border-color: var(--gold-dim); }
+.rules-btn-fixed,
 .profile-btn-fixed {
   font-family: var(--font-pixel);
   font-size: 10px;
   color: var(--dim);
-  background: var(--panel);
+  background: transparent;
   border: 1px solid var(--border);
   padding: 4px 10px;
   cursor: pointer;
   letter-spacing: 1px;
   transition: all 0.2s;
-  position: fixed;
-  bottom: 16px;
-  right: 130px;
-  z-index: 90;
 }
+.rules-btn-fixed:hover { color: var(--gold); border-color: var(--gold-dim); }
 .profile-btn-fixed:hover { color: var(--purple); border-color: var(--purple-dim); }
 .profile-badge {
   font-family: var(--font-pixel);
@@ -529,7 +526,7 @@
 .result-text { font-size: 19px; line-height: 1.8; padding: 10px 0; }
 .result-text.curse-text { color: var(--red-glow); }
 .result-text.effect-text { color: var(--blue); }
-.result-text.blessing-text { color: var(--green); }
+.result-text.blessing-text { color: var(--green); text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 4px; text-decoration-color: rgba(39,174,96,0.4); }
 .result-text.genre-text { color: var(--teal); }
 
 .effect-bar { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
@@ -785,7 +782,7 @@
 .log-entry-detail { color: var(--dim); font-size: 15px; line-height: 1.7; padding-left: 12px; margin-bottom: 4px; }
 .log-entry-detail.curse { color: rgba(192,57,43,0.7); }
 .log-entry-detail.effect { color: rgba(155,89,182,0.7); }
-.log-entry-detail.blessing { color: rgba(39,174,96,0.7); }
+.log-entry-detail.blessing { color: rgba(39,174,96,0.7); text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; text-decoration-color: rgba(39,174,96,0.3); }
 
 .pending-section { margin-top: 16px; }
 .pending-curse { color: var(--red); font-size: 16px; padding: 6px 0; border-bottom: 1px solid rgba(192,57,43,0.15); display: flex; align-items: flex-start; gap: 8px; animation: cursePulse 2s ease-in-out infinite; }
@@ -1291,6 +1288,40 @@
   border-top-color: transparent;
   border-bottom-color: var(--border-light);
 }
+/* Mobile: show tooltip via JS-toggled class instead of hover */
+.info-tip.info-tip-active .info-tip-content {
+  display: block;
+  pointer-events: auto;
+}
+/* "Go to Splice" link inside tooltip (mobile only) */
+.genre-splice-link {
+  display: block;
+  margin-top: 10px;
+  padding: 6px 12px;
+  text-align: center;
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--gold);
+  border-radius: 3px;
+  text-decoration: none;
+  animation: splice-glow 2s ease-in-out infinite;
+}
+.genre-splice-link:hover {
+  background: var(--teal);
+}
+@keyframes splice-glow {
+  0%, 100% { box-shadow: 0 0 6px rgba(212, 175, 55, 0.4); }
+  50% { box-shadow: 0 0 14px rgba(212, 175, 55, 0.8); }
+}
+/* Show/hide helpers for desktop vs mobile */
+.mobile-only { display: none; }
+@media (hover: none) {
+  .desktop-only { display: none !important; }
+  .mobile-only { display: block !important; }
+}
 @media (max-width: 600px) {
   .info-tip-content {
     min-width: 220px;
@@ -1772,8 +1803,9 @@
   .log-entry-header { font-size: 10px; }
   .log-entry-detail { font-size: 14px; }
 
-  /* Rules button */
-  .rules-btn-fixed { bottom: 12px; right: 12px; font-size: 9px; padding: 4px 8px; }
+  /* Bottom bar */
+  .bottom-bar { padding: 8px 12px; }
+  .rules-btn-fixed, .profile-btn-fixed { font-size: 9px; padding: 4px 8px; }
 }
 
 @media (max-width: 600px) {
@@ -1874,8 +1906,8 @@
   .log-entry { font-size: 14px; }
   .log-entry-detail { font-size: 13px; padding-left: 8px; }
 
-  /* Rules button */
-  .rules-btn-fixed { bottom: 8px; right: 8px; }
+  /* Bottom bar */
+  .bottom-bar { padding: 6px 8px; gap: 6px; }
 }
 
 @media (max-width: 400px) {

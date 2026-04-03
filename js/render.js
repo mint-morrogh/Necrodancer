@@ -23,7 +23,7 @@ function genreTip(name) {
   const spliceUrl = genreSpliceUrl(name);
   const info = typeof GENRE_DESCRIPTIONS !== 'undefined' && GENRE_DESCRIPTIONS[name];
   if (!info) return `<a href="${spliceUrl}" target="_blank" rel="noopener" class="genre-link" style="color:var(--gold);">${name}</a>`;
-  return `<span class="info-tip" style="color:var(--gold);"><a href="${spliceUrl}" target="_blank" rel="noopener" class="genre-link">${name}</a><span class="info-tip-content info-tip-genre"><div class="info-tip-title">${name}</div><div class="info-tip-desc">${info.desc}</div><div class="info-tip-field"><strong>BPM Range:</strong> ${info.bpm}</div><div class="info-tip-field"><strong>Characteristics:</strong> ${info.traits}</div><div class="info-tip-field genre-splice-hint">Click genre name to browse on Splice</div></span></span>`;
+  return `<span class="info-tip" style="color:var(--gold);"><a href="${spliceUrl}" target="_blank" rel="noopener" class="genre-link">${name}</a><span class="info-tip-content info-tip-genre"><div class="info-tip-title">${name}</div><div class="info-tip-desc">${info.desc}</div><div class="info-tip-field"><strong>BPM Range:</strong> ${info.bpm}</div><div class="info-tip-field"><strong>Characteristics:</strong> ${info.traits}</div><div class="info-tip-field genre-splice-hint desktop-only">Click genre name to browse on Splice</div><a href="${spliceUrl}" target="_blank" rel="noopener" class="genre-splice-link mobile-only">Go to Splice →</a></span></span>`;
 }
 
 function trackTip(name) {
@@ -372,8 +372,10 @@ function renderDungeon() {
           ${state.shieldNextRoom > 0 ? `<div class="song-info-item" style="color:var(--green)">SHIELD x${state.shieldNextRoom}</div>` : ''}
           ${state.challengeMods && state.challengeMods.length > 0 ? `<div class="song-info-item" style="color:var(--orange);">CHALLENGE x${challengeScoreMult().toFixed(1)}</div>` : ''}
         </div>
-        <button class="rules-btn-fixed" onclick="showHelp()">? RULES</button>
-        <button class="profile-btn-fixed" onclick="showProfile()">PROFILE</button>
+        <div class="bottom-bar">
+          <button class="profile-btn-fixed" onclick="showProfile()">PROFILE</button>
+          <button class="rules-btn-fixed" onclick="showHelp()">? RULES</button>
+        </div>
 
         <div class="room-main">
           ${mainContent}

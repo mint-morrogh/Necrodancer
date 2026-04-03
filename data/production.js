@@ -367,17 +367,17 @@ const PRODUCTION_FLAVOR = {
 // ── MODE-SPECIFIC BLESSINGS ─────────────────────────────
 
 const BLESSINGS_PRODUCTION = [
-  '☀ The spirits grant you Preset Freedom — you may use any preset as a starting point instead of designing from scratch',
-  '☀ Patch Memory — you may reuse a patch you designed in a previous production room',
-  '☀ The spirits simplify your task — use any single synth plugin for everything in this room',
-  '☀ Layering License — stack as many synth layers as you want with no restrictions'
+  'The spirits grant you Preset Freedom \u2014 you may use any preset as a starting point instead of designing from scratch',
+  'Patch Memory \u2014 you may reuse a patch you designed in a previous production room',
+  'The spirits simplify your task \u2014 use any single synth plugin for everything in this room',
+  'Layering License \u2014 stack as many synth layers as you want with no restrictions'
 ];
 
 const BLESSINGS_SPLICE = [
-  '☀ Genre Unlock — search any genre on Splice for this room, ignoring the assigned genre',
-  '☀ Sample Freedom — use any sample type from Splice, not just the one assigned',
-  '☀ Double Dip — use samples from two different genres on Splice for this room',
-  '☀ The spirits expand your search — use Splice tags and genres interchangeably'
+  'Genre Unlock \u2014 search any genre on Splice for this room, ignoring the assigned genre',
+  'Sample Freedom \u2014 use any sample type from Splice, not just the one assigned',
+  'Double Dip \u2014 use samples from two different genres on Splice for this room',
+  'The spirits expand your search \u2014 use Splice tags and genres interchangeably'
 ];
 
 
@@ -413,7 +413,6 @@ const RELICS_PRODUCTION = [
     id: 'oscillator_core',
     name: 'Oscillator Core',
     tier: 'common',
-    icon: '\u223F',
     description: 'Production rooms: max effect count reduced by 1',
     effectType: 'production_effect_reduction',
     mode: 'production'
@@ -422,7 +421,6 @@ const RELICS_PRODUCTION = [
     id: 'patch_grimoire',
     name: 'Patch Grimoire',
     tier: 'common',
-    icon: '\uD83D\uDCD6',
     description: 'Production rooms: +20% blessing chance',
     effectType: 'production_blessing_boost',
     mode: 'production'
@@ -431,7 +429,6 @@ const RELICS_PRODUCTION = [
     id: 'circuit_breaker',
     name: 'Circuit Breaker',
     tier: 'rare',
-    icon: '\u26A1',
     description: 'Production rooms: block the first curse each floor',
     effectType: 'production_curse_block',
     mode: 'production'
@@ -443,7 +440,6 @@ const RELICS_SPLICE = [
     id: 'splice_compass',
     name: 'Splice Compass',
     tier: 'common',
-    icon: '\uD83E\uDDED',
     description: 'Splice rooms: genre is always an official Splice genre (not a tag)',
     effectType: 'splice_genre_guarantee',
     mode: 'splice'
@@ -452,7 +448,6 @@ const RELICS_SPLICE = [
     id: 'sample_magnet',
     name: 'Sample Magnet',
     tier: 'common',
-    icon: '\uD83E\uDDF2',
     description: 'Splice rooms: +20% blessing chance',
     effectType: 'splice_blessing_boost',
     mode: 'splice'
@@ -461,7 +456,6 @@ const RELICS_SPLICE = [
     id: 'curators_eye',
     name: "Curator's Eye",
     tier: 'rare',
-    icon: '\uD83D\uDC41\uFE0F',
     description: 'Splice rooms: block the first curse each floor',
     effectType: 'splice_curse_block',
     mode: 'splice'

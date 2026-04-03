@@ -1722,7 +1722,7 @@ function generateBeatSheet() {
     sheet += `${'─'.repeat(44)}\n`;
     for (const id of state.relics) {
       const r = getRelic(id);
-      if (r) sheet += `${r.icon} ${r.name} — ${r.description}\n`;
+      if (r) sheet += `${r.name} \u2014 ${r.description}\n`;
     }
     sheet += `\n`;
   }
@@ -1954,9 +1954,60 @@ document.addEventListener('mouseenter', (e) => {
 }, true);
 
 // ════════════════════════════════════════════════════════
-// MOBILE: tap-to-preview map nodes
+// MOBILE: tap-to-preview info-tip tooltips (genres, effects, etc.)
 // ════════════════════════════════════════════════════════
 const isTouchDevice = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+let _activeInfoTip = null;
+
+function dismissActiveInfoTip() {
+  if (_activeInfoTip) {
+    _activeInfoTip.classList.remove('info-tip-active');
+    _activeInfoTip = null;
+  }
+}
+
+document.addEventListener('click', (e) => {
+  if (!isTouchDevice()) return;
+
+  const infoTip = e.target.closest('.info-tip');
+
+  // Clicked inside the tooltip content itself (e.g. the Splice link) — let it through
+  if (e.target.closest('.info-tip-content')) return;
+
+  if (infoTip) {
+    // If this tooltip is already active, dismiss it
+    if (infoTip === _activeInfoTip) {
+      e.preventDefault();
+      dismissActiveInfoTip();
+      return;
+    }
+
+    // Block the link navigation, show tooltip instead
+    e.preventDefault();
+    dismissActiveInfoTip();
+    infoTip.classList.add('info-tip-active');
+    _activeInfoTip = infoTip;
+
+    // Reposition tooltip if it overflows
+    const tip = infoTip.querySelector('.info-tip-content');
+    if (tip) {
+      tip.classList.remove('tip-below', 'tip-left', 'tip-right');
+      const rect = tip.getBoundingClientRect();
+      if (rect.top < 0) tip.classList.add('tip-below');
+      if (rect.left < 0) tip.classList.add('tip-left');
+      else if (rect.right > window.innerWidth) tip.classList.add('tip-right');
+    }
+    return;
+  }
+
+  // Tapped elsewhere — dismiss info tooltip
+  dismissActiveInfoTip();
+}, true);
+
+// ════════════════════════════════════════════════════════
+// MOBILE: tap-to-preview map nodes
+// ════════════════════════════════════════════════════════
 
 let _activeTooltipNode = null;
 
