@@ -1094,7 +1094,7 @@ function renderFloorComplete() {
         </div>
       </div>
 
-      <div style="display:flex; gap:16px; justify-content:center; margin-top:32px; flex-wrap:wrap;">
+      <div class="btn-row" style="justify-content:center; margin-top:32px;">
         <button class="btn" style="border-color:var(--gold); color:var(--gold);" onclick="nextFloor()">DELVE DEEPER</button>
         <button class="btn btn-green" onclick="endSession()">COMPLETE SESSION</button>
       </div>
@@ -1149,7 +1149,7 @@ function renderRoadEvent() {
         </div>
       </div>
 
-      <div style="display:flex; gap:12px; justify-content:center; margin-top:24px;">
+      <div class="btn-row" style="justify-content:center; margin-top:24px;">
         <button class="btn btn-green" onclick="acceptRoadEvent()">ACCEPT THE DEAL</button>
         <button class="btn" onclick="declineRoadEvent()">DECLINE AND MOVE ON</button>
       </div>
@@ -1227,7 +1227,7 @@ function renderAmbush() {
             </div>
           </div>
 
-          <div style="display:flex; gap:12px; justify-content:center; margin-top:24px;">
+          <div class="btn-row" style="justify-content:center; margin-top:24px;">
             <button class="btn btn-green" onclick="completeAmbush()" ${ad.taskCompleted ? '' : 'disabled style="opacity:0.3; cursor:not-allowed; pointer-events:none;"'}>TASK COMPLETE — DEFEND TRACK</button>
             <button class="btn" onclick="failAmbush()" style="border-color:var(--red); color:var(--red);">FORFEIT TRACK</button>
           </div>
