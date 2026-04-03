@@ -2037,10 +2037,12 @@ document.addEventListener('click', (e) => {
   if (mapNode) {
     const isReachable = mapNode.classList.contains('reachable');
 
-    // If this node already has tooltip showing and is reachable, enter the room
-    if (mapNode === _activeTooltipNode && isReachable) {
+    // If this node already has tooltip showing, dismiss it
+    // (on mobile, user must tap the "Enter Room" button inside the tooltip)
+    if (mapNode === _activeTooltipNode) {
+      e.preventDefault();
       dismissActiveTooltip();
-      return; // let the onclick="enterNodeFromMap()" fire
+      return;
     }
 
     // Otherwise, show tooltip and block navigation
