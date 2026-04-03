@@ -329,6 +329,12 @@ function renderSetup() {
       ` : ''}
     </div>
   `;
+
+  // Scroll the newest step into view
+  requestAnimationFrame(() => {
+    const latest = document.querySelector('.setup-step');
+    if (latest) latest.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
 }
 
 function renderDungeon() {
