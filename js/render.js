@@ -1343,8 +1343,8 @@ function renderSessionLog() {
       <div class="pending-section">
         <div class="panel-header" style="color:var(--red);">Deferred Curses</div>
         ${state.deferredCurses.map((c, i) => `
-          <div class="pending-curse ${c.completed ? 'resolved' : ''}">
-            <div class="check-box ${c.completed ? 'checked' : ''}" onclick="toggleDeferred(${i})">${c.completed ? '✓' : ''}</div>
+          <div class="pending-curse ${c.completed ? 'resolved' : ''}" onclick="toggleDeferred(${i})">
+            <div class="check-box ${c.completed ? 'checked' : ''}">${c.completed ? '\u2713' : ''}</div>
             <span class="pending-text ${c.completed ? 'done' : ''}">${c.text} <span style="opacity:0.4;">(Room #${c.fromRoom})</span></span>
           </div>
         `).join('')}
@@ -1357,8 +1357,8 @@ function renderSessionLog() {
       <div class="pending-section">
         <div class="panel-header" style="color:var(--orange);">Road Event Debts</div>
         ${state.acceptedEvents.filter(e => e.cost).map((ev, i) => `
-          <div class="pending-curse ${ev.completed ? 'resolved' : ''}">
-            <div class="check-box ${ev.completed ? 'checked' : ''}" onclick="toggleEventDebt(${i})">${ev.completed ? '\u2713' : ''}</div>
+          <div class="pending-curse ${ev.completed ? 'resolved' : ''}" onclick="toggleEventDebt(${i})">
+            <div class="check-box ${ev.completed ? 'checked' : ''}">${ev.completed ? '\u2713' : ''}</div>
             <span class="pending-text ${ev.completed ? 'done' : ''}">${ev.cost} <span style="opacity:0.4;">(${ev.name})</span></span>
           </div>
         `).join('')}

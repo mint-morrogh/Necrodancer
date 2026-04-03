@@ -785,9 +785,9 @@
 .log-entry-detail.blessing { color: rgba(39,174,96,0.7); text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; text-decoration-color: rgba(39,174,96,0.3); }
 
 .pending-section { margin-top: 16px; }
-.pending-curse { color: var(--red); font-size: 16px; padding: 6px 0; border-bottom: 1px solid rgba(192,57,43,0.15); display: flex; align-items: flex-start; gap: 8px; animation: cursePulse 2s ease-in-out infinite; }
+.pending-curse { color: var(--red); font-size: 16px; padding: 6px 8px; border-bottom: 1px solid rgba(192,57,43,0.15); display: flex; align-items: flex-start; gap: 10px; animation: cursePulse 2s ease-in-out infinite; cursor: pointer; }
 .pending-curse.resolved { animation: none; }
-.pending-curse .check-box { width: 16px; height: 16px; border-color: var(--red); font-size: 10px; cursor: pointer; }
+.pending-curse .check-box { width: 16px; height: 16px; border-color: var(--red); font-size: 10px; pointer-events: none; }
 .pending-curse .check-box.checked { background: rgba(192,57,43,0.15); }
 .pending-text.done { text-decoration: line-through; color: var(--dim); }
 
