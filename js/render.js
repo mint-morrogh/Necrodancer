@@ -374,7 +374,8 @@ function renderDungeon() {
         </div>
         <div class="bottom-bar">
           <button class="profile-btn-fixed" onclick="showProfile()">PROFILE</button>
-          <button class="rules-btn-fixed" onclick="showHelp()">? RULES</button>
+          <button class="rules-btn-fixed" onclick="showHelp()">RULES</button>
+          <button class="forfeit-btn-fixed" onclick="confirmForfeit()">FORFEIT</button>
         </div>
 
         <div class="room-main">

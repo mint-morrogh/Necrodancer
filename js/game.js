@@ -831,6 +831,10 @@ async function sealRoom() {
   const bossBlessing = isBoss ? state.currentRoom.blessing : null;
   if (isBoss) state.score += Math.round(d.scorePerBoss * d.scoreMultiplier * scoreMult);
 
+  // Track nat20/nat1 for achievements
+  if (rollValue === 20) state._nat20Rolled = true;
+  if (rollValue === 1) state._nat1Rolled = true;
+
   state.transitionData = {
     roomName: state.currentRoom.name,
     roomNumber: state.currentRoom.number,
@@ -1056,6 +1060,7 @@ async function doubleOrNothing() {
     resultEl.style.display = 'block';
     if (isNat20) {
       state.rerolls += 1;
+      state._donWins = (state._donWins || 0) + 1;
       resultEl.className = 'transition-result nat20-text';
       resultEl.innerHTML = 'CRITICAL SUCCESS! +2 REROLLS';
     } else if (isNat1) {
@@ -1063,15 +1068,18 @@ async function doubleOrNothing() {
       state.rerolls -= 1;
       if (state.rerolls > 0) state.rerolls -= 1;
       if (state.rerolls < 0) state.rerolls = 0;
+      state._donLost = true;
       resultEl.className = 'transition-result nat1-text';
       resultEl.innerHTML = 'CRITICAL FAILURE! REROLLS LOST';
     } else if (won) {
       state.rerolls += 1;
+      state._donWins = (state._donWins || 0) + 1;
       resultEl.className = 'transition-result earned';
       resultEl.innerHTML = 'SUCCESS! +2 REROLLS';
     } else {
       state.rerolls -= 1;
       if (state.rerolls < 0) state.rerolls = 0;
+      state._donLost = true;
       resultEl.className = 'transition-result denied';
       resultEl.innerHTML = 'FAILURE! REROLL LOST';
     }
@@ -1137,6 +1145,7 @@ function skipSideQuest() {
 function collectChest() {
   if (!state.chestData || state.chestData.collected) return;
   state.chestData.collected = true;
+  state._chestsOpened = (state._chestsOpened || 0) + 1;
 
   if (state.chestData.reward === 'reroll') {
     state.rerolls += 1;
@@ -1324,6 +1333,7 @@ function completeAmbush() {
 
   // Award gold for surviving the ambush
   state.gold += 15;
+  state._ambushesSurvived = (state._ambushesSurvived || 0) + 1;
 
   continueFromAmbush(ad.pendingRoom);
 }
@@ -1489,6 +1499,35 @@ function hideProfile() {
   document.getElementById('profile-overlay').style.display = 'none';
 }
 
+// ════════════════════════════════════════════════════════
+// BADGE CELEBRATION MODAL
+// ════════════════════════════════════════════════════════
+function showBadgeCelebration(badgeIds) {
+  const badges = badgeIds.map(id => ACHIEVEMENTS.find(a => a.id === id)).filter(Boolean);
+  if (badges.length === 0) return;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'badge-celebration-overlay';
+  overlay.innerHTML = `
+    <div class="badge-celebration-panel">
+      <div class="badge-celebration-header">
+        ${badges.length > 1 ? 'BADGES UNLOCKED' : 'BADGE UNLOCKED'}
+      </div>
+      <div class="badge-celebration-list">
+        ${badges.map(b => `
+          <div class="badge-celebration-item">
+            <div class="badge-celebration-icon"></div>
+            <div class="badge-celebration-name">${b.name}</div>
+            <div class="badge-celebration-desc">${b.desc}</div>
+          </div>
+        `).join('')}
+      </div>
+      <button class="btn" onclick="this.closest('.badge-celebration-overlay').remove()">CONTINUE</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
 function endSession() {
   clearSave();
   const totalRooms = state.rooms.length;
@@ -1505,7 +1544,12 @@ function endSession() {
   state.score += rerollBonus;
 
   // Update player profile and check achievements
-  updateProfileFromSession();
+  const { newBadges } = updateProfileFromSession();
+
+  // Show badge celebration if any new badges were earned
+  if (newBadges.length > 0) {
+    showBadgeCelebration(newBadges);
+  }
 
   // Save high score
   const today = new Date();
@@ -1669,6 +1713,22 @@ function endSession() {
   `;
 }
 
+function confirmForfeit() {
+  const overlay = document.createElement('div');
+  overlay.className = 'help-overlay';
+  overlay.innerHTML = `
+    <div class="panel" style="max-width:360px; text-align:center; padding:32px 28px;">
+      <div style="font-family:var(--font-pixel); font-size:12px; color:var(--red); letter-spacing:2px; margin-bottom:16px;">FORFEIT RUN</div>
+      <div style="color:var(--dim); font-size:15px; margin-bottom:24px; line-height:1.5;">Are you sure? This will end your current run and delete your save. All progress in this session will be lost.</div>
+      <div class="btn-row" style="justify-content:center;">
+        <button class="btn btn-small" style="color:var(--red); border-color:var(--red);" onclick="this.closest('.help-overlay').remove(); clearSave(); newSession();">YES, FORFEIT</button>
+        <button class="btn btn-small" onclick="this.closest('.help-overlay').remove();">CANCEL</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
 function newSession() {
   state = {
     screen: 'title', key: null, scale: null, bpm: 128,
@@ -1823,6 +1883,7 @@ function rerollSampleType() {
   if (!room || (state.rerolls <= 0 && !hasAncientKnowledge() && !(hasRelic('metronome_of_mercy') && !relicUsedThisFloor('metronome_of_mercy'))) || room.isAlchemist) return;
   deductReroll();
   state.rerollsUsedThisRoom++;
+  state._totalRerollsUsed = (state._totalRerollsUsed || 0) + 1;
   const prevSample = room.sampleType;
   const samplePool = (SAMPLE_TYPES[room.trackType] || ['sample']).filter(s => s !== prevSample);
   room.sampleType = samplePool.length > 0 ? pick(samplePool) : pick(SAMPLE_TYPES[room.trackType] || ['sample']);
@@ -1836,6 +1897,7 @@ function rerollGenre() {
   if (!room || (state.rerolls <= 0 && !hasAncientKnowledge() && !(hasRelic('metronome_of_mercy') && !relicUsedThisFloor('metronome_of_mercy'))) || room.isAlchemist) return;
   deductReroll();
   state.rerollsUsedThisRoom++;
+  state._totalRerollsUsed = (state._totalRerollsUsed || 0) + 1;
   const prevGenre = room.genre;
   let newGenre;
   let genreAttempts = 0;
@@ -1857,6 +1919,7 @@ function rerollCurse(index) {
   if (!curse || curse.type === 'carried' || curse.type === 'deferred-forced') return;
   deductReroll();
   state.rerollsUsedThisRoom++;
+  state._totalRerollsUsed = (state._totalRerollsUsed || 0) + 1;
 
   let pool;
   if (curse.type === 'immediate') {
@@ -1898,6 +1961,7 @@ function rerollEffect(index) {
   if (!effect) return;
   deductReroll();
   state.rerollsUsedThisRoom++;
+  state._totalRerollsUsed = (state._totalRerollsUsed || 0) + 1;
 
   const NEEDS_PREVIOUS_TRACK = ['Sidechain Compression'];
   const isFirstRoom = state.rooms.length === 0;

@@ -291,19 +291,39 @@ const PROFILE_KEY = 'necrodancer_profile';
 function getProfile() {
   try {
     const raw = localStorage.getItem(PROFILE_KEY);
-    return raw ? JSON.parse(raw) : {
+    const defaults = {
       totalSessions: 0, totalRooms: 0, totalBosses: 0, totalSideQuests: 0,
       maxScore: 0, maxGold: 0, maxFloor: 0, maxRelics: 0, maxCursesInRoom: 0,
       masteryInSession: 0, floorNoRerolls: false, floorNoCurses: false,
       nightmareCompleted: false, challengeSessionCompleted: false,
+      nightmareChallengeCompleted: false,
+      nat20Rolled: false, nat1Rolled: false,
+      doubleOrNothingWins: 0, doubleOrNothingLost: false,
+      zeroRerollsSession: false,
+      totalCursesCompleted: 0, totalBlessings: 0,
+      totalRoadDebtsCompleted: 0, totalAmbushSurvived: 0, totalChests: 0,
+      maxUniqueGenres: 0,
       badges: [], skeletonKeys: 0
     };
+    if (!raw) return defaults;
+    const parsed = JSON.parse(raw);
+    // Merge defaults so new fields are always present
+    return { ...defaults, ...parsed };
   } catch (e) {
-    return { totalSessions: 0, totalRooms: 0, totalBosses: 0, totalSideQuests: 0,
+    return {
+      totalSessions: 0, totalRooms: 0, totalBosses: 0, totalSideQuests: 0,
       maxScore: 0, maxGold: 0, maxFloor: 0, maxRelics: 0, maxCursesInRoom: 0,
       masteryInSession: 0, floorNoRerolls: false, floorNoCurses: false,
       nightmareCompleted: false, challengeSessionCompleted: false,
-      badges: [], skeletonKeys: 0 };
+      nightmareChallengeCompleted: false,
+      nat20Rolled: false, nat1Rolled: false,
+      doubleOrNothingWins: 0, doubleOrNothingLost: false,
+      zeroRerollsSession: false,
+      totalCursesCompleted: 0, totalBlessings: 0,
+      totalRoadDebtsCompleted: 0, totalAmbushSurvived: 0, totalChests: 0,
+      maxUniqueGenres: 0,
+      badges: [], skeletonKeys: 0
+    };
   }
 }
 
@@ -329,14 +349,39 @@ function updateProfileFromSession() {
     if (room.curses.length > profile.maxCursesInRoom) profile.maxCursesInRoom = room.curses.length;
   }
 
+  // Curse / blessing / event totals
+  const cursesCompleted = state.rooms.reduce((s, r) => s + r.curses.filter(c => c.completed).length, 0);
+  profile.totalCursesCompleted = (profile.totalCursesCompleted || 0) + cursesCompleted;
+  const blessingsReceived = state.rooms.filter(r => r.blessing).length;
+  profile.totalBlessings = (profile.totalBlessings || 0) + blessingsReceived;
+  const roadDebtsCompleted = (state.acceptedEvents || []).filter(e => e.cost && e.completed).length;
+  profile.totalRoadDebtsCompleted = (profile.totalRoadDebtsCompleted || 0) + roadDebtsCompleted;
+  profile.totalChests = (profile.totalChests || 0) + (state._chestsOpened || 0);
+  profile.totalAmbushSurvived = (profile.totalAmbushSurvived || 0) + (state._ambushesSurvived || 0);
+
+  // Unique genres in this session
+  const genres = new Set(state.rooms.map(r => r.genre).filter(Boolean));
+  if (genres.size > (profile.maxUniqueGenres || 0)) profile.maxUniqueGenres = genres.size;
+
+  // Zero rerolls session (started with rerolls but never used any)
+  if (state._totalRerollsUsed === 0) profile.zeroRerollsSession = true;
+
+  // Nat20 / Nat1 / Double or Nothing (set by game.js during play)
+  if (state._nat20Rolled) profile.nat20Rolled = true;
+  if (state._nat1Rolled) profile.nat1Rolled = true;
+  profile.doubleOrNothingWins = (profile.doubleOrNothingWins || 0) + (state._donWins || 0);
+  if (state._donLost) profile.doubleOrNothingLost = true;
+
   // Grant a skeleton key for completing a run
   profile.skeletonKeys = (profile.skeletonKeys || 0) + 1;
 
   // Difficulty and challenge checks
   if (state.difficulty === 'nightmare') profile.nightmareCompleted = true;
+  if (state.difficulty === 'nightmare' && state.challengeMods && state.challengeMods.length > 0) profile.nightmareChallengeCompleted = true;
   if (state.challengeMods && state.challengeMods.length > 0) profile.challengeSessionCompleted = true;
 
-  // Check achievements
+  // Check achievements — track newly unlocked
+  const prevBadges = [...profile.badges];
   if (typeof ACHIEVEMENTS !== 'undefined') {
     for (const ach of ACHIEVEMENTS) {
       if (!profile.badges.includes(ach.id) && ach.check(profile)) {
@@ -344,9 +389,10 @@ function updateProfileFromSession() {
       }
     }
   }
+  const newBadges = profile.badges.filter(id => !prevBadges.includes(id));
 
   saveProfile(profile);
-  return profile;
+  return { profile, newBadges };
 }
 
 const SCORES_KEY = 'necrodancer_scores';
