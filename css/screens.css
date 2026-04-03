@@ -4,10 +4,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: 100vh; /* fallback for older browsers */
   text-align: center;
   position: relative;
   overflow: hidden;
+}
+@supports (min-height: 100dvh) {
+  #title-screen { min-height: 100dvh; }
 }
 
 /* Floating dust particles */
@@ -1923,7 +1927,7 @@
   .title-sub { font-size: 8px; letter-spacing: 2px; margin-bottom: 20px; }
   .title-divider { width: 120px; margin: 16px auto; }
   .title-flavor { font-size: 15px; margin-bottom: 24px; max-width: 90%; }
-  #title-screen { min-height: 100vh; }
+  #title-screen { min-height: 100dvh; min-height: 100vh; }
 
   /* Setup screen */
   .setup-title { font-size: 11px; }
