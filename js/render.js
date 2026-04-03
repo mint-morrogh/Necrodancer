@@ -976,7 +976,7 @@ function renderCampfire() {
             <div style="color:var(--green);">Buy Curse Shield${state.shieldNextRoom > 0 ? ` <span style="font-size:11px; opacity:0.7;">(${state.shieldNextRoom} active)</span>` : ''}</div>
             <div style="font-size:13px; color:var(--dim);">Blocks curses for 1 room — stackable</div>
           </div>
-          <div style="font-family:var(--font-pixel); font-size:12px; color:var(--gold);">${stock.shield > 0 ? stock.shield + ' in stock · 10g' : 'SOLD OUT'}</div>
+          <div class="shop-price">${stock.shield > 0 ? `<span class="shop-gold">10g</span><span class="shop-stock">${stock.shield}</span>` : '<span class="shop-sold-out">SOLD OUT</span>'}</div>
         </div>
 
         <div class="campfire-shop-item ${state.gold < 20 || stock.reroll <= 0 ? 'disabled' : ''}" onclick="buyCampfireItem('reroll')">
@@ -984,7 +984,7 @@ function renderCampfire() {
             <div style="color:var(--purple);">Buy a Reroll <span style="font-size:11px; opacity:0.7;">(${state.rerolls} owned)</span></div>
             <div style="font-size:13px; color:var(--dim);">Gain +1 reroll token</div>
           </div>
-          <div style="font-family:var(--font-pixel); font-size:12px; color:var(--gold);">${stock.reroll > 0 ? stock.reroll + ' in stock · 20g' : 'SOLD OUT'}</div>
+          <div class="shop-price">${stock.reroll > 0 ? `<span class="shop-gold">20g</span><span class="shop-stock">${stock.reroll}</span>` : '<span class="shop-sold-out">SOLD OUT</span>'}</div>
         </div>
 
         <div class="campfire-shop-item ${!hasNextRoomCurses || state.gold < 12 ? 'disabled' : ''}" onclick="buyCampfireItem('removeNextRoom')">
@@ -1000,7 +1000,7 @@ function renderCampfire() {
             <div style="color:var(--purple);">Buy a Relic <span style="font-size:11px; opacity:0.7;">(${state.relics.length} owned, ${getAvailableRelics().length} available)</span></div>
             <div style="font-size:13px; color:var(--dim);">Choose from 3 random relics</div>
           </div>
-          <div style="font-family:var(--font-pixel); font-size:12px; color:var(--gold);">${stock.relic > 0 ? stock.relic + ' in stock · 50g' : 'SOLD OUT'}</div>
+          <div class="shop-price">${stock.relic > 0 ? `<span class="shop-gold">50g</span><span class="shop-stock">${stock.relic}</span>` : '<span class="shop-sold-out">SOLD OUT</span>'}</div>
         </div>
       </div>
 

@@ -956,6 +956,24 @@
 }
 .campfire-shop-item:hover { border-color: var(--orange); background: rgba(230,126,34,0.08); }
 .campfire-shop-item.disabled { opacity: 0.35; pointer-events: none; }
+.shop-price {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+  font-family: var(--font-pixel);
+  font-size: 12px;
+}
+.shop-gold { color: var(--gold); white-space: nowrap; }
+.shop-stock {
+  color: var(--dim);
+  font-size: 10px;
+  border-left: 1px solid var(--border);
+  margin-left: 8px;
+  padding-left: 8px;
+  white-space: nowrap;
+}
+.shop-sold-out { color: var(--red); font-size: 10px; letter-spacing: 1px; white-space: nowrap; }
 
 /* ========== SIDE QUEST ========== */
 @keyframes questPulse {
@@ -1806,7 +1824,7 @@
   .difficulty-option { padding: 10px 12px; }
   .difficulty-name { font-size: 11px; letter-spacing: 1.5px; }
   .difficulty-desc { font-size: 13px; }
-  .bpm-input { font-size: 20px; width: 90px; }
+  .bpm-input { font-size: 18px; width: 85px; }
 
   /* Song info bar */
   .song-info-bar { padding: 10px 12px; gap: 10px 16px; }
@@ -1906,7 +1924,7 @@
   .difficulty-name { font-size: 10px; }
   .difficulty-desc { font-size: 12px; }
   .seed-toggle-btn { font-size: 10px; padding: 8px 12px; }
-  .bpm-input { font-size: 18px; width: 80px; }
+  .bpm-input { font-size: 16px; width: 80px; }
   .bpm-wrapper { height: 48px; }
 
   /* Song info bar - stack key items */
