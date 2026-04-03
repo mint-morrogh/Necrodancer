@@ -102,26 +102,26 @@ const BOSS_ROOM_NAMES = [
 
 // ── BOSS CURSES (master bus challenges — still allow a good mix) ──
 const BOSS_CURSES = [
-  'Add a bit crusher to the master bus — keep it subtle enough that the mix still sounds intentional',
-  'Add a flanger to the master bus at low depth — the whole mix should shimmer slightly',
-  'Add a phaser to the master bus — slow rate, low mix, just enough to feel the movement',
-  'Put a reverb on the master bus — short decay, under 20% wet, the mix lives in a room now',
-  'Add a chorus effect to the master bus — keep it tight so the mix widens without getting washy',
-  'Run the master bus through a tape saturation plugin for the rest of the session',
-  'Apply a 1dB per octave tilt EQ to the master bus — bright or dark, your choice, but commit',
-  'Cut a frequency band of your choice on the master bus by 50% — carve a hole in the mix',
-  'Boost the master bus above 8kHz by 3dB — add some air and sizzle to everything',
-  'Roll off everything below 40Hz on the master bus — tighten up the sub',
-  'Apply parallel compression to the mix bus — blend at no more than 30%',
-  'Sidechain the entire mix bus to a ghost kick at -24dB — subtle pumping on the master',
-  'Add a stereo widener to the master bus — push the sides out but keep the low end centered',
-  'No reverb or delay sends may exceed -12dB — keep spatial effects subtle for the rest of the session',
+  'Add a bit crusher to the master bus at {bossWet} wet \u2014 keep it subtle enough that the mix still sounds intentional',
+  'Add a flanger to the master bus at {bossWet} wet \u2014 the whole mix should shimmer slightly',
+  'Add a phaser to the master bus at {bossWet} wet \u2014 slow rate, just enough to feel the movement',
+  'Put a reverb on the master bus at {bossWet} wet \u2014 short decay, the mix lives in a room now',
+  'Add a chorus effect to the master bus at {bossWet} wet \u2014 keep it tight so the mix widens without getting washy',
+  'Run the master bus through a tape saturation plugin at {bossWet} wet for the rest of the session',
+  'Apply a 1dB per octave tilt EQ to the master bus \u2014 bright or dark, your choice, but commit',
+  'Cut a frequency band of your choice on the master bus by 50% \u2014 carve a hole in the mix',
+  'Boost the master bus above 8kHz by 3dB \u2014 add some air and sizzle to everything',
+  'Roll off everything below 40Hz on the master bus \u2014 tighten up the sub',
+  'Apply parallel compression to the mix bus \u2014 blend at no more than 30%',
+  'Sidechain the entire mix bus to a ghost kick at -24dB \u2014 subtle pumping on the master',
+  'Add a stereo widener to the master bus at {bossWet} wet \u2014 push the sides out but keep the low end centered',
+  'No reverb or delay sends may exceed -12dB \u2014 keep spatial effects subtle for the rest of the session',
   'Every track must have at least one automation lane active from this point forward',
-  'The mix must breathe: automate master volume ±1dB between sections for dynamic movement',
-  'Add a multiband compressor to the master bus — tame at least two frequency bands',
-  'Put a de-esser on the master bus targeting 5-8kHz — tame any harshness across the mix',
-  'Add a tremolo effect to the master bus — slow rate, shallow depth, gentle pulse on everything',
-  'Apply a vinyl/lo-fi plugin to the master bus — add some dust, crackle, or age to the mix'
+  'The mix must breathe: automate master volume \u00B11dB between sections for dynamic movement',
+  'Add a multiband compressor to the master bus \u2014 tame at least two frequency bands',
+  'Put a de-esser on the master bus targeting 5-8kHz \u2014 tame any harshness across the mix',
+  'Add a tremolo effect to the master bus at {bossWet} wet \u2014 slow rate, shallow depth, gentle pulse on everything',
+  'Apply a vinyl/lo-fi plugin to the master bus at {bossWet} wet \u2014 add some dust, crackle, or age to the mix'
 ];
 
 // ── BOSS CURSES NIGHTMARE (extreme — can destroy the mix) ──────

@@ -1874,6 +1874,14 @@ function rerollCurse(index) {
   let attempts = 0;
   do { newText = pick(pool); attempts++; } while (excludeTexts.includes(newText) && attempts < 20);
 
+  // Resolve {bossWet} placeholder for boss curses
+  if (newText.includes('{bossWet}')) {
+    const [wetLo, wetHi] = diff().bossWetRange;
+    const lo = roll(wetLo, Math.round((wetLo + wetHi) / 2));
+    const hi = roll(Math.round((wetLo + wetHi) / 2), wetHi);
+    newText = newText.replace('{bossWet}', `${lo}\u2013${hi}%`);
+  }
+
   curse.text = newText;
 
   // Update matching checklist entry

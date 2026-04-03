@@ -203,8 +203,15 @@ function generateRoom(trackType, opts = {}) {
     const isNightmare = state.difficulty === 'nightmare';
     const bossCursePool = isNightmare ? BOSS_CURSES_NIGHTMARE : BOSS_CURSES;
     const bossCurseCount = roll(...diff().bossCurseRange);
+    const [wetLo, wetHi] = diff().bossWetRange;
     for (let i = 0; i < bossCurseCount; i++) {
-      curses.push({ text: pickUniqueCurse(bossCursePool), type: 'boss-curse', completed: false });
+      let text = pickUniqueCurse(bossCursePool);
+      if (text.includes('{bossWet}')) {
+        const lo = roll(wetLo, Math.round((wetLo + wetHi) / 2));
+        const hi = roll(Math.round((wetLo + wetHi) / 2), wetHi);
+        text = text.replace('{bossWet}', `${lo}\u2013${hi}%`);
+      }
+      curses.push({ text, type: 'boss-curse', completed: false });
     }
   } else if (isSanctuary) {
     // Sanctuary: no curses at all
