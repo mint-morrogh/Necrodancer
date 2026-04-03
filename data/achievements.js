@@ -24,7 +24,7 @@ const ACHIEVEMENTS = [
   { id: 'flawless',        name: 'Flawless',            desc: 'Achieve Room Mastery 5 times in one session',    check: (p) => p.masteryInSession >= 5 },
   { id: 'curse_magnet',    name: 'Curse Magnet',        desc: 'Survive 5 curses in a single room',              check: (p) => p.maxCursesInRoom >= 5 },
   { id: 'untouchable',     name: 'Untouchable',         desc: 'Complete a floor with zero curses encountered',   check: (p) => p.floorNoCurses },
-  { id: 'hoarder',         name: 'Hoarder',             desc: 'Accumulate 100+ gold in a single session',        check: (p) => p.maxGold >= 100 },
+  { id: 'hoarder',         name: 'Hoarder',             desc: 'Accumulate 200+ gold in a single session',        check: (p) => p.maxGold >= 200 },
   { id: 'midas_touch',     name: 'Midas Touch',         desc: 'Accumulate 250+ gold in a single session',        check: (p) => p.maxGold >= 250 },
 
   // ── Challenge badges ──────────────────────────────────

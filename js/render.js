@@ -405,7 +405,12 @@ function renderDungeon() {
   `;
 
   if (state.roomPhase === 'map') {
-    requestAnimationFrame(() => drawMapConnections());
+    requestAnimationFrame(() => {
+      drawMapConnections();
+      // Scroll to instrument picker or boss picker if visible
+      const picker = document.querySelector('.map-start-select');
+      if (picker) picker.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
   }
 }
 
