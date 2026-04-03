@@ -1181,10 +1181,10 @@ function renderAmbush() {
           ${completedRooms.map((room, i) => {
             const actualIndex = state.rooms.indexOf(room);
             return `
-              <button class="btn" onclick="stakeTrackForAmbush(${actualIndex})" style="display:block; width:100%; margin-bottom:8px; text-align:left; border-color:var(--red); color:var(--text);">
+              <button class="btn" onclick="stakeTrackForAmbush(${actualIndex})" style="display:block; width:100%; margin-bottom:10px; text-align:left; border-color:var(--red); color:var(--text); padding:14px 20px; line-height:1.8;">
                 <span style="color:var(--red); font-family:var(--font-pixel); font-size:10px;">ROOM ${room.number}</span>
                 <span style="margin-left:8px; text-transform:uppercase;">${room.trackType}</span>
-                <span style="margin-left:8px; color:var(--dim);">— ${room.genre}</span>
+                <span style="margin-left:8px; color:var(--dim);">\u2014 ${room.genre}</span>
               </button>
             `;
           }).join('')}
