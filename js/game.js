@@ -2066,9 +2066,16 @@ document.addEventListener('click', (e) => {
   const infoTip = e.target.closest('.info-tip');
 
   // Clicked inside the tooltip content itself (e.g. the Splice link)
-  // Stop propagation so the click doesn't reach checklist items underneath
+  // Stop propagation so the click doesn't reach checklist items underneath,
+  // but manually navigate if they clicked a link since stopPropagation in
+  // capture phase prevents the <a> from receiving the click
   if (e.target.closest('.info-tip-content')) {
     e.stopPropagation();
+    e.preventDefault();
+    const link = e.target.closest('a[href]');
+    if (link) {
+      window.open(link.href, link.target || '_blank');
+    }
     return;
   }
 
