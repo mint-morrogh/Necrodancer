@@ -894,11 +894,12 @@ async function animateSpell() {
     setTimeout(() => dust.remove(), 800);
   }, 100);
 
-  // Cycle through random d20 faces — fast and clean
-  const steps = 18;
+  // Cycle through random d20 faces — fast start, dramatic slowdown
+  const steps = 24;
   for (let i = 0; i < steps; i++) {
     setD20Face(dieEl, Math.floor(Math.random() * 20) + 1);
-    await sleep(40 + i * 5); // starts fast, slows slightly
+    const t = i / (steps - 1); // 0 → 1
+    await sleep(25 + Math.round(t * t * t * 200)); // cubic ease: 25ms → 225ms
   }
 
   clearInterval(dustInterval);
@@ -1023,10 +1024,11 @@ async function doubleOrNothing() {
     setTimeout(() => dust.remove(), 800);
   }, 100);
 
-  const steps = 18;
+  const steps = 24;
   for (let i = 0; i < steps; i++) {
     setD20Face(dieEl, Math.floor(Math.random() * 20) + 1);
-    await sleep(40 + i * 5);
+    const t = i / (steps - 1);
+    await sleep(25 + Math.round(t * t * t * 200));
   }
 
   clearInterval(dustInterval);

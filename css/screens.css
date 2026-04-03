@@ -1105,14 +1105,14 @@
   font-size: 9px;
   color: var(--dim);
   letter-spacing: 2px;
-  min-width: 70px;
+  min-width: 75px;
   text-align: right;
 }
 .roll-info-value {
   font-family: var(--font-pixel);
   font-size: 9px;
   letter-spacing: 2px;
-  min-width: 80px;
+  min-width: 75px;
   text-align: left;
 }
 .transition-result {
@@ -1760,7 +1760,7 @@
   .campfire-icon { font-size: 48px; }
   .campfire-shop-item { padding: 10px 12px; font-size: 14px; }
   .transition-panel { padding: 30px 20px; }
-  .spell-display { width: 80px; height: 80px; background-size: 400px 320px; }
+  .spell-display { width: 90px; height: 90px; background-size: 450px 360px; }
   .relic-panel { padding: 30px 16px; }
   .relic-chamber-icon { font-size: 48px; }
   .relic-choices { gap: 12px; }
@@ -1865,7 +1865,7 @@
   .campfire-icon { font-size: 40px; }
   .campfire-shop-item { padding: 8px 10px; }
   .transition-panel { padding: 24px 14px; }
-  .spell-display { width: 70px; height: 70px; background-size: 350px 280px; }
+  .spell-display { width: 85px; height: 85px; background-size: 425px 340px; }
   .relic-panel { padding: 24px 12px; }
   .relic-chamber-icon { font-size: 40px; }
   .relic-choices { grid-template-columns: 1fr; gap: 10px; }
@@ -1918,7 +1918,7 @@
   .result-text { font-size: 15px; }
   .checklist-text { font-size: 14px; }
   .help-content { padding: 14px 10px; }
-  .spell-display { width: 60px; height: 60px; background-size: 300px 240px; }
+  .spell-display { width: 80px; height: 80px; background-size: 400px 320px; }
   .relic-card-name { font-size: 10px; }
   .mastery-popup { padding: 16px 12px; }
 }
