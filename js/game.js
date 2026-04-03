@@ -1972,8 +1972,12 @@ document.addEventListener('click', (e) => {
 
   const infoTip = e.target.closest('.info-tip');
 
-  // Clicked inside the tooltip content itself (e.g. the Splice link) — let it through
-  if (e.target.closest('.info-tip-content')) return;
+  // Clicked inside the tooltip content itself (e.g. the Splice link)
+  // Stop propagation so the click doesn't reach checklist items underneath
+  if (e.target.closest('.info-tip-content')) {
+    e.stopPropagation();
+    return;
+  }
 
   if (infoTip) {
     // If this tooltip is already active, dismiss it

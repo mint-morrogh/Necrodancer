@@ -23,7 +23,7 @@ function genreTip(name) {
   const spliceUrl = genreSpliceUrl(name);
   const info = typeof GENRE_DESCRIPTIONS !== 'undefined' && GENRE_DESCRIPTIONS[name];
   if (!info) return `<a href="${spliceUrl}" target="_blank" rel="noopener" class="genre-link" style="color:var(--gold);">${name}</a>`;
-  return `<span class="info-tip" style="color:var(--gold);"><a href="${spliceUrl}" target="_blank" rel="noopener" class="genre-link">${name}</a><span class="info-tip-content info-tip-genre"><div class="info-tip-title">${name}</div><div class="info-tip-desc">${info.desc}</div><div class="info-tip-field"><strong>BPM Range:</strong> ${info.bpm}</div><div class="info-tip-field"><strong>Characteristics:</strong> ${info.traits}</div><div class="info-tip-field genre-splice-hint desktop-only">Click genre name to browse on Splice</div><a href="${spliceUrl}" target="_blank" rel="noopener" class="genre-splice-link mobile-only">Go to Splice →</a></span></span>`;
+  return `<span class="info-tip" style="color:var(--gold);"><a href="${spliceUrl}" target="_blank" rel="noopener" class="genre-link">${name}</a><span class="info-tip-content info-tip-genre"><div class="info-tip-title">${name}</div><div class="info-tip-desc">${info.desc}</div><div class="info-tip-field"><strong>BPM Range:</strong> ${info.bpm}</div><div class="info-tip-field"><strong>Characteristics:</strong> ${info.traits}</div><div class="info-tip-field genre-splice-hint desktop-only">Click genre name to browse on Splice</div><a href="${spliceUrl}" target="_blank" rel="noopener" class="genre-splice-link mobile-only">Go to Splice</a></span></span>`;
 }
 
 function trackTip(name) {
