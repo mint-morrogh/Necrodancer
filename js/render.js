@@ -675,6 +675,7 @@ function renderRoomActive(room) {
           ${room.curses.map((c, i) => `
             <div class="result-text curse-text">
               ${c.type === 'carried' ? '[CARRIED] ' : c.type === 'boss-curse' ? '[BOSS] ' : c.type === 'deferred-forced' ? '[DEFERRED] ' : ''}${c.text}
+              ${c.redirected ? ' <span style="color:var(--green); font-size:13px; font-style:italic;">[Curse Redirect \u2014 may apply to any track]</span>' : ''}
               ${c.type !== 'carried' && c.type !== 'deferred-forced' && state.rerolls > 0 ? `<button class="reroll-inline" onclick="rerollCurse(${i})" title="Reroll this curse (${state.rerolls} left)">↻</button>` : ''}
             </div>
           `).join('')}

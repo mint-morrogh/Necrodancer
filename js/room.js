@@ -199,19 +199,30 @@ function generateRoom(trackType, opts = {}) {
   if (isBoss) {
     // Boss rooms get guaranteed curses
     curses.push({ text: pickUniqueCurse(immediateCursePool), type: 'immediate', completed: false });
-    // Boss curses (mix-level) — nightmare uses the extreme pool
-    const isNightmare = state.difficulty === 'nightmare';
-    const bossCursePool = isNightmare ? BOSS_CURSES_NIGHTMARE : BOSS_CURSES;
+
+    const isHardOrNightmare = state.difficulty === 'hard' || state.difficulty === 'nightmare';
     const bossCurseCount = roll(...diff().bossCurseRange);
-    const [wetLo, wetHi] = diff().bossWetRange;
-    for (let i = 0; i < bossCurseCount; i++) {
-      let text = pickUniqueCurse(bossCursePool);
-      if (text.includes('{bossWet}')) {
-        const lo = roll(wetLo, Math.round((wetLo + wetHi) / 2));
-        const hi = roll(Math.round((wetLo + wetHi) / 2), wetHi);
-        text = text.replace('{bossWet}', `${lo}\u2013${hi}%`);
+
+    if (isHardOrNightmare) {
+      // Hard/Nightmare: master bus curses
+      const isNightmare = state.difficulty === 'nightmare';
+      const bossCursePool = isNightmare ? BOSS_CURSES_NIGHTMARE : BOSS_CURSES;
+      const [wetLo, wetHi] = diff().bossWetRange;
+      for (let i = 0; i < bossCurseCount; i++) {
+        let text = pickUniqueCurse(bossCursePool);
+        if (text.includes('{bossWet}')) {
+          const lo = roll(wetLo, Math.round((wetLo + wetHi) / 2));
+          const hi = roll(Math.round((wetLo + wetHi) / 2), wetHi);
+          text = text.replace('{bossWet}', `${lo}\u2013${hi}%`);
+        }
+        curses.push({ text, type: 'boss-curse', completed: false });
       }
-      curses.push({ text, type: 'boss-curse', completed: false });
+    } else {
+      // Easy/Normal: extra regular curses instead of master bus curses
+      for (let i = 0; i < bossCurseCount; i++) {
+        const pool = TRACK_CURSES[trackType] || immediateCursePool;
+        curses.push({ text: pickUniqueCurse(pool), type: 'track', completed: false });
+      }
     }
   } else if (isSanctuary) {
     // Sanctuary: no curses at all
@@ -379,6 +390,10 @@ function generateRoom(trackType, opts = {}) {
   }
 
   const enchantersFreedom = blessing && blessing.includes('Enchanter\'s Freedom');
+  const curseRedirect = blessing && blessing.includes('Curse Redirect');
+  if (curseRedirect) {
+    for (const c of curses) { if (!c.removed) c.redirected = true; }
+  }
 
   state.deferredCurses.push(...newDeferredCurses);
   state.nextRoomCurses.push(...newNextRoomCurses);
@@ -388,7 +403,8 @@ function generateRoom(trackType, opts = {}) {
   for (let i = 0; i < curses.length; i++) {
     const cType = curses[i].type === 'boss-curse' ? 'boss-curse' : 'curse';
     const removed = curses[i].removed || null;
-    checklist.push({ id: 'curse-' + i, text: curses[i].text, completed: !!removed, type: cType, removed });
+    const curseText = curses[i].redirected ? curses[i].text + ' [Curse Redirect \u2014 may apply to any track]' : curses[i].text;
+    checklist.push({ id: 'curse-' + i, text: curseText, completed: !!removed, type: cType, removed });
   }
   for (let i = 0; i < effects.length; i++) {
     checklist.push({ id: 'fx-' + i, text: `${effects[i].name} at ${effects[i].min}–${effects[i].max}% wet`, completed: false, type: 'effect' });

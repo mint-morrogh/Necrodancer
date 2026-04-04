@@ -76,5 +76,6 @@ const BLESSINGS = [
   'Harmonic Convergence \u2014 freely use any scale degree \u2014 ignore the key of {key}',
   'Treasure Hoard \u2014 gain +2 re-roll tokens AND peek at the next room',
   'Blessing of Abundance \u2014 you may build any second track type of your choice with no restrictions alongside your {trackType}',
-  'Enchanter\'s Freedom \u2014 you may adjust the dry/wet range of all effects in this room to any values you prefer'
+  'Enchanter\'s Freedom \u2014 you may adjust the dry/wet range of all effects in this room to any values you prefer',
+  'Curse Redirect \u2014 all curses in this room may be applied to ANY track in your session, not just your current {trackType}'
 ];
